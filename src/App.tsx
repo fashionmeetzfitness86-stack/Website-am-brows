@@ -4,7 +4,7 @@
  */
 
 import { motion, AnimatePresence } from 'motion/react';
-import { Menu, ArrowRight, Instagram, Mail, Calendar, User, Star, X, ChevronRight, ChevronLeft, MapPin, Phone, Plus } from 'lucide-react';
+import { Menu, ArrowRight, Instagram, Facebook, Mail, Calendar, User, Star, X, ChevronRight, ChevronLeft, MapPin, Phone, Plus } from 'lucide-react';
 import { useState } from 'react';
 
 // --- Types ---
@@ -35,7 +35,7 @@ const services = [
     price: '$550+',
     shortDescription: 'Enhance your natural lip color and redefine the vermillion border.',
     description: 'This is not your average "lip tattoo". Our Lip Blush technique focuses on sheer layers of pigment that create a healthy, youthful glow. We specialize in modifying the vermillion border subtly to create the illusion of fuller lips without the need for fillers. It is the ultimate "your lips but better" treatment.',
-    image: 'https://images.unsplash.com/photo-1586790170083-2f9ceadc732d?auto=format&fit=crop&q=80&w=800',
+    image: '/lip-blush.webp',
     tags: ['Sheer Tint', 'Contour', 'Anti-Aging'],
     process: [
       { step: 'Color Theory', description: 'We analyze your lip health and naturally existing blue/purple tones to neutralize and enhance.' },
@@ -275,8 +275,11 @@ const Hero = ({ onNavigate }: { onNavigate: (page: Page) => void }) => (
       transition={{ delay: 1.2 }}
       className="absolute bottom-12 left-12 hidden lg:flex flex-col gap-6"
     >
-      <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="text-ink/30 hover:text-accent transition-colors">
+      <a href="https://www.instagram.com/ashleymbrows" target="_blank" rel="noopener noreferrer" className="text-ink/30 hover:text-accent transition-colors">
         <Instagram className="w-5 h-5" />
+      </a>
+      <a href="https://www.facebook.com/ashleymbrows" target="_blank" rel="noopener noreferrer" className="text-ink/30 hover:text-accent transition-colors">
+        <Facebook className="w-5 h-5" />
       </a>
       <a href="mailto:concierge@ashleymbrows.com" className="text-ink/30 hover:text-accent transition-colors">
         <Mail className="w-5 h-5" />
@@ -418,8 +421,11 @@ const Footer = ({ onNavigate }: { onNavigate: (page: Page) => void }) => (
            Artistry in Permanent Beauty. A sanctuary for the modern individual seeking timeless refinement.
          </p>
          <div className="flex gap-4 mt-8">
-            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Follow us on Instagram">
+            <a href="https://www.instagram.com/ashleymbrows" target="_blank" rel="noopener noreferrer" aria-label="Follow us on Instagram">
               <Instagram className="w-5 h-5 opacity-50 hover:opacity-100 cursor-pointer transition-opacity focus-visible:outline-accent" />
+            </a>
+            <a href="https://www.facebook.com/ashleymbrows" target="_blank" rel="noopener noreferrer" aria-label="Follow us on Facebook">
+              <Facebook className="w-5 h-5 opacity-50 hover:opacity-100 cursor-pointer transition-opacity focus-visible:outline-accent" />
             </a>
             <a href="mailto:concierge@ashleymbrows.com" aria-label="Email studio concierge">
               <Mail className="w-5 h-5 opacity-50 hover:opacity-100 cursor-pointer transition-opacity focus-visible:outline-accent" />
@@ -554,8 +560,11 @@ const ContactPage = () => {
             <div>
                <h4 className="text-[10px] uppercase tracking-[0.3em] font-bold opacity-30 mb-4">Follow Our Work</h4>
                <div className="flex gap-6">
-                <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram Profile" className="text-ink/40 hover:text-accent transition-colors focus-visible:outline-accent">
+                <a href="https://www.instagram.com/ashleymbrows" target="_blank" rel="noopener noreferrer" aria-label="Instagram Profile" className="text-ink/40 hover:text-accent transition-colors focus-visible:outline-accent">
                   <Instagram className="w-6 h-6" />
+                </a>
+                <a href="https://www.facebook.com/ashleymbrows" target="_blank" rel="noopener noreferrer" aria-label="Facebook Page" className="text-ink/40 hover:text-accent transition-colors focus-visible:outline-accent">
+                  <Facebook className="w-6 h-6" />
                 </a>
                 <a href="mailto:concierge@ashleymbrows.com" aria-label="Email studio" className="text-ink/40 hover:text-accent transition-colors focus-visible:outline-accent">
                   <Mail className="w-6 h-6" />
@@ -1110,7 +1119,7 @@ const InstagramFeed = () => {
             <p className="text-accent text-[10px] uppercase tracking-[0.6em] mb-4 font-bold">Social Connection</p>
             <h2 className="text-4xl md:text-5xl font-serif">Latest from @ashleymbrows</h2>
           </div>
-          <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="px-8 py-4 border border-ink/10 text-[10px] uppercase tracking-widest font-bold hover:bg-accent hover:text-paper transition-all">
+          <a href="https://www.instagram.com/ashleymbrows" target="_blank" rel="noopener noreferrer" className="px-8 py-4 border border-ink/10 text-[10px] uppercase tracking-widest font-bold hover:bg-accent hover:text-paper transition-all">
             Follow Studio
           </a>
         </div>
@@ -1118,7 +1127,7 @@ const InstagramFeed = () => {
           {posts.map((post) => (
             <motion.a 
               key={post.id}
-              href="https://instagram.com"
+              href="https://www.instagram.com/ashleymbrows"
               target="_blank"
               rel="noopener noreferrer"
               whileHover={{ y: -10 }}
