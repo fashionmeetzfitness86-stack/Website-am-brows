@@ -17,7 +17,7 @@ const services = [
     price: '$650+',
     shortDescription: 'A sophisticated fusion of Microblading and Ombre Shading.',
     description: 'Our Signature Brows are the gold standard in facial architecture. Using a proprietary "Mapping of the Golden Ratio", we align your new brows with your unique orbital bone structure. This procedure combines the precision of hyper-real nano-strokes with the soft, ethereal gradient of powder shading. The result is a brow that looks completely authentic in natural sunlight, but possesses the polished definition of a professional makeup application.',
-    image: 'https://images.unsplash.com/photo-1596704017254-9b121068fb31?auto=format&fit=crop&q=80&w=800',
+    image: '/gallery/brows-before-after.jpg',
     tags: ['Microblading', 'Nano-Strokes', 'Powder Finish'],
     process: [
       { step: 'Consultation', description: 'We map your face and select pigments that harmonize with your skin undertones.' },
@@ -53,7 +53,7 @@ const services = [
     price: '$450+',
     shortDescription: 'From lash enhancement to a soft winged liner, we create a timeless look.',
     description: 'An eye-defining service that eliminates the struggle of daily asymmetric eyeliner. Whether you desire a subtle lash enhancement that makes your lashes look twice as thick, or a soft, smudged wing for a permanent "smoky" look, we tailor the depth and thickness to your eye shape.',
-    image: 'https://images.unsplash.com/photo-1541643600914-78b084683601?auto=format&fit=crop&q=80&w=800',
+    image: '/gallery/lash-enhancement-before-after.jpg',
     tags: ['Lash Enhancement', 'Soft Wing', 'Tightline'],
     process: [
       { step: 'Style Selection', description: 'We choose between a tight-line lash enhancement or a soft winged shadow look.' },
@@ -1105,10 +1105,10 @@ const galleryItems = [
 
 const InstagramFeed = () => {
   const posts = [
-    { id: 1, image: 'https://images.unsplash.com/photo-1596704017254-9b121068fb31', likes: '1.2k', comments: '42' },
-    { id: 2, image: 'https://images.unsplash.com/photo-1586790170083-2f9ceadc732d', likes: '890', comments: '18' },
-    { id: 3, image: 'https://images.unsplash.com/photo-1541643600914-78b084683601', likes: '2.5k', comments: '104' },
-    { id: 4, image: 'https://images.unsplash.com/photo-1512496015851-a90fb38ba796', likes: '1.1k', comments: '29' }
+    { id: 1, image: '/instagram/post-1.jpg', likes: '1.2k', comments: '42' },
+    { id: 2, image: '/instagram/post-2.jpg', likes: '890', comments: '18' },
+    { id: 3, image: '/instagram/post-3.jpg', likes: '2.5k', comments: '104' },
+    { id: 4, image: '/instagram/post-4.jpg', likes: '1.1k', comments: '29' }
   ];
 
   return (
