@@ -8,7 +8,7 @@ import { Menu, ArrowRight, Instagram, Facebook, Mail, Calendar, User, Star, X, C
 import { useState } from 'react';
 
 // --- Types ---
-type Page = 'home' | 'services' | 'gallery' | 'booking' | 'artist' | 'contact' | 'service-detail';
+type Page = 'home' | 'services' | 'gallery' | 'booking' | 'artist' | 'contact' | 'service-detail' | 'privacy';
 
 const services = [
   {
@@ -455,7 +455,9 @@ const Footer = ({ onNavigate }: { onNavigate: (page: Page) => void }) => (
         <h4 className="text-[10px] uppercase tracking-widest font-bold mb-6 opacity-30">Legal</h4>
         <ul className="space-y-3 text-sm">
            <li className="cursor-pointer hover:text-accent transition-colors">Booking Policy</li>
-           <li className="cursor-pointer hover:text-accent transition-colors">Privacy</li>
+           <li>
+             <button onClick={() => onNavigate('privacy')} className="cursor-pointer hover:text-accent transition-colors focus-visible:outline-accent">Privacy</button>
+           </li>
            <li className="cursor-pointer hover:text-accent transition-colors">Terms</li>
         </ul>
       </div>
@@ -471,6 +473,137 @@ const Footer = ({ onNavigate }: { onNavigate: (page: Page) => void }) => (
 );
 
 // --- Page Content ---
+const PrivacyPage = () => (
+  <div className="pt-24 min-h-screen bg-paper pb-32">
+    <div className="max-w-3xl mx-auto px-6 py-20">
+      <p className="text-accent text-[10px] uppercase tracking-[0.6em] mb-4 font-bold">Legal</p>
+      <h1 className="text-4xl md:text-6xl font-serif mb-4">Privacy Policy</h1>
+      <p className="text-[10px] uppercase tracking-widest font-bold opacity-40 mb-16">Last updated: May 12, 2026</p>
+
+      <div className="space-y-12 text-ink/70 leading-relaxed text-sm md:text-base">
+        <section>
+          <p>
+            Ashley Brows ("we", "our", "us") respects your privacy. This Privacy Policy explains
+            what information we collect when you visit our website or book a service with us,
+            how we use it, and the choices you have. The studio is operated by Ashley Miller and
+            based in Brighton, Michigan.
+          </p>
+        </section>
+
+        <section>
+          <h2 className="text-2xl font-serif text-ink mb-4">Information We Collect</h2>
+          <p className="mb-4">We collect information you provide directly to us, including:</p>
+          <ul className="space-y-2 list-disc pl-6">
+            <li><strong className="text-ink">Booking and consultation requests:</strong> your full name, email address, phone number, the service you are interested in, your preferred date and time, and any notes you choose to share about your goals or skin type.</li>
+            <li><strong className="text-ink">Contact form messages:</strong> your name, email, subject line, and the contents of your message.</li>
+            <li><strong className="text-ink">Communications:</strong> when you message us on Instagram, Facebook, or by email, we retain a record of the conversation.</li>
+          </ul>
+          <p className="mt-4">
+            We also automatically collect limited technical information when you visit the
+            site &mdash; for example, your IP address, device and browser type, and the pages
+            you view. This data helps us keep the site secure and understand how visitors
+            interact with it.
+          </p>
+        </section>
+
+        <section>
+          <h2 className="text-2xl font-serif text-ink mb-4">How We Use Your Information</h2>
+          <ul className="space-y-2 list-disc pl-6">
+            <li>To respond to consultation requests and confirm appointments.</li>
+            <li>To send appointment confirmations, reminders, and pre-care or aftercare instructions.</li>
+            <li>To answer questions you send through the contact form or social channels.</li>
+            <li>To maintain client records for ongoing care (for example, touch-up appointments and color history).</li>
+            <li>To improve the site, troubleshoot issues, and prevent abuse.</li>
+            <li>To comply with legal obligations.</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2 className="text-2xl font-serif text-ink mb-4">How We Share Your Information</h2>
+          <p className="mb-4">
+            We do not sell or rent your personal information. We share information only with
+            trusted service providers who help us operate the studio and this site &mdash; for
+            example, our website host, our email and form-processing tools, and our booking
+            and appointment software. These providers may only use your information to provide
+            their services to us.
+          </p>
+          <p>
+            We may also disclose information if required by law, or to protect the rights,
+            property, or safety of Ashley Brows, our clients, or others.
+          </p>
+        </section>
+
+        <section>
+          <h2 className="text-2xl font-serif text-ink mb-4">Cookies &amp; Analytics</h2>
+          <p>
+            The site may use cookies and similar technologies to remember your preferences and
+            measure aggregate site usage. You can disable cookies in your browser settings,
+            though some parts of the site may not function as expected without them.
+          </p>
+        </section>
+
+        <section>
+          <h2 className="text-2xl font-serif text-ink mb-4">Data Retention</h2>
+          <p>
+            We retain client records for as long as needed to provide our services to you and
+            for legitimate business or legal purposes (for example, supporting future touch-up
+            appointments). When information is no longer required, we delete or anonymize it.
+          </p>
+        </section>
+
+        <section>
+          <h2 className="text-2xl font-serif text-ink mb-4">Your Rights</h2>
+          <p className="mb-4">You have the right to:</p>
+          <ul className="space-y-2 list-disc pl-6">
+            <li>Request a copy of the personal information we hold about you.</li>
+            <li>Ask us to correct information that is inaccurate or incomplete.</li>
+            <li>Ask us to delete your information, subject to any obligations we may have to retain it.</li>
+            <li>Opt out of marketing communications at any time.</li>
+          </ul>
+          <p className="mt-4">
+            To exercise any of these rights, email us at the address below.
+          </p>
+        </section>
+
+        <section>
+          <h2 className="text-2xl font-serif text-ink mb-4">Children's Privacy</h2>
+          <p>
+            Our services are intended for adults. We do not knowingly collect information from
+            anyone under the age of 18. If you believe a minor has provided us with personal
+            information, please contact us so that we can remove it.
+          </p>
+        </section>
+
+        <section>
+          <h2 className="text-2xl font-serif text-ink mb-4">Security</h2>
+          <p>
+            We take reasonable steps to protect the information we collect against
+            unauthorized access, alteration, or disclosure. No internet transmission is ever
+            completely secure, however, and we cannot guarantee absolute security.
+          </p>
+        </section>
+
+        <section>
+          <h2 className="text-2xl font-serif text-ink mb-4">Changes to This Policy</h2>
+          <p>
+            We may update this Privacy Policy from time to time. When we do, we will revise
+            the "Last updated" date at the top of this page. Significant changes will be
+            communicated through the site or by email when appropriate.
+          </p>
+        </section>
+
+        <section>
+          <h2 className="text-2xl font-serif text-ink mb-4">Contact Us</h2>
+          <p>
+            Questions about this Privacy Policy or about how your information is handled?
+            Email us at <a href="mailto:ashleymbrows@gmail.com" className="text-accent hover:underline">ashleymbrows@gmail.com</a> &mdash; Ashley Brows, Brighton, Michigan.
+          </p>
+        </section>
+      </div>
+    </div>
+  </div>
+);
+
 const ContactPage = () => {
   const [formData, setFormData] = useState({
     name: '',
@@ -1332,6 +1465,7 @@ export default function App() {
        case 'services': return <Services onSelectService={handleSelectService} />;
        case 'artist': return <ArtistPage />;
        case 'contact': return <ContactPage />;
+       case 'privacy': return <PrivacyPage />;
        case 'service-detail': return <ServiceDetailPage service={selectedService} onNavigate={setCurrentPage} />;
        default: return <HomePage onNavigate={setCurrentPage} onSelectService={handleSelectService} />;
     }
