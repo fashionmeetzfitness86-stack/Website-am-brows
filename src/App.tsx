@@ -275,7 +275,7 @@ const Hero = ({ onNavigate }: { onNavigate: (page: Page) => void }) => (
       transition={{ delay: 1.2 }}
       className="absolute bottom-12 left-12 hidden lg:flex flex-col gap-6"
     >
-      <a href="https://www.instagram.com/ashleymbrows" target="_blank" rel="noopener noreferrer" className="text-ink/30 hover:text-accent transition-colors">
+      <a href="https://www.instagram.com/ashleymbrows?igsh=YXQyM290NW1uMG9n" target="_blank" rel="noopener noreferrer" className="text-ink/30 hover:text-accent transition-colors">
         <Instagram className="w-5 h-5" />
       </a>
       <a href="https://www.facebook.com/ashleymbrows" target="_blank" rel="noopener noreferrer" className="text-ink/30 hover:text-accent transition-colors">
@@ -421,7 +421,7 @@ const Footer = ({ onNavigate }: { onNavigate: (page: Page) => void }) => (
            Artistry in Permanent Beauty. A sanctuary for the modern individual seeking timeless refinement.
          </p>
          <div className="flex gap-4 mt-8">
-            <a href="https://www.instagram.com/ashleymbrows" target="_blank" rel="noopener noreferrer" aria-label="Follow us on Instagram">
+            <a href="https://www.instagram.com/ashleymbrows?igsh=YXQyM290NW1uMG9n" target="_blank" rel="noopener noreferrer" aria-label="Follow us on Instagram">
               <Instagram className="w-5 h-5 opacity-50 hover:opacity-100 cursor-pointer transition-opacity focus-visible:outline-accent" />
             </a>
             <a href="https://www.facebook.com/ashleymbrows" target="_blank" rel="noopener noreferrer" aria-label="Follow us on Facebook">
@@ -560,7 +560,7 @@ const ContactPage = () => {
             <div>
                <h4 className="text-[10px] uppercase tracking-[0.3em] font-bold opacity-30 mb-4">Follow Our Work</h4>
                <div className="flex gap-6">
-                <a href="https://www.instagram.com/ashleymbrows" target="_blank" rel="noopener noreferrer" aria-label="Instagram Profile" className="text-ink/40 hover:text-accent transition-colors focus-visible:outline-accent">
+                <a href="https://www.instagram.com/ashleymbrows?igsh=YXQyM290NW1uMG9n" target="_blank" rel="noopener noreferrer" aria-label="Instagram Profile" className="text-ink/40 hover:text-accent transition-colors focus-visible:outline-accent">
                   <Instagram className="w-6 h-6" />
                 </a>
                 <a href="https://www.facebook.com/ashleymbrows" target="_blank" rel="noopener noreferrer" aria-label="Facebook Page" className="text-ink/40 hover:text-accent transition-colors focus-visible:outline-accent">
@@ -1066,37 +1066,37 @@ const galleryCategories = ['All', 'Signature Brows', 'Lip Blush', 'Defining Line
 
 const galleryItems = [
   {
-    image: 'https://images.unsplash.com/photo-1596704017254-9b121068fb31',
+    image: '/gallery/brows-nano-portrait.jpg',
     title: 'Signature Stroke Restoration',
     category: 'Signature Brows',
     description: '2.5 Hour Procedure • Signature Stroke'
   },
   {
-    image: 'https://images.unsplash.com/photo-1586790170083-2f9ceadc732d',
+    image: '/gallery/lip-blush-before-healed.jpg',
     title: 'Nude Velvet Blush',
     category: 'Lip Blush',
     description: '2 Hour Procedure • Sheer Application'
   },
   {
-    image: 'https://images.unsplash.com/photo-1541643600914-78b084683601',
+    image: '/gallery/brows-before-after.jpg',
     title: 'Architectural Lamination',
     category: 'Signature Brows',
     description: '1.5 Hour Procedure • Hybrid Technique'
   },
   {
-    image: 'https://images.unsplash.com/photo-1512496015851-a90fb38ba796',
+    image: '/gallery/lash-enhancement-before-after.jpg',
     title: 'Ethereal Wing',
     category: 'Defining Liner',
     description: '2 Hour Procedure • Soft Shading'
   },
   {
-    image: 'https://images.unsplash.com/photo-1594824476967-48c8b964273f',
+    image: '/gallery/lip-blush-glossy.jpg',
     title: 'Full Satin Lips',
     category: 'Lip Blush',
     description: '2.5 Hour Procedure • Saturated Tint'
   },
   {
-    image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2',
+    image: '/gallery/powder-brows-portrait.jpg',
     title: 'Feathered Arch',
     category: 'Signature Brows',
     description: '3 Hour Procedure • Nano Strokes'
@@ -1119,7 +1119,7 @@ const InstagramFeed = () => {
             <p className="text-accent text-[10px] uppercase tracking-[0.6em] mb-4 font-bold">Social Connection</p>
             <h2 className="text-4xl md:text-5xl font-serif">Latest from @ashleymbrows</h2>
           </div>
-          <a href="https://www.instagram.com/ashleymbrows" target="_blank" rel="noopener noreferrer" className="px-8 py-4 border border-ink/10 text-[10px] uppercase tracking-widest font-bold hover:bg-accent hover:text-paper transition-all">
+          <a href="https://www.instagram.com/ashleymbrows?igsh=YXQyM290NW1uMG9n" target="_blank" rel="noopener noreferrer" className="px-8 py-4 border border-ink/10 text-[10px] uppercase tracking-widest font-bold hover:bg-accent hover:text-paper transition-all">
             Follow Studio
           </a>
         </div>
@@ -1127,7 +1127,7 @@ const InstagramFeed = () => {
           {posts.map((post) => (
             <motion.a 
               key={post.id}
-              href="https://www.instagram.com/ashleymbrows"
+              href="https://www.instagram.com/ashleymbrows?igsh=YXQyM290NW1uMG9n"
               target="_blank"
               rel="noopener noreferrer"
               whileHover={{ y: -10 }}
