@@ -209,7 +209,7 @@ const Navbar = ({ onNavigate, currentPage }: { onNavigate: (page: Page) => void,
 );
 
 const Hero = ({ onNavigate }: { onNavigate: (page: Page) => void }) => (
-  <section className="relative flex flex-col items-center justify-center text-center px-6 overflow-hidden pt-40 pb-24">
+  <section className="relative flex flex-col items-center justify-center text-center px-6 overflow-hidden pt-40 pb-6">
     <motion.p 
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
