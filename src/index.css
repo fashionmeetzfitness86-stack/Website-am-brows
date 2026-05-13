@@ -6,11 +6,12 @@
   --font-display: 'Playfair Display', serif;
   --font-serif: 'Cormorant Garamond', serif;
 
-  --color-paper: #f9f7f4;
-  --color-ink: #2a241e;
-  --color-accent: #8b6b4a;
-  --color-accent-light: #d4c4b5;
-  --color-warm-gray: #e6e1db;
+  --color-paper: #FAF7F3;
+  --color-paper-dark: #F2EDE6;
+  --color-ink: #3B2A1A;
+  --color-accent: #936639;
+  --color-accent-light: #EDE3D8;
+  --color-warm-gray: #E8E0D5;
 }
 
 @layer base {
