@@ -14,56 +14,53 @@ const services = [
   {
     id: 'brows',
     title: 'Signature Brows',
-    price: '$650+',
-    shortDescription: 'A sophisticated fusion of Microblading and Ombre Shading.',
-    description: 'Our Signature Brows are the gold standard in facial architecture. Using a proprietary "Mapping of the Golden Ratio", we align your new brows with your unique orbital bone structure. This procedure combines the precision of hyper-real nano-strokes with the soft, ethereal gradient of powder shading. The result is a brow that looks completely authentic in natural sunlight, but possesses the polished definition of a professional makeup application.',
+    price: '$650',
+    shortDescription: 'Soft, shaded brows for a polished makeup-style finish.',
+    description: 'Our most popular brow service. Done with a single-needle tattoo machine that layers small pixels of pigment into the skin until the desired saturation is achieved. Can be bold and defined to your preference, or softly shaded with no harsh edges for a natural makeup look. Best suited for all skin types &mdash; especially oily and mature skin. Does not include touch-up.',
     image: '/gallery/brows-before-after.jpg',
-    tags: ['Microblading', 'Nano-Strokes', 'Powder Finish'],
+    tags: ['Powder Finish', 'All Skin Types', 'Most Popular'],
     process: [
       { step: 'Consultation', description: 'We map your face and select pigments that harmonize with your skin undertones.' },
-      { step: 'Procedure', description: 'A 2.5-hour meticulous session using single-use, medical-grade tools.' },
-      { step: 'Heal & Reveal', description: 'A 6-week healing period followed by a complimentary perfection touch-up.' }
+      { step: 'Procedure', description: 'A 2 to 2.5 hour session including drawing, numbing, treatment and aftercare instructions.' },
+      { step: 'Perfection Session', description: 'A follow-up at 6 to 12 weeks ($150) reinforces any imperfections from the heal.' }
     ],
     testimonials: [
-      { author: 'Elena Rodriguez', text: 'Ashley didn\'t just give me brows; she restored a sense of symmetry I hadn\'t seen in decades.' },
-      { author: 'Sarah Jenkins', text: 'The result is so natural my own mother couldn\'t tell. Meticulous and graceful work.' }
+      { author: 'Cindy', text: 'After seeing another senior with beautiful brows created by Ashley I had to give it a try. The result was outstanding. It is remarkable how the brows have so much depth and beauty.' },
+      { author: 'Kyla', text: 'Ashley is by far one of the best when it comes to brows. She listens to her clients, gives her honest opinion, and her work is flawless. I have had so many compliments on my brows.' }
     ]
   },
   {
     id: 'lips',
     title: 'Ashley M. Lip Blush',
-    price: '$550+',
-    shortDescription: 'Enhance your natural lip color and redefine the vermillion border.',
-    description: 'This is not your average "lip tattoo". Our Lip Blush technique focuses on sheer layers of pigment that create a healthy, youthful glow. We specialize in modifying the vermillion border subtly to create the illusion of fuller lips without the need for fillers. It is the ultimate "your lips but better" treatment.',
+    price: '$650',
+    shortDescription: 'A wash of color restored to your lips &mdash; fuller, defined, youthful.',
+    description: 'Lip Blush (or "watercolor lips") is another form of cosmetic tattooing. Immediate results look bright, bold and lipstick-like but heal down to a tint/stain. A wash of restored color can make lips appear fuller, more defined and more youthful. Great for covering fordyce spots, scars, pale lips, defining borders, correcting asymmetries and neutralizing dark pigmentation &mdash; all while staying within your natural vermillion border. Lasts 2 to 4 years.',
     image: '/lip-blush.webp',
-    tags: ['Sheer Tint', 'Contour', 'Anti-Aging'],
+    tags: ['Watercolor Lips', 'Defined Border', 'Lasts 2-4 Years'],
     process: [
-      { step: 'Color Theory', description: 'We analyze your lip health and naturally existing blue/purple tones to neutralize and enhance.' },
-      { step: 'Design', description: 'We redefine your cupids bow and corners to bring structural balance.' },
-      { step: 'Infusion', description: 'A gentle application that minimizes swelling and ensures even healing.' }
+      { step: 'Color Theory', description: 'We analyze your natural lip tones and neutralize any blue or purple where needed.' },
+      { step: 'Design', description: 'We define the borders, cupid\'s bow and corners while respecting your natural lip shape.' },
+      { step: 'Heal & Bloom', description: 'Lips heal in 5 to 7 days, then color blooms back through over a few weeks.' }
     ],
     testimonials: [
-      { author: 'Victoria Shin', text: 'The Lip Blush gave me back the color I lost with age. I look refreshed even when I just wake up.' },
-      { author: 'Chloe M.', text: 'Total game changer. My lips look fuller and the color is perfectly sheer.' }
+      { author: 'Tatjana', text: 'I have had my brows and lips done by her now and I am obsessed with both! Her attention to detail and meticulous eye makes for literal perfection.' },
+      { author: 'Carolyn', text: 'She was meticulous about getting my lips perfect and clearly skilled with the process. I left knowing what to expect in terms of healing and results. My lips look great!' }
     ]
   },
   {
     id: 'liner',
     title: 'Defining Liner',
-    price: '$450+',
-    shortDescription: 'From lash enhancement to a soft winged liner, we create a timeless look.',
-    description: 'An eye-defining service that eliminates the struggle of daily asymmetric eyeliner. Whether you desire a subtle lash enhancement that makes your lashes look twice as thick, or a soft, smudged wing for a permanent "smoky" look, we tailor the depth and thickness to your eye shape.',
+    price: '$400+',
+    shortDescription: 'From subtle lash enhancement to a softly shaded winged liner.',
+    description: 'Lash Enhancement ($400) is a thin tattooed line just between your lashes, making them appear darker and fuller at the base &mdash; very subtle, perfect for anyone not committed to daily eyeliner. Shaded Lash Enhancement ($450) adds thickness for a simple eyeliner look. Shaded Eyeliner ($550) is a softly shaded winged liner using three blended tones for a seamless finish, customized to your eye shape. Bottom/lower-lid eyeliner is not offered at this time.',
     image: '/gallery/lash-enhancement-before-after.jpg',
-    tags: ['Lash Enhancement', 'Soft Wing', 'Tightline'],
+    tags: ['Lash Enhancement', 'Soft Wing', '3 Blended Tones'],
     process: [
-      { step: 'Style Selection', description: 'We choose between a tight-line lash enhancement or a soft winged shadow look.' },
-      { step: 'Symmetry Check', description: 'Using digital tools to ensure perfectly mirrored results.' },
-      { step: 'Pigment Fill', description: 'Working between the lashes to create a dense, natural-looking lash line.' }
+      { step: 'Style Selection', description: 'We pick the depth, thickness and shape that suits your eye and lifestyle.' },
+      { step: 'Symmetry Check', description: 'Mirror-perfect alignment confirmed before any pigment is laid down.' },
+      { step: 'Pigment Fill', description: 'Worked between or above the lashes for a dense, natural-looking line or wing.' }
     ],
-    testimonials: [
-      { author: 'Sarah Jenkins', text: 'Masterful work. My eyes look so much brighter and more awake.' },
-      { author: 'Linda K.', text: 'The soft wing is perfection. It saves me so much time every morning.' }
-    ]
+    testimonials: []
   }
 ];
 
@@ -90,21 +87,21 @@ const artists = [
 
 const testimonials = [
   {
-    author: 'Elena Rodriguez',
-    role: 'Creative Director',
-    text: 'Ashley\'s clinical mastery is evident from the first moment. She didn\'t just give me brows; she restored a sense of symmetry I hadn\'t seen in decades. It is true high-art.',
+    author: 'Cindy',
+    role: 'Brows Client',
+    text: 'After seeing another "senior" with beautiful brows created by Ashley I had to give it a try. The result was outstanding. It is remarkable how the brows have so much depth and beauty. It really helps to define the face when brows are completely gone or not full.',
     rating: 5
   },
   {
-    author: 'Sarah Jenkins',
-    role: 'Private Pilot',
-    text: 'I was nervous about the clinical aspect, but the Ashley M. studio is a sanctuary. The result is so natural my own mother couldn\'t tell. Meticulous and graceful work.',
+    author: 'Tatjana',
+    role: 'Brows & Lip Blush Client',
+    text: 'Ashley is the best around. I have had my brows and lips done by her now and I am obsessed with both! Her attention to detail and VERY meticulous eye and application makes for literal perfection. She made it so comfortable with all her knowledge of everything &mdash; answered every little question I had and put my nerves at ease.',
     rating: 5
   },
   {
-    author: 'Victoria Shin',
-    role: 'Collector',
-    text: 'The Architectural Lift was a revelation. It subtly re-contoured my face in a way I didn\'t think possible without surgery. Ashley is a master technician.',
+    author: 'Cynthia',
+    role: 'Powder Brows Client',
+    text: 'Ashley did such a great job on my powder brows! I had {not so great} microblading done previously. She reshaped and made my brows perfectly symmetrical. You can tell she wants your brows to be perfection! She sets expectations right away and gives detailed instructions on aftercare and what to expect as they heal. Don\'t go to anyone else for this procedure!',
     rating: 5
   }
 ];
@@ -112,19 +109,19 @@ const testimonials = [
 const faqs = [
   {
     question: "How long does permanent makeup last?",
-    answer: "Typically, results last between 1 to 3 years. Factors such as skin type (oily vs. dry), sun exposure, and lifestyle can affect longevity. We recommend a color boost every 12-18 months to maintain vibrancy."
+    answer: "Brow results typically last 1 to 3 years, depending on lifestyle, skin type, age, medication and sun exposure. Lip blush lasts 2 to 4 years. We recommend an annual or periodic touch-up to keep things looking fresh."
   },
   {
     question: "Does the procedure hurt?",
-    answer: "We prioritize your comfort. A high-quality topical anesthetic is applied before and during the procedure to minimize discomfort. Most clients describe the sensation as a light scratch or vibration."
+    answer: "Two topical anesthetics are available on-site to minimize discomfort. Per current Michigan regulations, numbing with lidocaine up to 5% requires a valid doctor's note and prescription. Brows and lip blush can be performed without numbing if preferred."
   },
   {
     question: "What is the healing process like?",
-    answer: "Initial healing takes about 7-10 days. You may experience slight redness and darkening of the pigment, followed by soft flaking. The true color settles after 6 weeks, which is when we perform your perfection touch-up."
+    answer: "Initial redness and inflammation subside quickly. Your tattoo may appear bold or darker than anticipated &mdash; this is completely normal. Most healing occurs in 7 to 10 days, with total healing around 4 weeks. Lips heal faster, in roughly 5 to 7 days, but take a few weeks for the color to bloom back through."
   },
   {
-    question: "Am I a good candidate for Microblading?",
-    answer: "Microblading is ideal for normal to dry skin. For those with oily skin or large pores, we recommend 'Nano-Strokes' or a 'Powder Finish', as these techniques offer better pigment retention and long-term clarity."
+    question: "Do I need a touch-up?",
+    answer: "Yes. Cosmetic tattoos are a two-step process. A follow-up perfection session at 6 to 12 weeks reinforces pigment and allows for adjustments. After that, periodic touch-ups every 1 to 3 years keep the work looking sharp."
   }
 ];
 
@@ -238,16 +235,16 @@ const Hero = ({ onNavigate }: { onNavigate: (page: Page) => void }) => (
       transition={{ duration: 1, ease: 'easeOut' }}
       className="text-5xl md:text-8xl font-serif leading-[1.1] mb-8 max-w-4xl"
     >
-      Mastery in <br />
-      <span className="italic font-normal opacity-90">Permanent Artistry</span>
+      Cosmetic <br />
+      <span className="italic font-normal opacity-90">Tattoo</span>
     </motion.h1>
-    <motion.p 
+    <motion.p
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ delay: 0.5 }}
       className="max-w-xl text-ink/60 leading-relaxed mb-12 text-sm md:text-base font-sans"
     >
-      Clinical precision meets high-fashion editorial aesthetics. Redefining facial architecture through twelve years of specialized technique.
+      Permanent makeup in Brighton, Michigan. Brows, lip blush, lashes, eyeliner and decorative work — meticulous, customized, and made to look like you.
     </motion.p>
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
@@ -312,24 +309,24 @@ const About = () => (
          initial={{ opacity: 0, x: 20 }}
          whileInView={{ opacity: 1, x: 0 }}
        >
-         <p className="text-[10px] uppercase tracking-[0.5em] text-accent mb-6 font-bold">Provenance</p>
-         <h2 className="text-4xl md:text-6xl font-serif mb-8 leading-tight">12+ Years of <br /> Mastery</h2>
+         <p className="text-[10px] uppercase tracking-[0.5em] text-accent mb-6 font-bold">The Studio</p>
+         <h2 className="text-4xl md:text-6xl font-serif mb-8 leading-tight">Permanent Makeup, <br /> Done Right</h2>
          <div className="space-y-6 text-ink/70 leading-relaxed font-sans">
            <p>
-             Ashley Miller has spent over a decade perfecting the delicate intersection of clinical safety and high-art facial enhancement. Her journey began in corrective medical pigmentation, evolving into a world-renowned signature style defined by restraint and anatomical respect.
+             Ashley Brows is a private permanent makeup studio in Brighton, Michigan, run by Ashley Miller. The work is meticulous, the consultations honest, and the goal is always the same: results that look like you, only better.
            </p>
            <p>
-             Every procedure is treated as a unique architectural study—balancing facial symmetry with the client\'s innate bone structure to create results that are imperceptible yet transformative.
+             Cosmetic tattoos are always a two-step process. Your follow-up perfection session at 6 to 12 weeks reinforces any imperfections from the healing process &mdash; only after that touch-up is your treatment complete.
            </p>
          </div>
          <div className="mt-12 flex gap-12">
             <div>
-              <p className="text-2xl font-serif">4,500+</p>
-              <p className="text-[10px] uppercase tracking-widest font-bold opacity-40">Procedures Completed</p>
+              <p className="text-2xl font-serif">Brighton, MI</p>
+              <p className="text-[10px] uppercase tracking-widest font-bold opacity-40">Studio Location</p>
             </div>
             <div>
-              <p className="text-2xl font-serif">15</p>
-              <p className="text-[10px] uppercase tracking-widest font-bold opacity-40">Global Certifications</p>
+              <p className="text-2xl font-serif">All Skin Types</p>
+              <p className="text-[10px] uppercase tracking-widest font-bold opacity-40">Welcomed</p>
             </div>
          </div>
        </motion.div>
@@ -889,12 +886,12 @@ const HomePage = ({ onNavigate, onSelectService }: { onNavigate: (page: Page) =>
     <section className="bg-paper py-24 px-6 overflow-hidden">
        <div className="flex flex-col md:flex-row items-center gap-20 max-w-7xl mx-auto">
           <div className="flex-1">
-             <h2 className="text-4xl md:text-7xl font-serif italic mb-8">Architectural <br /> Enhancement</h2>
+             <h2 className="text-4xl md:text-7xl font-serif italic mb-8">A Two-Step <br /> Process</h2>
              <p className="text-ink/60 max-w-md leading-relaxed mb-8">
-                We approach the face not as a canvas for makeup, but as a structure to be optimized. By respecting natural proportions, we create results that heal beautifully and age with grace.
+                Permanent makeup heals in waves &mdash; redness softens, color blooms, the tattoo settles. Your initial session shapes the look; the perfection session at 6 to 12 weeks refines it. Only together do they become the final result.
              </p>
              <button onClick={() => onNavigate('artist')} className="group flex items-center gap-4 text-[10px] uppercase tracking-[0.4em] font-bold">
-                Meet the artists <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                Meet Ashley <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
              </button>
           </div>
           <div className="flex-1 relative">
@@ -914,7 +911,7 @@ const HomePage = ({ onNavigate, onSelectService }: { onNavigate: (page: Page) =>
     <FAQSection />
     <section className="py-40 bg-accent-light px-6 text-center">
        <h2 className="text-5xl md:text-8xl font-serif mb-12">Begin Your <br /> Transformation</h2>
-       <p className="max-w-xl mx-auto text-ink/70 mb-12">Consultations with Ashley Miller are limited to four per month to ensure dedicated attention to every facial architecture study.</p>
+       <p className="max-w-xl mx-auto text-ink/70 mb-12">Booking is by request. Pick a service, send Ashley a few details about your goals, and she will follow up to confirm your appointment and walk you through pre-care.</p>
        <button onClick={() => onNavigate('booking')} className="px-16 py-6 bg-accent text-paper text-xs uppercase tracking-widest font-bold shadow-2xl hover:scale-105 transition-transform">
           Secure A Consultation
        </button>
