@@ -288,9 +288,9 @@ const About = () => (
          className="relative aspect-[3/4] bg-warm-gray overflow-hidden"
        >
          <img 
-           src="https://images.unsplash.com/photo-1594824476967-48c8b964273f?auto=format&fit=crop&q=80&w=1200" 
-           alt="Mastery" 
-           className="w-full h-full object-cover grayscale-[20%]"
+           src="/ashley-portrait.jpg"
+           alt="Ashley Miller"
+           className="w-full h-full object-cover"
          />
        </motion.div>
        <motion.div
