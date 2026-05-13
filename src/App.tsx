@@ -168,45 +168,116 @@ const FAQSection = () => {
 
 // --- Components ---
 
-const Navbar = ({ onNavigate, currentPage }: { onNavigate: (page: Page) => void, currentPage: Page }) => (
-  <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 bg-paper/80 backdrop-blur-md border-b border-ink/5" aria-label="Main Navigation">
-    <div className="flex items-center gap-4">
-      <button 
-        className="md:hidden p-2 focus-visible:outline-accent" 
-        aria-label="Toggle Menu"
-      >
-        <Menu className="w-5 h-5" />
-      </button>
-      <button 
-        onClick={() => onNavigate('home')}
-        className="text-xl font-display uppercase tracking-[0.2em] cursor-pointer focus-visible:outline-accent"
-        aria-label="Ashley M. Brows Home"
-      >
-        Ashley M. Brows
-      </button>
-    </div>
-    <div className="hidden md:flex items-center gap-10">
-      {(['home', 'services', 'gallery', 'artist', 'contact'] as Page[]).map((p) => (
-        <button 
-          key={p}
-          onClick={() => onNavigate(p)}
-          aria-current={currentPage === p ? 'page' : undefined}
-          className={`text-[10px] uppercase tracking-[0.3em] font-bold transition-colors focus-visible:outline-accent px-2 py-1 ${currentPage === p ? 'text-accent' : 'text-ink/40 hover:text-ink'}`}
+const Navbar = ({ onNavigate, currentPage }: { onNavigate: (page: Page) => void, currentPage: Page }) => {
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const navigate = (page: Page) => {
+    onNavigate(page);
+    setMenuOpen(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const navLinks: Page[] = ['home', 'services', 'gallery', 'artist', 'contact'];
+
+  return (
+    <>
+      <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 bg-paper/90 backdrop-blur-md border-b border-ink/5" aria-label="Main Navigation">
+        <div className="flex items-center gap-4">
+          <button
+            className="md:hidden p-2 focus-visible:outline-accent"
+            aria-label={menuOpen ? 'Close Menu' : 'Open Menu'}
+            aria-expanded={menuOpen}
+            onClick={() => setMenuOpen(o => !o)}
+          >
+            <AnimatePresence mode="wait" initial={false}>
+              {menuOpen
+                ? <motion.span key="x" initial={{ rotate: -45, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}><X className="w-5 h-5" /></motion.span>
+                : <motion.span key="m" initial={{ rotate: 45, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}><Menu className="w-5 h-5" /></motion.span>
+              }
+            </AnimatePresence>
+          </button>
+          <button
+            onClick={() => navigate('home')}
+            className="text-xl font-display uppercase tracking-[0.2em] cursor-pointer focus-visible:outline-accent"
+            aria-label="Ashley M. Brows Home"
+          >
+            Ashley M. Brows
+          </button>
+        </div>
+        <div className="hidden md:flex items-center gap-10">
+          {navLinks.map((p) => (
+            <button
+              key={p}
+              onClick={() => navigate(p)}
+              aria-current={currentPage === p ? 'page' : undefined}
+              className={`text-[10px] uppercase tracking-[0.3em] font-bold transition-colors focus-visible:outline-accent px-2 py-1 ${currentPage === p ? 'text-accent' : 'text-ink/40 hover:text-ink'}`}
+            >
+              {p}
+            </button>
+          ))}
+        </div>
+        <button
+          onClick={() => navigate('booking')}
+          className="flex items-center gap-2 cursor-pointer group focus-visible:outline-accent"
+          aria-label="Book a consultation"
         >
-          {p}
+          <Calendar className="w-4 h-4 text-accent" />
+          <span className="text-[10px] uppercase tracking-widest font-bold group-hover:text-accent transition-colors">Book</span>
         </button>
-      ))}
-    </div>
-    <button 
-      onClick={() => onNavigate('booking')}
-      className="flex items-center gap-2 cursor-pointer group focus-visible:outline-accent"
-      aria-label="Book a consultation"
-    >
-      <Calendar className="w-4 h-4 text-accent" />
-      <span className="text-[10px] uppercase tracking-widest font-bold group-hover:text-accent transition-colors">Book</span>
-    </button>
-  </nav>
-);
+      </nav>
+
+      {/* Mobile menu overlay */}
+      <AnimatePresence>
+        {menuOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              key="backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.25 }}
+              className="fixed inset-0 z-40 bg-ink/30 backdrop-blur-sm md:hidden"
+              onClick={() => setMenuOpen(false)}
+            />
+            {/* Menu panel */}
+            <motion.div
+              key="panel"
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+              className="fixed top-[57px] left-0 right-0 z-40 bg-paper border-b border-ink/5 shadow-xl md:hidden px-8 py-10 flex flex-col gap-2"
+            >
+              {navLinks.map((p, i) => (
+                <motion.button
+                  key={p}
+                  initial={{ opacity: 0, x: -16 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.06, duration: 0.3 }}
+                  onClick={() => navigate(p)}
+                  className={`text-left py-4 border-b border-ink/5 text-sm uppercase tracking-[0.3em] font-bold transition-colors ${currentPage === p ? 'text-accent' : 'text-ink/60 hover:text-accent'}`}
+                >
+                  {p}
+                </motion.button>
+              ))}
+              <motion.button
+                initial={{ opacity: 0, x: -16 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: navLinks.length * 0.06 }}
+                onClick={() => navigate('booking')}
+                className="mt-6 w-full py-5 bg-accent text-paper text-[10px] uppercase tracking-[0.3em] font-bold hover:bg-ink transition-colors"
+              >
+                Book Consultation
+              </motion.button>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </>
+  );
+};
+
 
 const Hero = ({ onNavigate }: { onNavigate: (page: Page) => void }) => (
   <section className="relative flex flex-col items-center justify-center text-center px-6 overflow-hidden pt-40 pb-6">
