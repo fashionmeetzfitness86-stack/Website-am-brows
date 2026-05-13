@@ -471,10 +471,10 @@ const Footer = ({ onNavigate }: { onNavigate: (page: Page) => void }) => (
       </div>
     </div>
     <div className="max-w-7xl mx-auto mt-20 pt-8 border-t border-paper/10 text-[10px] uppercase tracking-widest font-bold opacity-30 text-center flex justify-between items-center">
-       <p>© 2024 Ashley M. Brows. Artistry in Every Stroke.</p>
+       <p>© 2026 Ashley M. Brows. Cosmetic Tattoo Artist.</p>
        <div className="flex gap-8">
-          <span>Austin, Texas</span>
-          <span>Europe</span>
+          <span>Brighton, Michigan</span>
+           <span>USA</span>
        </div>
     </div>
   </footer>
