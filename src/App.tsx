@@ -209,7 +209,7 @@ const Navbar = ({ onNavigate, currentPage }: { onNavigate: (page: Page) => void,
 );
 
 const Hero = ({ onNavigate }: { onNavigate: (page: Page) => void }) => (
-  <section className="relative h-screen flex flex-col items-center justify-center text-center px-6 overflow-hidden">
+  <section className="relative flex flex-col items-center justify-center text-center px-6 overflow-hidden pt-40 pb-24">
     <motion.p 
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
@@ -283,39 +283,51 @@ const About = () => (
   <section className="py-24 px-6 md:px-20 max-w-7xl mx-auto">
     <div className="grid md:grid-cols-2 gap-16 items-center">
        <motion.div 
-         initial={{ opacity: 0, x: -20 }}
-         whileInView={{ opacity: 1, x: 0 }}
-         className="relative aspect-[3/4] bg-warm-gray overflow-hidden"
+         initial={{ opacity: 0, x: -40, scale: 0.97 }}
+         whileInView={{ opacity: 1, x: 0, scale: 1 }}
+         viewport={{ once: true }}
+         transition={{ duration: 0.9, ease: 'easeOut' }}
+         className="relative aspect-[3/4] bg-warm-gray overflow-hidden shadow-2xl"
        >
          <img 
            src="/ashley-portrait.jpg"
            alt="Ashley Miller"
            className="w-full h-full object-cover"
          />
+         <motion.div
+           initial={{ scaleX: 1 }}
+           whileInView={{ scaleX: 0 }}
+           viewport={{ once: true }}
+           transition={{ duration: 0.8, ease: 'easeInOut', delay: 0.1 }}
+           style={{ originX: 0 }}
+           className="absolute inset-0 bg-paper pointer-events-none"
+         />
        </motion.div>
        <motion.div
-         initial={{ opacity: 0, x: 20 }}
+         initial={{ opacity: 0, x: 40 }}
          whileInView={{ opacity: 1, x: 0 }}
+         viewport={{ once: true }}
+         transition={{ duration: 0.9, ease: 'easeOut', delay: 0.1 }}
        >
-         <p className="text-[10px] uppercase tracking-[0.5em] text-accent mb-6 font-bold">The Studio</p>
-         <h2 className="text-4xl md:text-6xl font-serif mb-8 leading-tight">Permanent Makeup, <br /> Done Right</h2>
-         <div className="space-y-6 text-ink/70 leading-relaxed font-sans">
+         <motion.p initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.2 }} className="text-[10px] uppercase tracking-[0.5em] text-accent mb-6 font-bold">The Studio</motion.p>
+         <motion.h2 initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.3, duration: 0.7 }} className="text-4xl md:text-6xl font-serif mb-8 leading-tight">Permanent Makeup, <br /> Done Right</motion.h2>
+         <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 0.5 }} className="space-y-6 text-ink/70 leading-relaxed font-sans">
            <p>
              Ashley Brows is a private permanent makeup studio in Brighton, Michigan, run by Ashley Miller. The work is meticulous, the consultations honest, and the goal is always the same: results that look like you, only better.
            </p>
            <p>
              Cosmetic tattoos are always a two-step process. Your follow-up perfection session at 6 to 12 weeks reinforces any imperfections from the healing process &mdash; only after that touch-up is your treatment complete.
            </p>
-         </div>
+         </motion.div>
          <div className="mt-12 flex gap-12">
-            <div>
+            <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.6 }}>
               <p className="text-2xl font-serif">Brighton, MI</p>
               <p className="text-[10px] uppercase tracking-widest font-bold opacity-40">Studio Location</p>
-            </div>
-            <div>
+            </motion.div>
+            <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.75 }}>
               <p className="text-2xl font-serif">All Skin Types</p>
               <p className="text-[10px] uppercase tracking-widest font-bold opacity-40">Welcomed</p>
-            </div>
+            </motion.div>
          </div>
        </motion.div>
     </div>
@@ -333,9 +345,11 @@ const Services = ({ onSelectService }: { onSelectService: (service: any) => void
         {services.map((service, idx) => (
           <motion.button 
             key={idx}
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
-            transition={{ delay: idx * 0.1 }}
+            viewport={{ once: true }}
+            whileHover={{ y: -8, boxShadow: '0 20px 40px rgba(0,0,0,0.08)' }}
+            transition={{ delay: idx * 0.15, duration: 0.6, ease: 'easeOut' }}
             className="group cursor-pointer text-left w-full focus-visible:outline-accent"
             onClick={() => onSelectService(service)}
             aria-label={`View details for ${service.title}`}
@@ -370,18 +384,19 @@ const Services = ({ onSelectService }: { onSelectService: (service: any) => void
 
 const Testimonials = () => (
   <section className="py-24 px-6 max-w-5xl mx-auto">
-    <div className="text-center mb-16">
+    <motion.div className="text-center mb-16" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
        <p className="text-[10px] uppercase tracking-[0.5em] text-accent mb-4 font-bold">In Their Own Words</p>
        <h2 className="text-4xl md:text-5xl font-serif">The Client Perspective</h2>
-    </div>
+    </motion.div>
     <div className="grid md:grid-cols-3 gap-12">
       {testimonials.map((t, idx) => (
         <motion.div 
           key={idx}
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          transition={{ delay: idx * 0.2 }}
-          className="flex flex-col"
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ delay: idx * 0.2, duration: 0.7, ease: 'easeOut' }}
+          className="flex flex-col p-8 bg-white border border-ink/5 hover:shadow-xl transition-shadow duration-500"
         >
           <div className="flex gap-1 mb-8">
             {[...Array(t.rating)].map((_, i) => <Star key={i} className="w-3 h-3 fill-accent text-accent" />)}
@@ -709,7 +724,7 @@ const ContactPage = () => {
   return (
     <div className="pt-24 min-h-screen bg-paper pb-20">
       <div className="max-w-7xl mx-auto px-6 py-20 flex flex-col md:flex-row gap-20">
-        <div className="flex-1">
+        <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8 }} className="flex-1">
           <p className="text-accent text-[10px] uppercase tracking-[0.6em] mb-4 font-bold">Get In Touch</p>
           <h2 className="text-4xl md:text-7xl font-serif mb-12">Contact the Studio</h2>
           <p className="text-ink/70 leading-relaxed mb-12 max-w-md">
@@ -752,8 +767,8 @@ const ContactPage = () => {
                </div>
             </div>
           </div>
-        </div>
-        <div className="flex-1 bg-white p-8 md:p-12 shadow-sm">
+        </motion.div>
+        <motion.div initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8, delay: 0.15 }} className="flex-1 bg-white p-8 md:p-12 shadow-sm">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
               <label className="text-[10px] uppercase tracking-widest font-bold opacity-40">Your Name *</label>
@@ -806,7 +821,7 @@ const ContactPage = () => {
               Send Message
             </button>
           </form>
-        </div>
+        </motion.div>
       </div>
     </div>
   );
@@ -935,7 +950,7 @@ const HomePage = ({ onNavigate, onSelectService }: { onNavigate: (page: Page) =>
     <About />
     <section className="bg-paper py-24 px-6 overflow-hidden">
        <div className="flex flex-col md:flex-row items-center gap-20 max-w-7xl mx-auto">
-          <div className="flex-1">
+          <motion.div initial={{ opacity: 0, x: -40 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.9 }} className="flex-1">
              <h2 className="text-4xl md:text-7xl font-serif italic mb-8">A Two-Step <br /> Process</h2>
              <p className="text-ink/60 max-w-md leading-relaxed mb-8">
                 Permanent makeup heals in waves &mdash; redness softens, color blooms, the tattoo settles. Your initial session shapes the look; the perfection session at 6 to 12 weeks refines it. Only together do they become the final result.
@@ -943,7 +958,7 @@ const HomePage = ({ onNavigate, onSelectService }: { onNavigate: (page: Page) =>
              <button onClick={() => onNavigate('artist')} className="group flex items-center gap-4 text-[10px] uppercase tracking-[0.4em] font-bold">
                 Meet Ashley <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
              </button>
-          </div>
+          </motion.div>
           <div className="flex-1 relative">
              <motion.div 
                initial={{ scale: 1.1 }}
@@ -959,13 +974,15 @@ const HomePage = ({ onNavigate, onSelectService }: { onNavigate: (page: Page) =>
     <Services onSelectService={onSelectService} />
     <Testimonials />
     <FAQSection />
-    <section className="py-40 bg-accent-light px-6 text-center">
-       <h2 className="text-5xl md:text-8xl font-serif mb-12">Begin Your <br /> Transformation</h2>
-       <p className="max-w-xl mx-auto text-ink/70 mb-12">Booking is by request. Pick a service, send Ashley a few details about your goals, and she will follow up to confirm your appointment and walk you through pre-care.</p>
-       <button onClick={() => onNavigate('booking')} className="px-16 py-6 bg-accent text-paper text-xs uppercase tracking-widest font-bold shadow-2xl hover:scale-105 transition-transform">
-          Secure A Consultation
-       </button>
-       <p className="mt-8 opacity-40 text-[10px] uppercase font-bold tracking-widest">Current Waitlist: 6 Weeks</p>
+    <section className="py-40 bg-accent-light px-6 text-center overflow-hidden relative">
+       <motion.div initial={{ opacity: 0, y: 50 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.9 }}>
+         <h2 className="text-5xl md:text-8xl font-serif mb-12">Begin Your <br /> Transformation</h2>
+         <p className="max-w-xl mx-auto text-ink/70 mb-12">Booking is by request. Pick a service, send Ashley a few details about your goals, and she will follow up to confirm your appointment and walk you through pre-care.</p>
+         <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }} onClick={() => onNavigate('booking')} className="px-16 py-6 bg-accent text-paper text-xs uppercase tracking-widest font-bold shadow-2xl">
+            Secure A Consultation
+         </motion.button>
+         <p className="mt-8 opacity-40 text-[10px] uppercase font-bold tracking-widest">Current Waitlist: 6 Weeks</p>
+       </motion.div>
     </section>
   </>
 );
@@ -976,12 +993,21 @@ const BookingPage = () => {
   const [selectedDate, setSelectedDate] = useState<number | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<Record<string, any>>({
     fullName: '',
+    birthDate: '',
     email: '',
     phone: '',
+    referralSource: '',
+    policyAcknowledged: false,
+    healthConditions: [] as string[],
+    previousPMU: '',
+    skinType: '',
+    interestedServices: [] as string[],
     serviceType: '',
-    notes: ''
+    notes: '',
+    currentAreaPhoto: null as File | null,
+    referencePhoto: null as File | null,
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -995,10 +1021,10 @@ const BookingPage = () => {
       newErrors.email = 'Invalid email format';
     }
     if (!formData.phone.trim()) newErrors.phone = 'Phone is required';
-    if (!formData.serviceType) newErrors.serviceType = 'Service type is required';
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
+
   };
 
   const handleNext = () => {
@@ -1140,80 +1166,265 @@ const BookingPage = () => {
         {step === 3 && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
              <button onClick={() => setStep(2)} className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold opacity-40 hover:opacity-100 mb-8">
-                <ChevronLeft className="w-4 h-4" /> Back to schedule
+                <ChevronLeft className="w-4 h-4" /> Change Time
              </button>
-             <h2 className="text-4xl font-serif mb-12 text-center">Client Information</h2>
-             <div className="bg-white p-8 md:p-12 shadow-sm max-w-2xl mx-auto">
-                <div className="space-y-6">
-                   <div className="grid md:grid-cols-2 gap-6">
-                      <div className="space-y-2">
-                         <label className="text-[10px] uppercase tracking-widest font-bold opacity-40">Full Name *</label>
-                         <input 
-                           type="text"
-                           value={formData.fullName}
-                           onChange={(e) => setFormData({...formData, fullName: e.target.value})}
-                           className={`w-full p-4 bg-paper/30 border ${errors.fullName ? 'border-red-400' : 'border-ink/5'} focus:border-accent outline-none text-sm transition-colors`}
-                           placeholder="Enter your name"
-                         />
-                         {errors.fullName && <p className="text-red-500 text-[9px] uppercase font-bold tracking-widest">{errors.fullName}</p>}
-                      </div>
-                      <div className="space-y-2">
-                         <label className="text-[10px] uppercase tracking-widest font-bold opacity-40">Email Address *</label>
-                         <input 
-                           type="email"
-                           value={formData.email}
-                           onChange={(e) => setFormData({...formData, email: e.target.value})}
-                           className={`w-full p-4 bg-paper/30 border ${errors.email ? 'border-red-400' : 'border-ink/5'} focus:border-accent outline-none text-sm transition-colors`}
-                           placeholder="email@example.com"
-                         />
-                         {errors.email && <p className="text-red-500 text-[9px] uppercase font-bold tracking-widest">{errors.email}</p>}
-                      </div>
-                   </div>
-                   <div className="grid md:grid-cols-2 gap-6">
-                      <div className="space-y-2">
-                         <label className="text-[10px] uppercase tracking-widest font-bold opacity-40">Phone Number *</label>
-                         <input 
-                           type="tel"
-                           value={formData.phone}
-                           onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                           className={`w-full p-4 bg-paper/30 border ${errors.phone ? 'border-red-400' : 'border-ink/5'} focus:border-accent outline-none text-sm transition-colors`}
-                           placeholder="(555) 000-0000"
-                         />
-                         {errors.phone && <p className="text-red-500 text-[9px] uppercase font-bold tracking-widest">{errors.phone}</p>}
-                      </div>
-                      <div className="space-y-2">
-                         <label className="text-[10px] uppercase tracking-widest font-bold opacity-40">Service Type *</label>
-                         <select 
-                           value={formData.serviceType}
-                           onChange={(e) => setFormData({...formData, serviceType: e.target.value})}
-                           className={`w-full p-4 bg-paper/30 border ${errors.serviceType ? 'border-red-400' : 'border-ink/5'} focus:border-accent outline-none text-sm transition-colors appearance-none`}
-                         >
-                            <option value="">Select a service</option>
-                            <option value="Signature Brows">Signature Brows</option>
-                            <option value="Lip Blush">Lip Blush</option>
-                            <option value="Defining Liner">Defining Liner</option>
-                         </select>
-                         {errors.serviceType && <p className="text-red-500 text-[9px] uppercase font-bold tracking-widest">{errors.serviceType}</p>}
-                      </div>
+             <p className="text-accent text-[10px] uppercase tracking-[0.5em] font-bold text-center mb-2">Phase 03</p>
+             <h2 className="text-4xl font-serif mb-10 text-center">Client Consultation Form</h2>
+             <div className="bg-white p-8 md:p-12 shadow-sm">
+
+               {/* Section I — Identity & Reach */}
+               <div className="flex items-center gap-4 mb-8">
+                 <div className="w-8 h-8 rounded-full border border-ink/20 flex items-center justify-center text-[10px] font-bold text-ink/40">I</div>
+                 <h3 className="text-xl font-serif italic">Identity &amp; Reach</h3>
+               </div>
+               <div className="space-y-6 mb-10">
+                 <div className="grid md:grid-cols-2 gap-6">
+                   <div className="space-y-2">
+                     <label className="text-[10px] uppercase tracking-widest font-bold opacity-40">Full Name *</label>
+                     <input
+                       type="text"
+                       value={formData.fullName}
+                       onChange={(e) => setFormData({...formData, fullName: e.target.value})}
+                       className={`w-full p-4 bg-paper/30 border ${errors.fullName ? 'border-red-400' : 'border-ink/5'} focus:border-accent outline-none text-sm transition-colors`}
+                       placeholder="First &amp; Last Name"
+                     />
+                     {errors.fullName && <p className="text-red-500 text-[9px] uppercase font-bold tracking-widest">{errors.fullName}</p>}
                    </div>
                    <div className="space-y-2">
-                      <label className="text-[10px] uppercase tracking-widest font-bold opacity-40">Additional Notes</label>
-                      <textarea 
-                        rows={4}
-                        value={formData.notes}
-                        onChange={(e) => setFormData({...formData, notes: e.target.value})}
-                        className="w-full p-4 bg-paper/30 border border-ink/5 focus:border-accent outline-none text-sm transition-colors resize-none"
-                        placeholder="Tell us about your goals or skin type..."
-                      />
+                     <label className="text-[10px] uppercase tracking-widest font-bold opacity-40">Birth Date *</label>
+                     <input
+                       type="date"
+                       value={formData.birthDate ?? ''}
+                       onChange={(e) => setFormData({...formData, birthDate: e.target.value})}
+                       className="w-full p-4 bg-paper/30 border border-ink/5 focus:border-accent outline-none text-sm transition-colors"
+                     />
                    </div>
-                   <button 
-                     onClick={handleNext}
-                     className="w-full py-6 mt-8 bg-accent text-paper text-xs uppercase tracking-[0.2em] font-bold hover:bg-ink transition-colors shadow-xl"
-                   >
-                     Submit Consultation Request
-                   </button>
-                   <p className="text-center text-[9px] uppercase tracking-widest opacity-30">This is a non-binding request. Our team will verify availability.</p>
-                </div>
+                 </div>
+                 <div className="grid md:grid-cols-2 gap-6">
+                   <div className="space-y-2">
+                     <label className="text-[10px] uppercase tracking-widest font-bold opacity-40">Phone Number *</label>
+                     <input
+                       type="tel"
+                       value={formData.phone}
+                       onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                       className={`w-full p-4 bg-paper/30 border ${errors.phone ? 'border-red-400' : 'border-ink/5'} focus:border-accent outline-none text-sm transition-colors`}
+                       placeholder="(555) 000-0000"
+                     />
+                     {errors.phone && <p className="text-red-500 text-[9px] uppercase font-bold tracking-widest">{errors.phone}</p>}
+                   </div>
+                   <div className="space-y-2">
+                     <label className="text-[10px] uppercase tracking-widest font-bold opacity-40">Email Address *</label>
+                     <input
+                       type="email"
+                       value={formData.email}
+                       onChange={(e) => setFormData({...formData, email: e.target.value})}
+                       className={`w-full p-4 bg-paper/30 border ${errors.email ? 'border-red-400' : 'border-ink/5'} focus:border-accent outline-none text-sm transition-colors`}
+                       placeholder="email@example.com"
+                     />
+                     {errors.email && <p className="text-red-500 text-[9px] uppercase font-bold tracking-widest">{errors.email}</p>}
+                   </div>
+                 </div>
+                 <div className="space-y-2">
+                   <label className="text-[10px] uppercase tracking-widest font-bold opacity-40">How Did You Find Ashley M Brows? *</label>
+                   <input
+                     type="text"
+                     value={formData.referralSource ?? ''}
+                     onChange={(e) => setFormData({...formData, referralSource: e.target.value})}
+                     className="w-full p-4 bg-paper/30 border border-ink/5 focus:border-accent outline-none text-sm transition-colors"
+                     placeholder="Referral, Social Media, Web Search, etc."
+                   />
+                 </div>
+               </div>
+
+               <div className="border-t border-ink/5 my-10" />
+
+               {/* Section II — Health & Policies */}
+               <div className="flex items-center gap-4 mb-8">
+                 <div className="w-8 h-8 rounded-full border border-ink/20 flex items-center justify-center text-[10px] font-bold text-ink/40">II</div>
+                 <h3 className="text-xl font-serif italic">Health &amp; Policies</h3>
+               </div>
+               <div className="space-y-6 mb-10">
+                 <label className="flex items-start gap-4 cursor-pointer group">
+                   <input
+                     type="checkbox"
+                     checked={formData.policyAcknowledged ?? false}
+                     onChange={(e) => setFormData({...formData, policyAcknowledged: e.target.checked})}
+                     className="mt-1 w-4 h-4 accent-[var(--color-accent)] shrink-0"
+                   />
+                   <span className="text-sm">
+                     <span className="font-bold text-ink">Policies and Preparation Acknowledgment *</span>
+                     <br />
+                     <span className="text-ink/50 italic text-xs leading-relaxed">
+                       I understand that a non-refundable deposit is required to secure an appointment. I also acknowledge that I am responsible for reviewing all FAQ, pre/post-care instructions, and cancellation policies.
+                     </span>
+                   </span>
+                 </label>
+
+                 <div>
+                   <p className="text-[10px] uppercase tracking-widest font-bold opacity-40 mb-4">Health &amp; Skin Considerations (Select all that apply) *</p>
+                   <div className="grid md:grid-cols-2 gap-x-10 gap-y-4">
+                     {[
+                       'Pregnant or Breastfeeding',
+                       'Diabetes',
+                       'Blood thinner use',
+                       'History of keloid scarring',
+                       'Active acne, eczema, psoriasis, or dermatitis',
+                       'Recent Botox, filler, laser, or facial procedures',
+                       'Use of Accutane within the last year',
+                       'Current antibiotic use',
+                       'Recent sun exposure, tanning, or sunburn',
+                       'Cold Sore history (lip blush services)',
+                       'Current Lash serum use (eyeliner services)',
+                       'None of the above',
+                     ].map((condition) => (
+                       <label key={condition} className="flex items-center gap-3 cursor-pointer group">
+                         <input
+                           type="checkbox"
+                           checked={(formData.healthConditions ?? []).includes(condition)}
+                           onChange={(e) => {
+                             const current = formData.healthConditions ?? [];
+                             setFormData({
+                               ...formData,
+                               healthConditions: e.target.checked
+                                 ? [...current, condition]
+                                 : current.filter((c: string) => c !== condition)
+                             });
+                           }}
+                           className="w-4 h-4 accent-[var(--color-accent)] shrink-0"
+                         />
+                         <span className="text-sm text-ink/70 group-hover:text-ink transition-colors">{condition}</span>
+                       </label>
+                     ))}
+                   </div>
+                 </div>
+               </div>
+
+               <div className="border-t border-ink/5 my-10" />
+
+               {/* Section III — Aesthetic Vision */}
+               <div className="flex items-center gap-4 mb-8">
+                 <div className="w-8 h-8 rounded-full border border-ink/20 flex items-center justify-center text-[10px] font-bold text-ink/40">III</div>
+                 <h3 className="text-xl font-serif italic">Aesthetic Vision</h3>
+               </div>
+               <div className="space-y-6 mb-10">
+                 <div className="grid md:grid-cols-2 gap-6">
+                   <div className="space-y-2">
+                     <label className="text-[10px] uppercase tracking-widest font-bold opacity-40">Previous Permanent Makeup? *</label>
+                     <select
+                       value={formData.previousPMU ?? ''}
+                       onChange={(e) => setFormData({...formData, previousPMU: e.target.value})}
+                       className="w-full p-4 bg-paper/30 border border-ink/5 focus:border-accent outline-none text-sm transition-colors appearance-none"
+                     >
+                       <option value="">Please Select</option>
+                       <option value="No">No</option>
+                       <option value="Yes — by Ashley">Yes — by Ashley</option>
+                       <option value="Yes — by another artist">Yes — by another artist</option>
+                     </select>
+                   </div>
+                   <div className="space-y-2">
+                     <label className="text-[10px] uppercase tracking-widest font-bold opacity-40">Skin Type? *</label>
+                     <select
+                       value={formData.skinType ?? ''}
+                       onChange={(e) => setFormData({...formData, skinType: e.target.value})}
+                       className="w-full p-4 bg-paper/30 border border-ink/5 focus:border-accent outline-none text-sm transition-colors appearance-none"
+                     >
+                       <option value="">Please Select</option>
+                       <option value="Dry">Dry</option>
+                       <option value="Normal">Normal</option>
+                       <option value="Combination">Combination</option>
+                       <option value="Oily">Oily</option>
+                       <option value="Sensitive">Sensitive</option>
+                       <option value="Mature">Mature</option>
+                     </select>
+                   </div>
+                 </div>
+
+                 <div>
+                   <p className="text-[10px] uppercase tracking-widest font-bold opacity-40 mb-4">Interested Service(s) *</p>
+                   <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                     {[
+                       'Powder Brows',
+                       'Nano/Nano Fusion Brows',
+                       'Lip Blush',
+                       'Ombre Lip Blush',
+                       'Shaded Eyeliner',
+                       'Lash Line Enhancement',
+                     ].map((svc) => (
+                       <button
+                         key={svc}
+                         type="button"
+                         onClick={() => {
+                           const current = formData.interestedServices ?? [];
+                           setFormData({
+                             ...formData,
+                             interestedServices: current.includes(svc)
+                               ? current.filter((s: string) => s !== svc)
+                               : [...current, svc]
+                           });
+                         }}
+                         className={`py-4 px-3 border text-[10px] uppercase tracking-widest font-bold transition-colors text-center focus-visible:outline-accent ${(formData.interestedServices ?? []).includes(svc) ? 'border-accent bg-accent/5 text-accent' : 'border-ink/5 hover:border-accent/40 text-ink/40'}`}
+                       >
+                         {svc}
+                       </button>
+                     ))}
+                   </div>
+                 </div>
+
+                 <div className="space-y-2">
+                   <label className="text-[10px] uppercase tracking-widest font-bold opacity-40">Aesthetic Goals &amp; Concerns *</label>
+                   <textarea
+                     rows={4}
+                     value={formData.notes}
+                     onChange={(e) => setFormData({...formData, notes: e.target.value})}
+                     className="w-full p-4 bg-paper/30 border border-ink/5 focus:border-accent outline-none text-sm transition-colors resize-none"
+                     placeholder="Please share any thoughts, concerns, past experiences, or aesthetic goals regarding the area being tattooed..."
+                   />
+                 </div>
+
+                 {/* Clinical Media Uploads */}
+                 <div>
+                   <p className="text-[10px] uppercase tracking-widest font-bold opacity-40 mb-4">Clinical Media Uploads</p>
+                   <div className="grid md:grid-cols-2 gap-6">
+                     <label className="block cursor-pointer group">
+                       <input type="file" accept="image/*" className="hidden" onChange={(e) => setFormData({...formData, currentAreaPhoto: e.target.files?.[0] ?? null})} />
+                       <div className={`aspect-[4/3] border-2 border-dashed flex flex-col items-center justify-center gap-3 transition-colors ${formData.currentAreaPhoto ? 'border-accent bg-accent/5' : 'border-ink/10 hover:border-accent/40'}`}>
+                         {formData.currentAreaPhoto ? (
+                           <img src={URL.createObjectURL(formData.currentAreaPhoto as File)} alt="Current area" className="w-full h-full object-cover" />
+                         ) : (
+                           <>
+                             <Plus className="w-6 h-6 text-accent/60" />
+                             <p className="text-[10px] uppercase tracking-widest font-bold text-ink/40 text-center">Current Area Photo</p>
+                             <p className="text-[9px] uppercase tracking-widest font-bold text-ink/25 text-center">Makeup-Free, Natural Light</p>
+                           </>
+                         )}
+                       </div>
+                     </label>
+                     <label className="block cursor-pointer group">
+                       <input type="file" accept="image/*" className="hidden" onChange={(e) => setFormData({...formData, referencePhoto: e.target.files?.[0] ?? null})} />
+                       <div className={`aspect-[4/3] border-2 border-dashed flex flex-col items-center justify-center gap-3 transition-colors ${formData.referencePhoto ? 'border-accent bg-accent/5' : 'border-ink/10 hover:border-accent/40'}`}>
+                         {formData.referencePhoto ? (
+                           <img src={URL.createObjectURL(formData.referencePhoto as File)} alt="Reference" className="w-full h-full object-cover" />
+                         ) : (
+                           <>
+                             <Star className="w-6 h-6 text-accent/60" />
+                             <p className="text-[10px] uppercase tracking-widest font-bold text-ink/40 text-center">Reference Photo</p>
+                             <p className="text-[9px] uppercase tracking-widest font-bold text-ink/25 text-center">(Optional) Inspired Look</p>
+                           </>
+                         )}
+                       </div>
+                     </label>
+                   </div>
+                   <p className="text-center text-[9px] uppercase tracking-widest opacity-25 mt-4">Your photos are confidential and securely stored in our clinical database.</p>
+                 </div>
+               </div>
+
+               <button
+                 onClick={handleNext}
+                 className="w-full py-6 bg-ink text-paper text-xs uppercase tracking-[0.3em] font-bold hover:bg-accent transition-colors shadow-xl flex items-center justify-center gap-4"
+               >
+                 Submit Formal Request <ArrowRight className="w-4 h-4" />
+               </button>
+               <p className="text-center text-[9px] uppercase tracking-widest opacity-30 mt-4">Our concierge will contact you within 1-3 business days.</p>
              </div>
           </motion.div>
         )}
@@ -1460,31 +1671,32 @@ const GalleryPage = () => {
 const ArtistPage = () => (
   <div className="pt-24 min-h-screen bg-paper">
      <div className="max-w-7xl mx-auto px-6 py-20">
-        <div className="text-center mb-20">
+        <motion.div className="text-center mb-20" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
            <p className="text-accent text-[10px] uppercase tracking-[0.6em] mb-4 font-bold">Meet Your Artist</p>
            <h2 className="text-4xl md:text-6xl font-serif">The Hands Behind the Art</h2>
-        </div>
+        </motion.div>
         <div className="space-y-40">
            {artists.map((artist, idx) => (
              <div key={idx} className={`flex flex-col ${idx % 2 === 0 ? 'md:flex-row' : 'md:flex-row-reverse'} gap-20 items-center`}>
-                <div className="flex-1 aspect-[4/5] bg-warm-gray w-full max-w-md overflow-hidden relative shadow-2xl">
-                   <img src={artist.image} alt={artist.name} className="w-full h-full object-cover grayscale-[30%]" />
-                </div>
-                <div className="flex-1">
+                <motion.div initial={{ opacity: 0, x: idx % 2 === 0 ? -50 : 50 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 1, ease: 'easeOut' }} className="flex-1 aspect-[4/5] bg-warm-gray w-full max-w-md overflow-hidden relative shadow-2xl">
+                   <img src={artist.image} alt={artist.name} className="w-full h-full object-cover grayscale-[30%] hover:grayscale-0 transition-all duration-700" />
+                   <motion.div initial={{ scaleY: 1 }} whileInView={{ scaleY: 0 }} viewport={{ once: true }} transition={{ duration: 0.9, ease: 'easeInOut' }} style={{ originY: 0 }} className="absolute inset-0 bg-paper pointer-events-none" />
+                </motion.div>
+                <motion.div initial={{ opacity: 0, x: idx % 2 === 0 ? 50 : -50 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 1, ease: 'easeOut', delay: 0.1 }} className="flex-1">
                    <h3 className="text-4xl md:text-5xl font-serif mb-4 italic">{artist.name}</h3>
                    <p className="text-accent text-[10px] uppercase tracking-[0.4em] font-bold mb-8">{artist.role}</p>
                    <p className="text-ink/60 leading-relaxed text-lg mb-8">{artist.bio}. She approaches every face with the eye of a jeweler and the precision of a surgeon.</p>
                    <div className="flex gap-8 border-t border-ink/5 pt-8">
-                      <div>
+                      <motion.div initial={{ opacity: 0, y: 15 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.4 }}>
                          <p className="text-xl font-serif">8yrs</p>
                          <p className="text-[10px] uppercase font-bold opacity-30">Experience</p>
-                      </div>
-                      <div>
+                      </motion.div>
+                      <motion.div initial={{ opacity: 0, y: 15 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.55 }}>
                          <p className="text-xl font-serif">Global</p>
                          <p className="text-[10px] uppercase font-bold opacity-30">Certification</p>
-                      </div>
+                      </motion.div>
                    </div>
-                </div>
+                </motion.div>
              </div>
            ))}
         </div>
@@ -1527,10 +1739,10 @@ export default function App() {
         <AnimatePresence mode="wait">
           <motion.div
             key={currentPage}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.4, ease: "easeInOut" }}
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
           >
             {content()}
           </motion.div>
