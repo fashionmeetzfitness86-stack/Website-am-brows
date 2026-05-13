@@ -8,7 +8,7 @@ import { Menu, ArrowRight, Instagram, Facebook, Mail, Calendar, User, Star, X, C
 import { useState } from 'react';
 
 // --- Types ---
-type Page = 'home' | 'services' | 'gallery' | 'booking' | 'artist' | 'contact' | 'service-detail' | 'privacy';
+type Page = 'home' | 'services' | 'gallery' | 'booking' | 'artist' | 'contact' | 'service-detail' | 'privacy' | 'policies';
 
 const services = [
   {
@@ -68,20 +68,8 @@ const artists = [
   {
     name: 'Ashley Miller',
     role: 'Founder & Master Artist',
-    image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=800',
+    image: '/ashley-portrait.jpg',
     bio: 'Specializing in "The Signature Stroke", Ashley blends hyper-realism with editorial design for a timeless look.'
-  },
-  {
-    name: 'Sophia Chen',
-    role: 'Master of Nano-Strokes',
-    image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=800',
-    bio: 'Sophia\'s meticulous approach to machine-work delivers airy, pixelated textures for the modern, minimalist aesthetic.'
-  },
-  {
-    name: 'Marcus Vance',
-    role: 'Shadow & Light Expert',
-    image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=800',
-    bio: 'With a background in fine arts, Marcus excels in ombre shading and corrective work, prioritizing structural harmony.'
   }
 ];
 
@@ -278,7 +266,7 @@ const Hero = ({ onNavigate }: { onNavigate: (page: Page) => void }) => (
       <a href="https://www.facebook.com/ashleymbrows" target="_blank" rel="noopener noreferrer" className="text-ink/30 hover:text-accent transition-colors">
         <Facebook className="w-5 h-5" />
       </a>
-      <a href="mailto:concierge@ashleymbrows.com" className="text-ink/30 hover:text-accent transition-colors">
+      <a href="mailto:ashleymbrows@gmail.com" className="text-ink/30 hover:text-accent transition-colors">
         <Mail className="w-5 h-5" />
       </a>
     </motion.div>
@@ -424,7 +412,7 @@ const Footer = ({ onNavigate }: { onNavigate: (page: Page) => void }) => (
             <a href="https://www.facebook.com/ashleymbrows" target="_blank" rel="noopener noreferrer" aria-label="Follow us on Facebook">
               <Facebook className="w-5 h-5 opacity-50 hover:opacity-100 cursor-pointer transition-opacity focus-visible:outline-accent" />
             </a>
-            <a href="mailto:concierge@ashleymbrows.com" aria-label="Email studio concierge">
+            <a href="mailto:ashleymbrows@gmail.com" aria-label="Email studio concierge">
               <Mail className="w-5 h-5 opacity-50 hover:opacity-100 cursor-pointer transition-opacity focus-visible:outline-accent" />
             </a>
          </div>
@@ -451,7 +439,9 @@ const Footer = ({ onNavigate }: { onNavigate: (page: Page) => void }) => (
       <div>
         <h4 className="text-[10px] uppercase tracking-widest font-bold mb-6 opacity-30">Legal</h4>
         <ul className="space-y-3 text-sm">
-           <li className="cursor-pointer hover:text-accent transition-colors">Booking Policy</li>
+           <li>
+             <button onClick={() => onNavigate('policies')} className="cursor-pointer hover:text-accent transition-colors focus-visible:outline-accent">Booking Policy</button>
+           </li>
            <li>
              <button onClick={() => onNavigate('privacy')} className="cursor-pointer hover:text-accent transition-colors focus-visible:outline-accent">Privacy</button>
            </li>
@@ -601,6 +591,65 @@ const PrivacyPage = () => (
   </div>
 );
 
+const PoliciesPage = () => (
+  <div className="pt-24 min-h-screen bg-paper pb-32">
+    <div className="max-w-3xl mx-auto px-6 py-20">
+      <p className="text-accent text-[10px] uppercase tracking-[0.6em] mb-4 font-bold">Legal</p>
+      <h1 className="text-4xl md:text-6xl font-serif mb-4">Policies</h1>
+      <p className="text-[10px] uppercase tracking-widest font-bold opacity-40 mb-16">Please read carefully before booking</p>
+
+      <div className="space-y-6 text-ink/70 leading-relaxed text-sm md:text-base">
+        <ul className="space-y-4 list-disc pl-6">
+          <li>Under Body Art Licensure, <strong className="text-ink">no person</strong> under the age of 18 is allowed servicing &mdash; even with parental consent.</li>
+          <li><strong className="text-ink">Valid ID</strong> is required at the time of your service.</li>
+          <li>Guidelines are provided to achieve optimal results, but there are <strong className="text-ink">no guarantees</strong> due to different skin types reacting differently to procedures. Please check the FAQ section to make sure you are an eligible candidate. If you are unsure, please contact us.</li>
+          <li><strong className="text-ink">Deposits:</strong> a minimum of $100 deposit is required to book and is <strong className="text-ink">non-refundable</strong> under any circumstance. Your deposit goes towards the overall cost. This ensures you are serious about your appointment.</li>
+          <li>A minimum of <strong className="text-ink">48 hours</strong> is required to reschedule your appointment without penalty. Less than 48 hours will result in forfeiture of your deposit and a new deposit will be required to reschedule.</li>
+          <li><strong className="text-ink">One reschedule</strong> is allowed within the minimum time frame before a new deposit will be required.</li>
+          <li><strong className="text-ink">Any and all cancellations without notice</strong> will result in a charge of the full cost of the service to the card on file. A new deposit will be required to reschedule.</li>
+          <li>Being more than <strong className="text-ink">15 minutes late</strong> to your appointment can result in forfeiture of your deposit and/or cancellation of your appointment.</li>
+          <li>We accept all major credit cards, however <strong className="text-ink">cash is preferred</strong>. The remaining balance is due at the time of your appointment.</li>
+          <li>A minimum of <strong className="text-ink">2 sessions</strong> is highly recommended for desired results. Additional sessions may be needed.</li>
+          <li><strong className="text-ink">Touch-up appointments are for existing clientele only.</strong></li>
+          <li>Annual touch-ups must be completed before <strong className="text-ink">3 years</strong> from the initial session, otherwise full session pricing applies.</li>
+          <li>If you have previous work by another artist you <strong className="text-ink">must</strong> email clear photos of your brows (right, left, and both) in good lighting in order to be approved for booking &mdash; <a href="mailto:ashleymbrows@gmail.com" className="text-accent hover:underline">ashleymbrows@gmail.com</a>.</li>
+          <li>Pricing is subject to change at any time without notice at the artist&rsquo;s discretion.</li>
+          <li><strong className="text-ink">All transactions are final and no refunds will be issued.</strong></li>
+        </ul>
+
+        <section className="pt-12">
+          <h2 className="text-2xl font-serif text-ink mb-4">Permanent makeup CANNOT be performed if any of the below apply to you</h2>
+          <ul className="space-y-2 list-disc pl-6">
+            <li>Pregnant or breastfeeding</li>
+            <li>Under the age of 18</li>
+            <li>Accutane in the past year</li>
+            <li>Undergoing chemotherapy (consult your doctor)</li>
+            <li>Serious heart conditions</li>
+            <li>Skin irritations in the brow area (rashes, sunburn, acne, psoriasis)</li>
+            <li>Frequently sun tan</li>
+            <li>Prone to keloid scarring</li>
+            <li>Botox in the last 2 weeks</li>
+            <li>Chemical peel, laser or microneedling in the last 4 weeks</li>
+            <li>Allergy to Lidocaine, Tetracaine, or Epinephrine</li>
+            <li>Blood thinners (must be discontinued 24 hours before procedure: Aspirin, Niacin, Vitamin E, Fish Oil or Ibuprofen)</li>
+            <li>Hemophilia</li>
+            <li>Auto immune diseases</li>
+            <li>Diabetic (must have a doctor&rsquo;s note)</li>
+            <li>Any active infection</li>
+            <li>Non-compliant with aftercare instructions</li>
+          </ul>
+        </section>
+
+        <section className="pt-8">
+          <p>
+            Questions about any of the above? Email <a href="mailto:ashleymbrows@gmail.com" className="text-accent hover:underline">ashleymbrows@gmail.com</a> before booking.
+          </p>
+        </section>
+      </div>
+    </div>
+  </div>
+);
+
 const ContactPage = () => {
   const [formData, setFormData] = useState({
     name: '',
@@ -663,27 +712,28 @@ const ContactPage = () => {
         <div className="flex-1">
           <p className="text-accent text-[10px] uppercase tracking-[0.6em] mb-4 font-bold">Get In Touch</p>
           <h2 className="text-4xl md:text-7xl font-serif mb-12">Contact the Studio</h2>
+          <p className="text-ink/70 leading-relaxed mb-12 max-w-md">
+            Need additional help? Reach out! Fill out the form and we will be in touch.
+          </p>
           <div className="space-y-12">
             <div>
-              <h4 className="text-[10px] uppercase tracking-[0.3em] font-bold opacity-30 mb-4">Location</h4>
+              <h4 className="text-[10px] uppercase tracking-[0.3em] font-bold opacity-30 mb-4">Located Within</h4>
               <div className="flex items-start gap-4">
                 <MapPin className="w-5 h-5 text-accent mt-1" />
                 <p className="text-lg text-ink/80">
-                  120 Artisan Way, Suite 400<br />
-                  Austin, TX 78701
+                  Stay Gold Beauty<br />
+                  8105 Grand River Rd.<br />
+                  Brighton, MI 48114
                 </p>
               </div>
+              <p className="text-sm text-ink/50 mt-4 ml-9">Also available in Miami by appointment.</p>
             </div>
             <div>
               <h4 className="text-[10px] uppercase tracking-[0.3em] font-bold opacity-30 mb-4">Direct Contact</h4>
               <div className="space-y-4">
                 <div className="flex items-center gap-4">
-                  <Phone className="w-5 h-5 text-accent" />
-                  <p className="text-lg text-ink/80">(512) 555-0198</p>
-                </div>
-                <div className="flex items-center gap-4">
                   <Mail className="w-5 h-5 text-accent" />
-                  <p className="text-lg text-ink/80">concierge@ashleymbrows.com</p>
+                  <a href="mailto:ashleymbrows@gmail.com" className="text-lg text-ink/80 hover:text-accent transition-colors">ashleymbrows@gmail.com</a>
                 </div>
               </div>
             </div>
@@ -696,7 +746,7 @@ const ContactPage = () => {
                 <a href="https://www.facebook.com/ashleymbrows" target="_blank" rel="noopener noreferrer" aria-label="Facebook Page" className="text-ink/40 hover:text-accent transition-colors focus-visible:outline-accent">
                   <Facebook className="w-6 h-6" />
                 </a>
-                <a href="mailto:concierge@ashleymbrows.com" aria-label="Email studio" className="text-ink/40 hover:text-accent transition-colors focus-visible:outline-accent">
+                <a href="mailto:ashleymbrows@gmail.com" aria-label="Email studio" className="text-ink/40 hover:text-accent transition-colors focus-visible:outline-accent">
                   <Mail className="w-6 h-6" />
                 </a>
                </div>
@@ -1463,6 +1513,7 @@ export default function App() {
        case 'artist': return <ArtistPage />;
        case 'contact': return <ContactPage />;
        case 'privacy': return <PrivacyPage />;
+       case 'policies': return <PoliciesPage />;
        case 'service-detail': return <ServiceDetailPage service={selectedService} onNavigate={setCurrentPage} />;
        default: return <HomePage onNavigate={setCurrentPage} onSelectService={handleSelectService} />;
     }
