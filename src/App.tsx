@@ -334,7 +334,7 @@ const About = () => (
   </section>
 );
 
-const Services = ({ onSelectService }: { onSelectService: (service: any) => void }) => (
+const Services = ({ onSelectService, onNavigate }: { onSelectService: (service: any) => void, onNavigate: (page: any) => void }) => (
   <section className="py-24 bg-white px-6">
     <div className="max-w-7xl mx-auto">
       <div className="mb-20 text-center">
@@ -370,11 +370,17 @@ const Services = ({ onSelectService }: { onSelectService: (service: any) => void
             <p className="text-sm text-ink/60 leading-relaxed mb-6 line-clamp-2">
               {service.shortDescription}
             </p>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 mb-6">
               {service.tags.map(tag => (
                 <span key={tag} className="text-[9px] uppercase tracking-widest px-3 py-1 bg-paper font-bold text-ink/40">{tag}</span>
               ))}
             </div>
+            <button
+              onClick={(e) => { e.stopPropagation(); onNavigate('booking'); }}
+              className="w-full py-4 border border-ink/15 text-[10px] uppercase tracking-[0.3em] font-bold hover:bg-accent hover:text-paper hover:border-accent transition-all duration-300"
+            >
+              Book Now
+            </button>
           </motion.button>
         ))}
       </div>
@@ -971,7 +977,7 @@ const HomePage = ({ onNavigate, onSelectService }: { onNavigate: (page: Page) =>
           </div>
        </div>
     </section>
-    <Services onSelectService={onSelectService} />
+    <Services onSelectService={onSelectService} onNavigate={onNavigate} />
     <Testimonials />
     <FAQSection />
     <section className="py-40 bg-accent-light px-6 text-center overflow-hidden relative">
@@ -1721,7 +1727,7 @@ export default function App() {
        case 'home': return <HomePage onNavigate={setCurrentPage} onSelectService={handleSelectService} />;
        case 'booking': return <BookingPage />;
        case 'gallery': return <GalleryPage />;
-       case 'services': return <Services onSelectService={handleSelectService} />;
+       case 'services': return <Services onSelectService={handleSelectService} onNavigate={setCurrentPage} />;
        case 'artist': return <ArtistPage />;
        case 'contact': return <ContactPage />;
        case 'privacy': return <PrivacyPage />;
