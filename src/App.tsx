@@ -6,6 +6,11 @@
 import { motion, AnimatePresence } from 'motion/react';
 import { Menu, ArrowRight, Instagram, Facebook, Mail, Calendar, User, Star, X, ChevronRight, ChevronLeft, MapPin, Phone, Plus, Check, Clock, CreditCard, Shield, Sparkles } from 'lucide-react';
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { supabase } from './lib/supabase';
+import { loadStripe } from '@stripe/stripe-js';
+
+const stripePromise = loadStripe((import.meta as any).env.VITE_STRIPE_PUBLIC_KEY || 'pk_test_placeholder');
 
 import AdminDashboard from './AdminDashboard';
 
@@ -776,12 +781,14 @@ const ContactPage = () => {
     if (!validate()) return;
     setIsSubmitting(true);
     try {
-      await fetch(CONTACT_ENDPOINT, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        body: JSON.stringify(formData),
+      await supabase.from('contacts').insert({
+        name: formData.name,
+        email: formData.email,
+        interested_services: formData.subject,
+        message: formData.message,
+        status: 'New'
       });
-    } catch { /* show success regardless of network */ }
+    } catch (e) { console.error('Contact failed', e); }
     setIsSubmitting(false);
     setSubmitted(true);
   };
@@ -1163,19 +1170,23 @@ const BookingPage = ({ onNavigate }: { onNavigate: (page: Page) => void }) => {
     if (!validate()) return;
     setIsSubmitting(true);
     try {
-      await fetch(BOOKING_ENDPOINT, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        body: JSON.stringify({
-          service: selectedService?.title, price: selectedService?.price,
-          date: selectedDate ? fmtDate(selectedDate) : '', time: selectedTime,
-          ...formData,
-          healthConditions: (formData.healthConditions as string[]).join(', '),
-          currentAreaPhoto: (formData.currentAreaPhoto as File | null)?.name ?? 'Not uploaded',
-          referencePhoto: (formData.referencePhoto as File | null)?.name ?? 'Not uploaded',
-        }),
+      await supabase.from('bookings').insert({
+        client_name: formData.fullName,
+        client_email: formData.email,
+        client_phone: formData.phone,
+        service_name: selectedService?.title || '',
+        service_price: selectedService?.price || '',
+        booking_date: selectedDate ? fmtDate(selectedDate) : '',
+        booking_time: selectedTime || '',
+        referral_source: formData.referralSource,
+        health_conditions: (formData.healthConditions as string[]).join(', '),
+        previous_pmu: formData.previousPMU,
+        skin_type: formData.skinType,
+        notes: formData.notes,
+        status: 'Pending Deposit',
+        deposit_status: 'Unpaid'
       });
-    } catch { /* show success regardless */ }
+    } catch (e) { console.error('Booking failed', e); }
     setIsSubmitting(false);
     setStep(6);
   };
@@ -1752,58 +1763,81 @@ const ArtistPage = () => (
 // --- Main App ---
 
 export default function App() {
-  const [currentPage, setCurrentPage] = useState<Page>('home');
+  const navigate = useNavigate();
+  const location = useLocation();
   const [selectedService, setSelectedService] = useState<any>(null);
 
   const handleSelectService = (service: any) => {
     setSelectedService(service);
-    setCurrentPage('service-detail');
+    navigate('/service-detail');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const content = () => {
-    switch (currentPage) {
-       case 'home': return <HomePage onNavigate={setCurrentPage} onSelectService={handleSelectService} />;
-       case 'booking': return <BookingPage onNavigate={setCurrentPage} />;
-       case 'gallery': return <GalleryPage />;
-       case 'services': return <Services onSelectService={handleSelectService} onNavigate={setCurrentPage} />;
-       case 'artist': return <ArtistPage />;
-       case 'contact': return <ContactPage />;
-       case 'privacy': return <PrivacyPage />;
-       case 'policies': return <PoliciesPage />;
-       case 'service-detail': return <ServiceDetailPage service={selectedService} onNavigate={setCurrentPage} />;
-       default: return <HomePage onNavigate={setCurrentPage} onSelectService={handleSelectService} />;
-    }
+  const handleNavigate = (page: Page) => {
+    const routes: Record<Page, string> = {
+      home: '/', services: '/services', gallery: '/gallery', booking: '/booking',
+      artist: '/artist', contact: '/contact', 'service-detail': '/service-detail',
+      privacy: '/privacy', policies: '/policies', admin: '/admin'
+    };
+    navigate(routes[page] || '/');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  if (currentPage === 'admin') {
+  const getCurrentPage = (): Page => {
+    const path = location.pathname;
+    if (path === '/') return 'home';
+    if (path === '/services') return 'services';
+    if (path === '/gallery') return 'gallery';
+    if (path === '/booking') return 'booking';
+    if (path === '/contact') return 'contact';
+    if (path === '/artist') return 'artist';
+    if (path === '/privacy') return 'privacy';
+    if (path === '/policies') return 'policies';
+    if (path === '/admin') return 'admin';
+    if (path === '/service-detail') return 'service-detail';
+    return 'home';
+  };
+  const currentPage = getCurrentPage();
+
+  if (location.pathname === '/admin') {
     return <AdminDashboard />;
   }
 
   return (
     <div className="selection:bg-accent/20 min-h-screen bg-paper text-ink font-sans">
-      <Navbar onNavigate={setCurrentPage} currentPage={currentPage} />
+      <Navbar onNavigate={handleNavigate} currentPage={currentPage} />
       
       <main>
         <AnimatePresence mode="wait">
           <motion.div
-            key={currentPage}
+            key={location.pathname}
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
           >
-            {content()}
+            <Routes location={location}>
+              <Route path="/" element={<HomePage onNavigate={handleNavigate} onSelectService={handleSelectService} />} />
+              <Route path="/booking" element={<BookingPage onNavigate={handleNavigate} />} />
+              <Route path="/gallery" element={<GalleryPage />} />
+              <Route path="/services" element={<Services onSelectService={handleSelectService} onNavigate={handleNavigate} />} />
+              <Route path="/artist" element={<ArtistPage />} />
+              <Route path="/contact" element={<ContactPage />} />
+              <Route path="/privacy" element={<PrivacyPage />} />
+              <Route path="/policies" element={<PoliciesPage />} />
+              <Route path="/service-detail" element={<ServiceDetailPage service={selectedService} onNavigate={handleNavigate} />} />
+              <Route path="*" element={<HomePage onNavigate={handleNavigate} onSelectService={handleSelectService} />} />
+            </Routes>
           </motion.div>
         </AnimatePresence>
       </main>
 
-      <Footer onNavigate={setCurrentPage} />
+      <Footer onNavigate={handleNavigate} />
       
       {/* Sticky mobile Book Now button */}
       <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-paper border-t border-ink/10 p-4 shadow-2xl">
         <button
-          onClick={() => { setCurrentPage('booking'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+          onClick={() => handleNavigate('booking')}
           className="w-full py-4 bg-accent text-paper text-[10px] uppercase tracking-[0.3em] font-bold hover:bg-ink transition-colors flex items-center justify-center gap-3"
         >
           <Calendar className="w-4 h-4" /> Book Now
