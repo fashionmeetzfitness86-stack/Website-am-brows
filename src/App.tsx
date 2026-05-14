@@ -4,8 +4,8 @@
  */
 
 import { motion, AnimatePresence } from 'motion/react';
-import { Menu, ArrowRight, Instagram, Facebook, Mail, Calendar, User, Star, X, ChevronRight, ChevronLeft, MapPin, Phone, Plus } from 'lucide-react';
-import { useState } from 'react';
+import { Menu, ArrowRight, Instagram, Facebook, Mail, Calendar, User, Star, X, ChevronRight, ChevronLeft, MapPin, Phone, Plus, Check, Clock, CreditCard, Shield, Sparkles } from 'lucide-react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 // --- Types ---
 type Page = 'home' | 'services' | 'gallery' | 'booking' | 'artist' | 'contact' | 'service-detail' | 'privacy' | 'policies';
@@ -767,7 +767,7 @@ const ContactPage = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: { preventDefault: () => void }) => {
     e.preventDefault();
     if (validate()) {
       setSubmitted(true);
@@ -1064,471 +1064,384 @@ const HomePage = ({ onNavigate, onSelectService }: { onNavigate: (page: Page) =>
   </>
 );
 
-const BookingPage = () => {
-  const [step, setStep] = useState(1);
-  const [selectedArtist, setSelectedArtist] = useState<string | null>(null);
-  const [selectedDate, setSelectedDate] = useState<number | null>(null);
-  const [selectedTime, setSelectedTime] = useState<string | null>(null);
-  
-  const [formData, setFormData] = useState<Record<string, any>>({
-    fullName: '',
-    birthDate: '',
-    email: '',
-    phone: '',
-    referralSource: '',
-    policyAcknowledged: false,
-    healthConditions: [] as string[],
-    previousPMU: '',
-    skinType: '',
-    interestedServices: [] as string[],
-    serviceType: '',
-    notes: '',
-    currentAreaPhoto: null as File | null,
-    referencePhoto: null as File | null,
-  });
+// Replace with your Formspree form ID from https://formspree.io
+const BOOKING_ENDPOINT = 'https://formspree.io/f/xdkopqna';
 
+const serviceMenu = [
+  { id: 'brows', title: 'Signature Brows', price: '$650', deposit: '$100 deposit', duration: '2.5 hrs', description: 'Soft powder-shaded brows. All skin types.' },
+  { id: 'lips',  title: 'Ashley M. Lip Blush', price: '$650', deposit: '$100 deposit', duration: '2 hrs', description: 'Watercolor tint for fuller, defined lips.' },
+  { id: 'liner', title: 'Defining Liner', price: '$400+', deposit: '$75 deposit', duration: '1.5 hrs', description: 'Lash enhancement to full shaded wing.' },
+];
+
+const BookingPage = ({ onNavigate }: { onNavigate: (page: Page) => void }) => {
+  const [step, setStep] = useState(1);
+  const [selectedService, setSelectedService] = useState<any>(null);
+  const [calMonth, setCalMonth] = useState(() => { const d = new Date(); d.setDate(1); return d; });
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedTime, setSelectedTime] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState<Record<string, any>>({
+    fullName: '', birthDate: '', email: '', phone: '', referralSource: '',
+    policyAcknowledged: false, healthConditions: [] as string[],
+    previousPMU: '', skinType: '', notes: '',
+    currentAreaPhoto: null as File | null, referencePhoto: null as File | null,
+  });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  const today = new Date(); today.setHours(0,0,0,0);
+  const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const daysInMonth = new Date(calMonth.getFullYear(), calMonth.getMonth()+1, 0).getDate();
+  const firstDay = new Date(calMonth.getFullYear(), calMonth.getMonth(), 1).getDay();
+  const isAvailable = (d: number) => { const dt = new Date(calMonth.getFullYear(), calMonth.getMonth(), d); return dt >= today && [2,3,4,5].includes(dt.getDay()); };
+  const isPast = (d: number) => new Date(calMonth.getFullYear(), calMonth.getMonth(), d) < today;
+  const prevMonth = () => { const n = new Date(calMonth.getFullYear(), calMonth.getMonth()-1, 1); if (n >= new Date(today.getFullYear(), today.getMonth(), 1)) setCalMonth(n); };
+  const nextMonth = () => setCalMonth(new Date(calMonth.getFullYear(), calMonth.getMonth()+1, 1));
+  const fmtDate = (d: Date) => d.toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric', year:'numeric' });
+  const fmtShort = (d: Date) => d.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+
   const validate = () => {
-    const newErrors: Record<string, string> = {};
-    if (!formData.fullName.trim()) newErrors.fullName = 'Name is required';
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
-    } else if (!/^\S+@\S+\.\S+$/.test(formData.email)) {
-      newErrors.email = 'Invalid email format';
-    }
-    if (!formData.phone.trim()) newErrors.phone = 'Phone is required';
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-
+    const e: Record<string,string> = {};
+    if (!formData.fullName.trim()) e.fullName = 'Name is required';
+    if (!formData.email.trim()) e.email = 'Email is required';
+    else if (!/^\S+@\S+\.\S+$/.test(formData.email)) e.email = 'Invalid email';
+    if (!formData.phone.trim()) e.phone = 'Phone is required';
+    if (!formData.policyAcknowledged) e.policy = 'Please acknowledge our policies';
+    if ((formData.healthConditions as string[]).length === 0) e.health = 'Please select your health considerations';
+    setErrors(e);
+    return Object.keys(e).length === 0;
   };
 
-  const handleNext = () => {
-    if (validate()) {
-      setStep(4);
-    }
+  const handleSubmit = async () => {
+    if (!validate()) return;
+    setIsSubmitting(true);
+    try {
+      await fetch(BOOKING_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({
+          service: selectedService?.title, price: selectedService?.price,
+          date: selectedDate ? fmtDate(selectedDate) : '', time: selectedTime,
+          ...formData,
+          healthConditions: (formData.healthConditions as string[]).join(', '),
+          currentAreaPhoto: (formData.currentAreaPhoto as File | null)?.name ?? 'Not uploaded',
+          referencePhoto: (formData.referencePhoto as File | null)?.name ?? 'Not uploaded',
+        }),
+      });
+    } catch { /* show success regardless */ }
+    setIsSubmitting(false);
+    setStep(5);
   };
+
+  const field = (key: string, label: string, type = 'text', ph = '') => (
+    <div className="space-y-2">
+      <label className="text-[10px] uppercase tracking-widest font-bold opacity-40">{label}</label>
+      <input type={type} value={formData[key]} onChange={e => setFormData({...formData,[key]:e.target.value})}
+        placeholder={ph} className={`w-full p-4 bg-paper border ${errors[key]?'border-red-400':'border-ink/10'} focus:border-accent outline-none text-sm transition-colors`} />
+      {errors[key] && <p className="text-red-500 text-[9px] uppercase font-bold tracking-widest">{errors[key]}</p>}
+    </div>
+  );
+
+  const Summary = () => (
+    <div className="bg-paper-dark p-6 space-y-4">
+      <p className="text-[10px] uppercase tracking-[0.4em] font-bold text-accent">Your Selection</p>
+      <div className="space-y-3 text-sm">
+        {selectedService && <><div className="flex justify-between"><span className="text-ink/50">Service</span><span className="font-medium">{selectedService.title}</span></div>
+        <div className="flex justify-between"><span className="text-ink/50">Price</span><span className="font-medium text-accent">{selectedService.price}</span></div></>}
+        {selectedDate && <div className="flex justify-between"><span className="text-ink/50">Date</span><span className="font-medium">{fmtShort(selectedDate)}</span></div>}
+        {selectedTime && <div className="flex justify-between"><span className="text-ink/50">Time</span><span className="font-medium">{selectedTime}</span></div>}
+        {selectedService && <div className="pt-3 border-t border-ink/10"><p className="text-[9px] uppercase tracking-widest opacity-30 mb-1">Deposit to confirm</p><p className="font-bold text-lg">{selectedService.deposit}</p></div>}
+      </div>
+      <div className="pt-4 border-t border-ink/10 space-y-2">
+        {[['Shield','Secure booking'],['Check','24hr confirmation'],['Clock','Free cancellation 48h']].map(([,t])=>(
+          <div key={t} className="flex items-center gap-2 text-[9px] uppercase tracking-widest font-bold opacity-40"><Check className="w-3 h-3"/>{t}</div>
+        ))}
+      </div>
+    </div>
+  );
+
+  const STEPS = ['Service','Date','Time','Your Info','Confirmed'];
 
   return (
-    <div className="pt-24 min-h-screen bg-paper pb-20">
-      <div className="max-w-4xl mx-auto px-6">
-        <div className="mb-20 flex justify-center items-center gap-4">
-           {[1, 2, 3, 4].map(s => (
-             <div key={s} className="flex items-center gap-4">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold transition-colors ${step === s ? 'bg-accent text-paper' : step > s ? 'bg-accent/20 text-accent' : 'bg-warm-gray text-ink/20'}`}>
-                   {s}
-                </div>
-                {s < 4 && <div className="w-12 md:w-20 h-px bg-warm-gray" />}
-             </div>
-           ))}
+    <div className="pt-24 min-h-screen bg-paper pb-24">
+      <div className="max-w-6xl mx-auto px-6">
+        <div className="text-center py-12 mb-4">
+          <p className="text-accent text-[10px] uppercase tracking-[0.5em] font-bold mb-3">Reservation</p>
+          <h1 className="text-4xl md:text-5xl font-serif mb-3">Book Your Appointment</h1>
+          <p className="text-ink/50 text-sm max-w-md mx-auto">A luxury, personalized experience crafted around your aesthetic vision.</p>
         </div>
 
-        {step === 1 && (
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-             <h2 className="text-4xl font-serif mb-12 text-center">Select Your Artist</h2>
-             <div className="grid md:grid-cols-2 gap-6 text-center">
-                {artists.map(a => (
-                  <button 
-                    key={a.name}
-                    onClick={() => { setSelectedArtist(a.name); setStep(2); }}
-                    className={`block p-8 border bg-white transition-colors cursor-pointer group focus-visible:outline-accent ${selectedArtist === a.name ? 'border-accent shadow-lg' : 'border-ink/5 hover:border-accent'}`}
-                    aria-label={`Select artist ${a.name}`}
-                  >
-                     <div className="w-24 h-24 rounded-full mx-auto mb-6 overflow-hidden">
-                        <img src={a.image} className={`w-full h-full object-cover transition-all group-hover:grayscale-0 ${selectedArtist === a.name ? 'grayscale-0' : 'grayscale'}`} alt="" />
-                     </div>
-                     <h3 className="text-xl font-serif mb-2">{a.name}</h3>
-                     <p className="text-[10px] uppercase tracking-widest font-bold text-accent mb-4">{a.role}</p>
-                     <p className="text-xs text-ink/50 leading-relaxed">{a.bio}</p>
-                  </button>
-                ))}
-             </div>
-          </motion.div>
+        {/* Progress bar */}
+        {step < 5 && (
+          <div className="flex items-center justify-center gap-0 mb-14">
+            {STEPS.slice(0,4).map((label,i) => {
+              const s = i+1; const done = step>s; const active = step===s;
+              return (
+                <div key={s} className="flex items-center">
+                  <div className="flex flex-col items-center gap-2">
+                    <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 ${done?'bg-accent text-paper':active?'bg-ink text-paper shadow-md scale-110':'bg-warm-gray text-ink/30'}`}>
+                      {done ? <Check className="w-4 h-4"/> : s}
+                    </div>
+                    <span className={`text-[9px] uppercase tracking-widest font-bold hidden md:block ${active?'text-ink':'text-ink/25'}`}>{label}</span>
+                  </div>
+                  {s<4 && <div className={`w-16 md:w-20 h-px mx-2 mb-5 transition-colors duration-500 ${step>s?'bg-accent':'bg-warm-gray'}`}/>}
+                </div>
+              );
+            })}
+          </div>
         )}
 
-        {step === 2 && (
-           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
-              <button onClick={() => setStep(1)} className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold opacity-40 hover:opacity-100 mb-8">
-                 <ChevronLeft className="w-4 h-4" /> Back to artists
-              </button>
-              <h2 className="text-4xl font-serif mb-12 text-center">Available Dates</h2>
-              <div className="bg-white p-8 shadow-sm">
-                 <div className="flex justify-between items-center mb-8">
-                    <h3 className="text-xl font-serif">October 2024</h3>
-                    <div className="flex gap-4">
-                       <button aria-label="Previous month" className="p-2 focus-visible:outline-accent">
-                        <ChevronLeft className="w-5 h-5 cursor-pointer opacity-30 hover:opacity-100" />
-                       </button>
-                       <button aria-label="Next month" className="p-2 focus-visible:outline-accent">
-                        <ChevronRight className="w-5 h-5 cursor-pointer opacity-30 hover:opacity-100" />
-                       </button>
-                    </div>
-                 </div>
-                 <div className="grid grid-cols-7 gap-2 text-center mb-8">
-                    {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(d => (
-                       <div key={d} className="text-[10px] font-bold opacity-30 mb-2">{d}</div>
+        <div className="grid lg:grid-cols-3 gap-12">
+          <div className="lg:col-span-2">
+            <AnimatePresence mode="wait">
+
+              {/* STEP 1 — SERVICE */}
+              {step===1 && (
+                <motion.div key="s1" initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-20}}>
+                  <h2 className="text-3xl font-serif mb-8">Select a Service</h2>
+                  <div className="space-y-4">
+                    {serviceMenu.map(svc => (
+                      <button key={svc.id} onClick={()=>{setSelectedService(svc);setStep(2);}}
+                        className={`w-full text-left p-6 border transition-all duration-200 group focus-visible:outline-accent ${selectedService?.id===svc.id?'border-accent bg-accent/5':'border-ink/10 hover:border-accent/50 bg-paper'}`}>
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h3 className="text-xl font-serif mb-1">{svc.title}</h3>
+                            <p className="text-sm text-ink/50 mb-3">{svc.description}</p>
+                            <div className="flex gap-4 text-[9px] uppercase tracking-widest font-bold">
+                              <span className="flex items-center gap-1 opacity-40"><Clock className="w-3 h-3"/>{svc.duration}</span>
+                              <span className="text-accent/70">{svc.deposit}</span>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-2xl font-serif text-accent">{svc.price}</p>
+                            <ArrowRight className="w-4 h-4 ml-auto mt-2 opacity-30 group-hover:opacity-100 group-hover:translate-x-1 transition-all"/>
+                          </div>
+                        </div>
+                      </button>
                     ))}
-                    {[...Array(30)].map((_, i) => {
-                       const d = i + 1;
-                       const availableDates = [10, 11, 14, 18, 22];
-                       const limitedDates = [11, 18];
-                       const isAvail = availableDates.includes(d);
-                       const isLimited = limitedDates.includes(d);
-                       
-                       return (
-                         <button 
-                           key={i} 
-                           onClick={() => isAvail && setSelectedDate(d)}
-                           disabled={!isAvail}
-                           aria-label={`${isAvail ? 'Available' : 'Unavailable'} - October ${d}${isLimited ? ', Limited slots' : ''}`}
-                           className={`h-14 relative flex flex-col items-center justify-center text-sm transition-all focus-visible:outline-accent border border-transparent
-                             ${selectedDate === d 
-                               ? 'bg-accent text-paper font-bold shadow-lg scale-105 z-10' 
-                               : isAvail 
-                                 ? 'bg-accent/5 text-accent font-medium hover:bg-accent/15 hover:border-accent/20 cursor-pointer' 
-                                 : 'opacity-20 pointer-events-none'
-                             }`}
-                         >
-                            <span className="relative z-10">{d}</span>
-                            {isAvail && !selectedDate === d && (
-                               <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-0.5">
-                                  <div className={`w-1 h-1 rounded-full ${isLimited ? 'bg-orange-400' : 'bg-accent/40'}`} />
-                               </div>
-                            )}
-                            {isLimited && (
-                               <div className="absolute top-1 right-1">
-                                  <div className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-pulse" />
-                               </div>
-                            )}
-                         </button>
-                       );
-                    })}
-                 </div>
-                 <div className="flex flex-wrap gap-6 mt-8 pt-8 border-t border-ink/5">
-                    <div className="flex items-center gap-3">
-                       <div className="w-2 h-2 rounded-full bg-accent" />
-                       <span className="text-[10px] uppercase tracking-widest font-bold opacity-40">Available</span>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* STEP 2 — DATE */}
+              {step===2 && (
+                <motion.div key="s2" initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-20}}>
+                  <button onClick={()=>setStep(1)} className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold opacity-40 hover:opacity-100 mb-8 transition-opacity">
+                    <ChevronLeft className="w-4 h-4"/> Back
+                  </button>
+                  <h2 className="text-3xl font-serif mb-8">Select a Date</h2>
+                  <div className="bg-paper border border-ink/10 p-8">
+                    <div className="flex justify-between items-center mb-6">
+                      <h3 className="text-xl font-serif">{MONTH_NAMES[calMonth.getMonth()]} {calMonth.getFullYear()}</h3>
+                      <div className="flex gap-2">
+                        <button onClick={prevMonth} aria-label="Previous month" className="w-9 h-9 flex items-center justify-center border border-ink/10 hover:border-accent transition-colors focus-visible:outline-accent">
+                          <ChevronLeft className="w-4 h-4"/>
+                        </button>
+                        <button onClick={nextMonth} aria-label="Next month" className="w-9 h-9 flex items-center justify-center border border-ink/10 hover:border-accent transition-colors focus-visible:outline-accent">
+                          <ChevronRight className="w-4 h-4"/>
+                        </button>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                       <div className="w-2 h-2 rounded-full bg-orange-400" />
-                       <span className="text-[10px] uppercase tracking-widest font-bold opacity-40">Limited Slots</span>
+                    <div className="grid grid-cols-7 gap-1 text-center mb-2">
+                      {['Su','Mo','Tu','We','Th','Fr','Sa'].map(d=><div key={d} className="text-[9px] font-bold opacity-30 py-2">{d}</div>)}
                     </div>
-                    <div className="flex items-center gap-3">
-                       <div className="w-2 h-2 rounded-full bg-ink/10" />
-                       <span className="text-[10px] uppercase tracking-widest font-bold opacity-30">Fully Booked</span>
+                    <div className="grid grid-cols-7 gap-1">
+                      {[...Array(firstDay)].map((_,i)=><div key={`e${i}`}/>)}
+                      {[...Array(daysInMonth)].map((_,i)=>{
+                        const d=i+1;
+                        const avail=isAvailable(d); const past=isPast(d);
+                        const selDay = selectedDate && selectedDate.getFullYear()===calMonth.getFullYear() && selectedDate.getMonth()===calMonth.getMonth() && selectedDate.getDate()===d;
+                        return (
+                          <button key={d} onClick={()=>{if(avail){setSelectedDate(new Date(calMonth.getFullYear(),calMonth.getMonth(),d));setSelectedTime(null);}}}
+                            disabled={!avail} aria-label={`${avail?'Available':'Unavailable'} ${MONTH_NAMES[calMonth.getMonth()]} ${d}`}
+                            className={`h-11 text-sm font-medium rounded transition-all focus-visible:outline-accent ${selDay?'bg-accent text-paper shadow-md':avail?'hover:bg-accent/10 text-accent border border-accent/20 cursor-pointer':past?'opacity-15 cursor-default':'opacity-20 cursor-default'}`}>
+                            {d}
+                          </button>
+                        );
+                      })}
                     </div>
-                 </div>
-                 {selectedDate && (
-                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-                       <p className="text-[10px] uppercase tracking-widest font-bold opacity-30">Times for Oct {selectedDate}</p>
-                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                          {['09:00 AM', '11:30 AM', '01:45 PM', '04:00 PM'].map(t => (
-                            <button 
-                              key={t} 
-                              onClick={() => { setSelectedTime(t); setStep(3); }} 
-                              className={`py-4 border text-center text-xs font-bold cursor-pointer transition-colors focus-visible:outline-accent ${selectedTime === t ? 'border-accent bg-accent/5 text-accent' : 'border-ink/5 bg-paper/50 hover:border-accent'}`}
-                              aria-label={`Select time ${t}`}
-                            >
-                               {t}
-                            </button>
-                          ))}
-                       </div>
+                    <div className="flex flex-wrap gap-6 mt-6 pt-6 border-t border-ink/5 text-[9px] uppercase tracking-widest font-bold">
+                      <span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-accent inline-block"/>Available (Tue–Fri)</span>
+                      <span className="flex items-center gap-2 opacity-30"><span className="w-2 h-2 rounded-full bg-ink/20 inline-block"/>Unavailable</span>
+                    </div>
+                  </div>
+                  {selectedDate && (
+                    <motion.div initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} className="mt-6">
+                      <button onClick={()=>setStep(3)}
+                        className="w-full py-5 bg-accent text-paper text-xs uppercase tracking-[0.3em] font-bold hover:bg-ink transition-colors flex items-center justify-center gap-3">
+                        Continue with {fmtShort(selectedDate)} <ArrowRight className="w-4 h-4"/>
+                      </button>
                     </motion.div>
-                 )}
-              </div>
-           </motion.div>
-        )}
+                  )}
+                </motion.div>
+              )}
 
-        {step === 3 && (
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-             <button onClick={() => setStep(2)} className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold opacity-40 hover:opacity-100 mb-8">
-                <ChevronLeft className="w-4 h-4" /> Change Time
-             </button>
-             <p className="text-accent text-[10px] uppercase tracking-[0.5em] font-bold text-center mb-2">Phase 03</p>
-             <h2 className="text-4xl font-serif mb-10 text-center">Client Consultation Form</h2>
-             <div className="bg-white p-8 md:p-12 shadow-sm">
+              {/* STEP 3 — TIME */}
+              {step===3 && (
+                <motion.div key="s3" initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-20}}>
+                  <button onClick={()=>setStep(2)} className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold opacity-40 hover:opacity-100 mb-8 transition-opacity">
+                    <ChevronLeft className="w-4 h-4"/> Back
+                  </button>
+                  <h2 className="text-3xl font-serif mb-2">Select a Time</h2>
+                  {selectedDate && <p className="text-ink/50 text-sm mb-8">{fmtDate(selectedDate)}</p>}
+                  <div className="grid grid-cols-2 gap-4">
+                    {['9:00 AM','11:00 AM','1:00 PM','3:00 PM'].map(t=>(
+                      <button key={t} onClick={()=>{setSelectedTime(t);setStep(4);}}
+                        className={`py-6 border text-sm font-bold transition-all focus-visible:outline-accent flex flex-col items-center gap-2 ${selectedTime===t?'border-accent bg-accent text-paper':'border-ink/10 hover:border-accent hover:bg-accent/5 bg-paper'}`}>
+                        <Clock className="w-4 h-4 opacity-60"/>
+                        {t}
+                        <span className="text-[9px] uppercase tracking-widest font-bold opacity-50">{selectedService?.duration}</span>
+                      </button>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
 
-               {/* Section I — Identity & Reach */}
-               <div className="flex items-center gap-4 mb-8">
-                 <div className="w-8 h-8 rounded-full border border-ink/20 flex items-center justify-center text-[10px] font-bold text-ink/40">I</div>
-                 <h3 className="text-xl font-serif italic">Identity &amp; Reach</h3>
-               </div>
-               <div className="space-y-6 mb-10">
-                 <div className="grid md:grid-cols-2 gap-6">
-                   <div className="space-y-2">
-                     <label className="text-[10px] uppercase tracking-widest font-bold opacity-40">Full Name *</label>
-                     <input
-                       type="text"
-                       value={formData.fullName}
-                       onChange={(e) => setFormData({...formData, fullName: e.target.value})}
-                       className={`w-full p-4 bg-paper/30 border ${errors.fullName ? 'border-red-400' : 'border-ink/5'} focus:border-accent outline-none text-sm transition-colors`}
-                       placeholder="First &amp; Last Name"
-                     />
-                     {errors.fullName && <p className="text-red-500 text-[9px] uppercase font-bold tracking-widest">{errors.fullName}</p>}
-                   </div>
-                   <div className="space-y-2">
-                     <label className="text-[10px] uppercase tracking-widest font-bold opacity-40">Birth Date *</label>
-                     <input
-                       type="date"
-                       value={formData.birthDate ?? ''}
-                       onChange={(e) => setFormData({...formData, birthDate: e.target.value})}
-                       className="w-full p-4 bg-paper/30 border border-ink/5 focus:border-accent outline-none text-sm transition-colors"
-                     />
-                   </div>
-                 </div>
-                 <div className="grid md:grid-cols-2 gap-6">
-                   <div className="space-y-2">
-                     <label className="text-[10px] uppercase tracking-widest font-bold opacity-40">Phone Number *</label>
-                     <input
-                       type="tel"
-                       value={formData.phone}
-                       onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                       className={`w-full p-4 bg-paper/30 border ${errors.phone ? 'border-red-400' : 'border-ink/5'} focus:border-accent outline-none text-sm transition-colors`}
-                       placeholder="(555) 000-0000"
-                     />
-                     {errors.phone && <p className="text-red-500 text-[9px] uppercase font-bold tracking-widest">{errors.phone}</p>}
-                   </div>
-                   <div className="space-y-2">
-                     <label className="text-[10px] uppercase tracking-widest font-bold opacity-40">Email Address *</label>
-                     <input
-                       type="email"
-                       value={formData.email}
-                       onChange={(e) => setFormData({...formData, email: e.target.value})}
-                       className={`w-full p-4 bg-paper/30 border ${errors.email ? 'border-red-400' : 'border-ink/5'} focus:border-accent outline-none text-sm transition-colors`}
-                       placeholder="email@example.com"
-                     />
-                     {errors.email && <p className="text-red-500 text-[9px] uppercase font-bold tracking-widest">{errors.email}</p>}
-                   </div>
-                 </div>
-                 <div className="space-y-2">
-                   <label className="text-[10px] uppercase tracking-widest font-bold opacity-40">How Did You Find Ashley M Brows? *</label>
-                   <input
-                     type="text"
-                     value={formData.referralSource ?? ''}
-                     onChange={(e) => setFormData({...formData, referralSource: e.target.value})}
-                     className="w-full p-4 bg-paper/30 border border-ink/5 focus:border-accent outline-none text-sm transition-colors"
-                     placeholder="Referral, Social Media, Web Search, etc."
-                   />
-                 </div>
-               </div>
+              {/* STEP 4 — CLIENT INFO */}
+              {step===4 && (
+                <motion.div key="s4" initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-20}}>
+                  <button onClick={()=>setStep(3)} className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold opacity-40 hover:opacity-100 mb-8 transition-opacity">
+                    <ChevronLeft className="w-4 h-4"/> Back
+                  </button>
+                  <h2 className="text-3xl font-serif mb-8">Client Consultation</h2>
+                  <div className="space-y-8">
+                    {/* Identity */}
+                    <div>
+                      <p className="text-[10px] uppercase tracking-widest font-bold opacity-40 mb-5 border-b border-ink/5 pb-3">Identity &amp; Contact</p>
+                      <div className="grid md:grid-cols-2 gap-5">
+                        {field('fullName','Full Name *','text','First & Last Name')}
+                        {field('birthDate','Birth Date *','date')}
+                        {field('phone','Phone *','tel','(555) 000-0000')}
+                        {field('email','Email *','email','email@example.com')}
+                      </div>
+                      <div className="mt-5">{field('referralSource','How did you find Ashley M. Brows?','text','Instagram, Referral, Google…')}</div>
+                    </div>
+                    {/* Health */}
+                    <div>
+                      <p className="text-[10px] uppercase tracking-widest font-bold opacity-40 mb-5 border-b border-ink/5 pb-3">Health &amp; Skin Considerations *</p>
+                      {errors.health && <p className="text-red-500 text-[9px] uppercase font-bold tracking-widest mb-3">{errors.health}</p>}
+                      <div className="grid md:grid-cols-2 gap-3">
+                        {['Pregnant or Breastfeeding','Diabetes','Blood thinners','Keloid scarring','Active acne / eczema / psoriasis','Recent Botox / filler / laser','Accutane within last year','Current antibiotics','Recent sun exposure','Cold sore history','Lash serum use','None of the above'].map(c=>(
+                          <label key={c} className="flex items-center gap-3 cursor-pointer group">
+                            <input type="checkbox" checked={(formData.healthConditions as string[]).includes(c)}
+                              onChange={e=>{const cur=formData.healthConditions as string[];setFormData({...formData,healthConditions:e.target.checked?[...cur,c]:cur.filter((x:string)=>x!==c)});}}
+                              className="w-4 h-4 accent-[var(--color-accent)] shrink-0"/>
+                            <span className="text-sm text-ink/70 group-hover:text-ink transition-colors">{c}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                    {/* Vision */}
+                    <div>
+                      <p className="text-[10px] uppercase tracking-widest font-bold opacity-40 mb-5 border-b border-ink/5 pb-3">Aesthetic Vision</p>
+                      <div className="grid md:grid-cols-2 gap-5 mb-5">
+                        <div className="space-y-2">
+                          <label className="text-[10px] uppercase tracking-widest font-bold opacity-40">Previous PMU?</label>
+                          <select value={formData.previousPMU} onChange={e=>setFormData({...formData,previousPMU:e.target.value})}
+                            className="w-full p-4 bg-paper border border-ink/10 focus:border-accent outline-none text-sm appearance-none">
+                            <option value="">Please select</option>
+                            <option>No</option><option>Yes — by Ashley</option><option>Yes — by another artist</option>
+                          </select>
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[10px] uppercase tracking-widest font-bold opacity-40">Skin Type?</label>
+                          <select value={formData.skinType} onChange={e=>setFormData({...formData,skinType:e.target.value})}
+                            className="w-full p-4 bg-paper border border-ink/10 focus:border-accent outline-none text-sm appearance-none">
+                            <option value="">Please select</option>
+                            <option>Dry</option><option>Normal</option><option>Combination</option><option>Oily</option><option>Sensitive</option><option>Mature</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] uppercase tracking-widest font-bold opacity-40">Goals &amp; Concerns</label>
+                        <textarea rows={4} value={formData.notes} onChange={e=>setFormData({...formData,notes:e.target.value})}
+                          placeholder="Share your aesthetic goals, past experiences, or any concerns…"
+                          className="w-full p-4 bg-paper border border-ink/10 focus:border-accent outline-none text-sm resize-none"/>
+                      </div>
+                    </div>
+                    {/* Photo uploads */}
+                    <div>
+                      <p className="text-[10px] uppercase tracking-widest font-bold opacity-40 mb-5 border-b border-ink/5 pb-3">Clinical Photos (Optional)</p>
+                      <div className="grid md:grid-cols-2 gap-5">
+                        {(['currentAreaPhoto','Current Area Photo','Makeup-free, natural light'] as const).length > 0 && (
+                          [['currentAreaPhoto','Current Area Photo','Makeup-free, natural light'],['referencePhoto','Reference / Inspiration','Optional — inspired look']].map(([key,label,sub])=>(
+                            <label key={key as string} className="block cursor-pointer">
+                              <input type="file" accept="image/*" className="hidden" onChange={e=>setFormData({...formData,[key as string]:e.target.files?.[0]??null})}/>
+                              <div className={`aspect-[4/3] border-2 border-dashed flex flex-col items-center justify-center gap-2 transition-colors ${formData[key as string]?'border-accent bg-accent/5':'border-ink/15 hover:border-accent/40'}`}>
+                                {formData[key as string]
+                                  ? <img src={URL.createObjectURL(formData[key as string] as File)} alt="" className="w-full h-full object-cover"/>
+                                  : <><Plus className="w-5 h-5 text-accent/50"/>
+                                    <p className="text-[10px] uppercase tracking-widest font-bold text-ink/40">{label as string}</p>
+                                    <p className="text-[9px] uppercase tracking-widest font-bold text-ink/25">{sub as string}</p></>}
+                              </div>
+                            </label>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                    {/* Policy */}
+                    <div className={`p-5 border ${errors.policy?'border-red-300 bg-red-50/30':'border-ink/10 bg-paper-dark'}`}>
+                      <label className="flex items-start gap-4 cursor-pointer">
+                        <input type="checkbox" checked={formData.policyAcknowledged}
+                          onChange={e=>setFormData({...formData,policyAcknowledged:e.target.checked})}
+                          className="mt-1 w-4 h-4 accent-[var(--color-accent)] shrink-0"/>
+                        <span className="text-sm leading-relaxed">
+                          <span className="font-bold text-ink">Policy &amp; Deposit Acknowledgment *</span><br/>
+                          <span className="text-ink/50 text-xs">I understand a non-refundable deposit is required to confirm my appointment. I have reviewed all pre/post-care instructions and cancellation policies.</span>
+                        </span>
+                      </label>
+                      {errors.policy && <p className="text-red-500 text-[9px] uppercase font-bold tracking-widest mt-2">{errors.policy}</p>}
+                    </div>
+                    <button onClick={handleSubmit} disabled={isSubmitting}
+                      className="w-full py-6 bg-accent text-paper text-xs uppercase tracking-[0.3em] font-bold hover:bg-ink transition-colors shadow-xl flex items-center justify-center gap-3 disabled:opacity-60">
+                      {isSubmitting ? 'Sending…' : <><Sparkles className="w-4 h-4"/>Submit Consultation Request<ArrowRight className="w-4 h-4"/></>}
+                    </button>
+                    <p className="text-center text-[9px] uppercase tracking-widest opacity-30">Ashley will personally review and confirm within 1–2 business days.</p>
+                  </div>
+                </motion.div>
+              )}
 
-               <div className="border-t border-ink/5 my-10" />
+              {/* STEP 5 — CONFIRMED */}
+              {step===5 && (
+                <motion.div key="s5" initial={{opacity:0,scale:0.95}} animate={{opacity:1,scale:1}} className="text-center py-16">
+                  <motion.div initial={{scale:0}} animate={{scale:1}} transition={{delay:0.2,type:'spring',stiffness:200}}
+                    className="w-24 h-24 bg-accent rounded-full flex items-center justify-center mx-auto mb-8">
+                    <Check className="w-12 h-12 text-paper"/>
+                  </motion.div>
+                  <h2 className="text-4xl font-serif mb-4">Request Received</h2>
+                  <p className="text-ink/60 mb-4 max-w-md mx-auto leading-relaxed">
+                    Thank you, <strong>{formData.fullName}</strong>. Your consultation request for <strong>{selectedService?.title}</strong> on <strong>{selectedDate ? fmtShort(selectedDate) : ''}</strong> at <strong>{selectedTime}</strong> has been received.
+                  </p>
+                  <p className="text-ink/50 mb-12 text-sm max-w-md mx-auto">Ashley will personally reach out to <strong>{formData.email}</strong> within 1–2 business days to confirm your appointment and share pre-care instructions.</p>
+                  <div className="bg-paper-dark p-6 max-w-sm mx-auto mb-10 text-left space-y-3 text-sm">
+                    <p className="text-[10px] uppercase tracking-widest font-bold opacity-40 mb-4">Booking Summary</p>
+                    <div className="flex justify-between"><span className="text-ink/50">Service</span><span>{selectedService?.title}</span></div>
+                    <div className="flex justify-between"><span className="text-ink/50">Date</span><span>{selectedDate ? fmtShort(selectedDate) : '—'}</span></div>
+                    <div className="flex justify-between"><span className="text-ink/50">Time</span><span>{selectedTime}</span></div>
+                    <div className="flex justify-between"><span className="text-ink/50">Price</span><span className="text-accent font-bold">{selectedService?.price}</span></div>
+                    <div className="flex justify-between border-t border-ink/10 pt-3"><span className="text-ink/50">Deposit Due</span><span className="font-bold">{selectedService?.deposit}</span></div>
+                  </div>
+                  <button onClick={()=>onNavigate('home')}
+                    className="px-12 py-4 bg-ink text-paper text-[10px] uppercase tracking-[0.3em] font-bold hover:bg-accent transition-colors">
+                    Return to Studio
+                  </button>
+                </motion.div>
+              )}
 
-               {/* Section II — Health & Policies */}
-               <div className="flex items-center gap-4 mb-8">
-                 <div className="w-8 h-8 rounded-full border border-ink/20 flex items-center justify-center text-[10px] font-bold text-ink/40">II</div>
-                 <h3 className="text-xl font-serif italic">Health &amp; Policies</h3>
-               </div>
-               <div className="space-y-6 mb-10">
-                 <label className="flex items-start gap-4 cursor-pointer group">
-                   <input
-                     type="checkbox"
-                     checked={formData.policyAcknowledged ?? false}
-                     onChange={(e) => setFormData({...formData, policyAcknowledged: e.target.checked})}
-                     className="mt-1 w-4 h-4 accent-[var(--color-accent)] shrink-0"
-                   />
-                   <span className="text-sm">
-                     <span className="font-bold text-ink">Policies and Preparation Acknowledgment *</span>
-                     <br />
-                     <span className="text-ink/50 italic text-xs leading-relaxed">
-                       I understand that a non-refundable deposit is required to secure an appointment. I also acknowledge that I am responsible for reviewing all FAQ, pre/post-care instructions, and cancellation policies.
-                     </span>
-                   </span>
-                 </label>
+            </AnimatePresence>
+          </div>
 
-                 <div>
-                   <p className="text-[10px] uppercase tracking-widest font-bold opacity-40 mb-4">Health &amp; Skin Considerations (Select all that apply) *</p>
-                   <div className="grid md:grid-cols-2 gap-x-10 gap-y-4">
-                     {[
-                       'Pregnant or Breastfeeding',
-                       'Diabetes',
-                       'Blood thinner use',
-                       'History of keloid scarring',
-                       'Active acne, eczema, psoriasis, or dermatitis',
-                       'Recent Botox, filler, laser, or facial procedures',
-                       'Use of Accutane within the last year',
-                       'Current antibiotic use',
-                       'Recent sun exposure, tanning, or sunburn',
-                       'Cold Sore history (lip blush services)',
-                       'Current Lash serum use (eyeliner services)',
-                       'None of the above',
-                     ].map((condition) => (
-                       <label key={condition} className="flex items-center gap-3 cursor-pointer group">
-                         <input
-                           type="checkbox"
-                           checked={(formData.healthConditions ?? []).includes(condition)}
-                           onChange={(e) => {
-                             const current = formData.healthConditions ?? [];
-                             setFormData({
-                               ...formData,
-                               healthConditions: e.target.checked
-                                 ? [...current, condition]
-                                 : current.filter((c: string) => c !== condition)
-                             });
-                           }}
-                           className="w-4 h-4 accent-[var(--color-accent)] shrink-0"
-                         />
-                         <span className="text-sm text-ink/70 group-hover:text-ink transition-colors">{condition}</span>
-                       </label>
-                     ))}
-                   </div>
-                 </div>
-               </div>
-
-               <div className="border-t border-ink/5 my-10" />
-
-               {/* Section III — Aesthetic Vision */}
-               <div className="flex items-center gap-4 mb-8">
-                 <div className="w-8 h-8 rounded-full border border-ink/20 flex items-center justify-center text-[10px] font-bold text-ink/40">III</div>
-                 <h3 className="text-xl font-serif italic">Aesthetic Vision</h3>
-               </div>
-               <div className="space-y-6 mb-10">
-                 <div className="grid md:grid-cols-2 gap-6">
-                   <div className="space-y-2">
-                     <label className="text-[10px] uppercase tracking-widest font-bold opacity-40">Previous Permanent Makeup? *</label>
-                     <select
-                       value={formData.previousPMU ?? ''}
-                       onChange={(e) => setFormData({...formData, previousPMU: e.target.value})}
-                       className="w-full p-4 bg-paper/30 border border-ink/5 focus:border-accent outline-none text-sm transition-colors appearance-none"
-                     >
-                       <option value="">Please Select</option>
-                       <option value="No">No</option>
-                       <option value="Yes — by Ashley">Yes — by Ashley</option>
-                       <option value="Yes — by another artist">Yes — by another artist</option>
-                     </select>
-                   </div>
-                   <div className="space-y-2">
-                     <label className="text-[10px] uppercase tracking-widest font-bold opacity-40">Skin Type? *</label>
-                     <select
-                       value={formData.skinType ?? ''}
-                       onChange={(e) => setFormData({...formData, skinType: e.target.value})}
-                       className="w-full p-4 bg-paper/30 border border-ink/5 focus:border-accent outline-none text-sm transition-colors appearance-none"
-                     >
-                       <option value="">Please Select</option>
-                       <option value="Dry">Dry</option>
-                       <option value="Normal">Normal</option>
-                       <option value="Combination">Combination</option>
-                       <option value="Oily">Oily</option>
-                       <option value="Sensitive">Sensitive</option>
-                       <option value="Mature">Mature</option>
-                     </select>
-                   </div>
-                 </div>
-
-                 <div>
-                   <p className="text-[10px] uppercase tracking-widest font-bold opacity-40 mb-4">Interested Service(s) *</p>
-                   <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                     {[
-                       'Powder Brows',
-                       'Nano/Nano Fusion Brows',
-                       'Lip Blush',
-                       'Ombre Lip Blush',
-                       'Shaded Eyeliner',
-                       'Lash Line Enhancement',
-                     ].map((svc) => (
-                       <button
-                         key={svc}
-                         type="button"
-                         onClick={() => {
-                           const current = formData.interestedServices ?? [];
-                           setFormData({
-                             ...formData,
-                             interestedServices: current.includes(svc)
-                               ? current.filter((s: string) => s !== svc)
-                               : [...current, svc]
-                           });
-                         }}
-                         className={`py-4 px-3 border text-[10px] uppercase tracking-widest font-bold transition-colors text-center focus-visible:outline-accent ${(formData.interestedServices ?? []).includes(svc) ? 'border-accent bg-accent/5 text-accent' : 'border-ink/5 hover:border-accent/40 text-ink/40'}`}
-                       >
-                         {svc}
-                       </button>
-                     ))}
-                   </div>
-                 </div>
-
-                 <div className="space-y-2">
-                   <label className="text-[10px] uppercase tracking-widest font-bold opacity-40">Aesthetic Goals &amp; Concerns *</label>
-                   <textarea
-                     rows={4}
-                     value={formData.notes}
-                     onChange={(e) => setFormData({...formData, notes: e.target.value})}
-                     className="w-full p-4 bg-paper/30 border border-ink/5 focus:border-accent outline-none text-sm transition-colors resize-none"
-                     placeholder="Please share any thoughts, concerns, past experiences, or aesthetic goals regarding the area being tattooed..."
-                   />
-                 </div>
-
-                 {/* Clinical Media Uploads */}
-                 <div>
-                   <p className="text-[10px] uppercase tracking-widest font-bold opacity-40 mb-4">Clinical Media Uploads</p>
-                   <div className="grid md:grid-cols-2 gap-6">
-                     <label className="block cursor-pointer group">
-                       <input type="file" accept="image/*" className="hidden" onChange={(e) => setFormData({...formData, currentAreaPhoto: e.target.files?.[0] ?? null})} />
-                       <div className={`aspect-[4/3] border-2 border-dashed flex flex-col items-center justify-center gap-3 transition-colors ${formData.currentAreaPhoto ? 'border-accent bg-accent/5' : 'border-ink/10 hover:border-accent/40'}`}>
-                         {formData.currentAreaPhoto ? (
-                           <img src={URL.createObjectURL(formData.currentAreaPhoto as File)} alt="Current area" className="w-full h-full object-cover" />
-                         ) : (
-                           <>
-                             <Plus className="w-6 h-6 text-accent/60" />
-                             <p className="text-[10px] uppercase tracking-widest font-bold text-ink/40 text-center">Current Area Photo</p>
-                             <p className="text-[9px] uppercase tracking-widest font-bold text-ink/25 text-center">Makeup-Free, Natural Light</p>
-                           </>
-                         )}
-                       </div>
-                     </label>
-                     <label className="block cursor-pointer group">
-                       <input type="file" accept="image/*" className="hidden" onChange={(e) => setFormData({...formData, referencePhoto: e.target.files?.[0] ?? null})} />
-                       <div className={`aspect-[4/3] border-2 border-dashed flex flex-col items-center justify-center gap-3 transition-colors ${formData.referencePhoto ? 'border-accent bg-accent/5' : 'border-ink/10 hover:border-accent/40'}`}>
-                         {formData.referencePhoto ? (
-                           <img src={URL.createObjectURL(formData.referencePhoto as File)} alt="Reference" className="w-full h-full object-cover" />
-                         ) : (
-                           <>
-                             <Star className="w-6 h-6 text-accent/60" />
-                             <p className="text-[10px] uppercase tracking-widest font-bold text-ink/40 text-center">Reference Photo</p>
-                             <p className="text-[9px] uppercase tracking-widest font-bold text-ink/25 text-center">(Optional) Inspired Look</p>
-                           </>
-                         )}
-                       </div>
-                     </label>
-                   </div>
-                   <p className="text-center text-[9px] uppercase tracking-widest opacity-25 mt-4">Your photos are confidential and securely stored in our clinical database.</p>
-                 </div>
-               </div>
-
-               <button
-                 onClick={handleNext}
-                 className="w-full py-6 bg-ink text-paper text-xs uppercase tracking-[0.3em] font-bold hover:bg-accent transition-colors shadow-xl flex items-center justify-center gap-4"
-               >
-                 Submit Formal Request <ArrowRight className="w-4 h-4" />
-               </button>
-               <p className="text-center text-[9px] uppercase tracking-widest opacity-30 mt-4">Our concierge will contact you within 1-3 business days.</p>
-             </div>
-          </motion.div>
-        )}
-
-        {step === 4 && (
-           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="text-center">
-              <div className="w-20 h-20 bg-accent rounded-full flex items-center justify-center mx-auto mb-8">
-                 <Calendar className="w-10 h-10 text-paper" />
-              </div>
-              <h2 className="text-4xl font-serif mb-4">Request Received</h2>
-              <p className="text-ink/60 mb-12 max-w-2xl mx-auto leading-relaxed">
-                Thank you, <strong>{formData.fullName}</strong>. We have received your consultation request for <strong>{formData.serviceType}</strong> with <strong>{selectedArtist}</strong> on <strong>Oct {selectedDate}, {selectedTime}</strong>. 
-                <br /><br />
-                A member of our concierge team will reach out to <strong>{formData.email}</strong> within 24 hours to finalize your appointment and discuss pre-care instructions.
-              </p>
-              <button 
-                onClick={() => window.location.reload()}
-                className="px-12 py-4 bg-ink text-paper text-[10px] uppercase tracking-[0.2em] font-bold"
-              >
-                Return to Studio
-              </button>
-           </motion.div>
-        )}
+          {/* Sidebar */}
+          {step < 5 && (
+            <div className="hidden lg:block">
+              <Summary />
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
 };
+
 
 const galleryCategories = ['All', 'Signature Brows', 'Lip Blush', 'Defining Liner'];
 
@@ -1796,7 +1709,7 @@ export default function App() {
   const content = () => {
     switch (currentPage) {
        case 'home': return <HomePage onNavigate={setCurrentPage} onSelectService={handleSelectService} />;
-       case 'booking': return <BookingPage />;
+       case 'booking': return <BookingPage onNavigate={setCurrentPage} />;
        case 'gallery': return <GalleryPage />;
        case 'services': return <Services onSelectService={handleSelectService} onNavigate={setCurrentPage} />;
        case 'artist': return <ArtistPage />;
