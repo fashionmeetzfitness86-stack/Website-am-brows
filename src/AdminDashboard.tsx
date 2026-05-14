@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import type { ReactNode } from 'react';
-import { Calendar, Users, DollarSign, Clock, Bell, ChevronRight, Search, Lock, Mail, Check, X, RefreshCw, TrendingUp, AlertCircle } from 'lucide-react';
+import { Calendar, Users, DollarSign, Clock, Bell, ChevronRight, Search, Lock, Mail, Check, X, RefreshCw, TrendingUp, AlertCircle, UserPlus, Trash2, ShieldCheck } from 'lucide-react';
 import { supabase } from './lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
@@ -63,11 +63,20 @@ const EmptyState = ({ icon, title, subtitle }: { icon: ReactNode; title: string;
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('appointments');
   const [session, setSession] = useState<any>(null);
+  const [userRole, setUserRole] = useState<string | null>(null);
   const [initialLoading, setInitialLoading] = useState(true);
   const [dataLoading, setDataLoading] = useState(false);
   const [authError, setAuthError] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  // Team management state
+  const [teamMembers, setTeamMembers] = useState<any[]>([]);
+  const [newStaffEmail, setNewStaffEmail] = useState('');
+  const [newStaffName, setNewStaffName] = useState('');
+  const [newStaffPassword, setNewStaffPassword] = useState('');
+  const [teamLoading, setTeamLoading] = useState(false);
+  const [teamError, setTeamError] = useState('');
+  const [teamSuccess, setTeamSuccess] = useState('');
   const [bookings, setBookings] = useState<any[]>([]);
   const [contacts, setContacts] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -78,12 +87,12 @@ export default function AdminDashboard() {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
-      if (session) fetchData();
+      if (session) { fetchData(); fetchRole(session.user.id); }
       setInitialLoading(false);
     });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
-      if (session) fetchData();
+      if (session) { fetchData(); fetchRole(session.user.id); }
     });
     return () => subscription.unsubscribe();
   }, []);
@@ -97,6 +106,40 @@ export default function AdminDashboard() {
     if (b) setBookings(b);
     if (c) setContacts(c);
     setDataLoading(false);
+  };
+
+  const fetchRole = async (userId: string) => {
+    const { data } = await supabase.from('user_roles').select('role').eq('user_id', userId).single();
+    setUserRole(data?.role ?? 'staff');
+    if (data?.role === 'super_admin') fetchTeam();
+  };
+
+  const fetchTeam = async () => {
+    const { data } = await supabase.from('user_roles').select('*').order('created_at', { ascending: false });
+    if (data) setTeamMembers(data);
+  };
+
+  const handleCreateStaff = async (e: any) => {
+    e.preventDefault();
+    setTeamLoading(true); setTeamError(''); setTeamSuccess('');
+    const { data: { session: s } } = await supabase.auth.getSession();
+    const { data, error } = await supabase.functions.invoke('create-staff-user', {
+      body: { email: newStaffEmail, full_name: newStaffName, password: newStaffPassword },
+    });
+    if (error || data?.error) {
+      setTeamError(data?.error || 'Failed to create staff user');
+    } else {
+      setTeamSuccess(`Staff user ${newStaffEmail} created successfully!`);
+      setNewStaffEmail(''); setNewStaffName(''); setNewStaffPassword('');
+      fetchTeam();
+    }
+    setTeamLoading(false);
+  };
+
+  const handleRemoveStaff = async (userId: string, memberEmail: string) => {
+    if (!confirm(`Remove ${memberEmail} from staff?`)) return;
+    await supabase.from('user_roles').delete().eq('user_id', userId);
+    fetchTeam();
   };
 
   const handleLogin = async (e: any) => {
@@ -208,7 +251,11 @@ export default function AdminDashboard() {
     );
   }
 
-  const TABS = ['appointments', 'leads'];
+  const TABS = userRole === 'super_admin'
+    ? ['appointments', 'leads', 'team']
+    : ['appointments', 'leads'];
+
+  const TAB_LABELS: Record<string, string> = { appointments: 'Bookings', leads: 'Leads', team: 'Team' };
 
   return (
     <div className="min-h-screen bg-[#fafaf8] flex font-sans text-ink">
@@ -225,8 +272,9 @@ export default function AdminDashboard() {
               onClick={() => setActiveTab(tab)}
               className={`w-full flex items-center justify-between p-3 text-sm font-medium rounded-lg transition-all ${activeTab === tab ? 'bg-accent/10 text-accent' : 'text-ink/50 hover:bg-ink/5 hover:text-ink'}`}
             >
-              <span className="capitalize">{tab === 'appointments' ? 'Bookings' : 'Leads'}</span>
-              {activeTab === tab && <ChevronRight className="w-4 h-4" />}
+              <span>{TAB_LABELS[tab]}</span>
+              {tab === 'team' && <ShieldCheck className="w-4 h-4 opacity-40" />}
+              {activeTab === tab && tab !== 'team' && <ChevronRight className="w-4 h-4" />}
             </button>
           ))}
         </nav>
@@ -446,6 +494,105 @@ export default function AdminDashboard() {
                           </tr>
                         ))
                     }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* Team Tab — super_admin only */}
+          {activeTab === 'team' && userRole === 'super_admin' && (
+            <div className="space-y-8">
+              {/* Invite form */}
+              <div className="bg-white border border-ink/8 rounded-xl shadow-sm p-6">
+                <div className="flex items-center gap-3 mb-6">
+                  <UserPlus className="w-5 h-5 text-accent" />
+                  <h3 className="text-lg font-serif">Invite Staff Member</h3>
+                </div>
+                <AnimatePresence>
+                  {teamError && (
+                    <motion.div initial={{opacity:0,y:-8}} animate={{opacity:1,y:0}} exit={{opacity:0}}
+                      className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-xs font-bold uppercase tracking-widest flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4" />{teamError}
+                    </motion.div>
+                  )}
+                  {teamSuccess && (
+                    <motion.div initial={{opacity:0,y:-8}} animate={{opacity:1,y:0}} exit={{opacity:0}}
+                      className="mb-4 p-3 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold uppercase tracking-widest flex items-center gap-2">
+                      <Check className="w-4 h-4" />{teamSuccess}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+                <form onSubmit={handleCreateStaff} className="grid md:grid-cols-3 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-[10px] uppercase tracking-widest font-bold opacity-40">Full Name</label>
+                    <input value={newStaffName} onChange={e=>setNewStaffName(e.target.value)} required
+                      className="w-full p-3 border border-ink/10 focus:border-accent outline-none text-sm rounded-lg" placeholder="Jane Smith" />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] uppercase tracking-widest font-bold opacity-40">Email</label>
+                    <input type="email" value={newStaffEmail} onChange={e=>setNewStaffEmail(e.target.value)} required
+                      className="w-full p-3 border border-ink/10 focus:border-accent outline-none text-sm rounded-lg" placeholder="jane@example.com" />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] uppercase tracking-widest font-bold opacity-40">Temp Password</label>
+                    <input type="password" value={newStaffPassword} onChange={e=>setNewStaffPassword(e.target.value)} required minLength={8}
+                      className="w-full p-3 border border-ink/10 focus:border-accent outline-none text-sm rounded-lg" placeholder="Min 8 characters" />
+                  </div>
+                  <div className="md:col-span-3">
+                    <button type="submit" disabled={teamLoading}
+                      className="flex items-center gap-2 px-6 py-3 bg-accent text-paper text-[10px] uppercase tracking-[0.3em] font-bold hover:bg-ink transition-colors disabled:opacity-50">
+                      {teamLoading ? 'Creating…' : <><UserPlus className="w-4 h-4" /> Add Staff Member</>}
+                    </button>
+                    <p className="text-xs text-ink/40 mt-2">Staff can view and edit bookings. Share the temp password with them — they can change it after logging in.</p>
+                  </div>
+                </form>
+              </div>
+
+              {/* Current team */}
+              <div className="bg-white border border-ink/8 rounded-xl shadow-sm overflow-hidden">
+                <div className="p-5 border-b border-ink/8">
+                  <h3 className="text-lg font-serif">Current Team ({teamMembers.length})</h3>
+                </div>
+                <table className="w-full text-left">
+                  <thead>
+                    <tr className="bg-paper-dark/40 text-[10px] uppercase tracking-widest text-ink/40">
+                      <th className="p-4 font-bold">Member</th>
+                      <th className="p-4 font-bold">Role</th>
+                      <th className="p-4 font-bold">Added</th>
+                      <th className="p-4 font-bold">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="text-sm">
+                    {teamMembers.length === 0 ? (
+                      <tr><td colSpan={4}><EmptyState icon={<Users className="w-6 h-6" />} title="No team members yet" subtitle="Invite your first staff member above." /></td></tr>
+                    ) : teamMembers.map(m => (
+                      <tr key={m.id} className="border-b border-ink/5 hover:bg-paper-dark/20 transition-colors">
+                        <td className="p-4">
+                          <div className="font-semibold">{m.full_name || '—'}</div>
+                          <div className="text-xs text-ink/50 mt-0.5">{m.email}</div>
+                        </td>
+                        <td className="p-4">
+                          <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
+                            m.role === 'super_admin' ? 'bg-purple-50 text-purple-700 border-purple-200' : 'bg-blue-50 text-blue-600 border-blue-100'
+                          }`}>
+                            {m.role === 'super_admin' ? 'Super Admin' : 'Staff'}
+                          </span>
+                        </td>
+                        <td className="p-4 text-xs text-ink/40">
+                          {m.created_at ? new Date(m.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}
+                        </td>
+                        <td className="p-4">
+                          {m.role !== 'super_admin' && (
+                            <button onClick={() => handleRemoveStaff(m.user_id, m.email)}
+                              className="flex items-center gap-1.5 text-xs text-red-400 hover:text-red-600 transition-colors">
+                              <Trash2 className="w-3.5 h-3.5" /> Remove
+                            </button>
+                          )}
+                          {m.role === 'super_admin' && <span className="text-xs text-ink/30">Owner</span>}
+                        </td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </div>
