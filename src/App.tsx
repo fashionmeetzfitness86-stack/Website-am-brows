@@ -13,6 +13,7 @@ import { loadStripe } from '@stripe/stripe-js';
 const stripePromise = loadStripe((import.meta as any).env.VITE_STRIPE_PUBLIC_KEY || 'pk_test_placeholder');
 
 import AdminDashboard from './AdminDashboard';
+import { BookingSuccess, BookingCancelled } from './BookingResultPages';
 
 // --- Types ---
 type Page = 'home' | 'services' | 'gallery' | 'booking' | 'artist' | 'contact' | 'service-detail' | 'privacy' | 'policies' | 'admin';
@@ -1166,29 +1167,53 @@ const BookingPage = ({ onNavigate }: { onNavigate: (page: Page) => void }) => {
     return Object.keys(e).length === 0;
   };
 
+  const [bookingId, setBookingId] = useState<string | null>(null);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
+
+  // Step 4 → 5: validate + save booking row to Supabase
   const handleSubmit = async () => {
     if (!validate()) return;
     setIsSubmitting(true);
+    setCheckoutError(null);
     try {
-      await supabase.from('bookings').insert({
-        client_name: formData.fullName,
-        client_email: formData.email,
-        client_phone: formData.phone,
-        service_name: selectedService?.title || '',
+      const depositMap: Record<string, number> = {
+        'Signature Brows': 10000, 'Ashley M. Lip Blush': 10000, 'Defining Liner': 7500,
+      };
+      const { data, error } = await supabase.from('bookings').insert({
+        client_name: formData.fullName, client_email: formData.email,
+        client_phone: formData.phone, service_name: selectedService?.title || '',
         service_price: selectedService?.price || '',
+        deposit_amount_cents: depositMap[selectedService?.title] ?? 10000,
         booking_date: selectedDate ? fmtDate(selectedDate) : '',
-        booking_time: selectedTime || '',
-        referral_source: formData.referralSource,
+        booking_time: selectedTime || '', referral_source: formData.referralSource,
         health_conditions: (formData.healthConditions as string[]).join(', '),
-        previous_pmu: formData.previousPMU,
-        skin_type: formData.skinType,
-        notes: formData.notes,
-        status: 'Pending Deposit',
-        deposit_status: 'Unpaid'
-      });
-    } catch (e) { console.error('Booking failed', e); }
+        previous_pmu: formData.previousPMU, skin_type: formData.skinType,
+        notes: formData.notes, status: 'Pending Deposit', deposit_status: 'Unpaid',
+      }).select('id').single();
+      if (error || !data) {
+        setCheckoutError('Failed to save your booking. Please try again.');
+        setIsSubmitting(false); return;
+      }
+      setBookingId(data.id);
+      setStep(5);
+    } catch { setCheckoutError('Something went wrong. Please try again.'); }
     setIsSubmitting(false);
-    setStep(6);
+  };
+
+  // Step 5: call Edge Function → redirect to Stripe Checkout
+  const handleCheckout = async () => {
+    if (!bookingId) return;
+    setIsSubmitting(true); setCheckoutError(null);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-checkout-session', {
+        body: { booking_id: bookingId },
+      });
+      if (error || !data?.url) {
+        setCheckoutError('Unable to connect to payment. Please try again or contact us directly.');
+        setIsSubmitting(false); return;
+      }
+      window.location.href = data.url;
+    } catch { setCheckoutError('Payment service unavailable. Please try again.'); setIsSubmitting(false); }
   };
 
   const field = (key: string, label: string, type = 'text', ph = '') => (
@@ -1450,18 +1475,57 @@ const BookingPage = ({ onNavigate }: { onNavigate: (page: Page) => void }) => {
                       </label>
                       {errors.policy && <p className="text-red-500 text-[9px] uppercase font-bold tracking-widest mt-2">{errors.policy}</p>}
                     </div>
+                    {checkoutError && (
+                      <div className="p-4 bg-red-50 border border-red-200 text-red-700 text-xs font-medium rounded">{checkoutError}</div>
+                    )}
                     <button onClick={handleSubmit} disabled={isSubmitting}
                       className="w-full py-6 bg-accent text-paper text-xs uppercase tracking-[0.3em] font-bold hover:bg-ink transition-colors shadow-xl flex items-center justify-center gap-3 disabled:opacity-60">
-                      {isSubmitting ? 'Sending…' : <><Sparkles className="w-4 h-4"/>Submit Consultation Request<ArrowRight className="w-4 h-4"/></>}
+                      {isSubmitting ? 'Saving…' : <>Continue to Payment <ArrowRight className="w-4 h-4"/></>}
                     </button>
                     <p className="text-center text-[9px] uppercase tracking-widest opacity-30">Ashley will personally review and confirm within 1–2 business days.</p>
                   </div>
                 </motion.div>
               )}
 
-              {/* STEP 5 — CONFIRMED */}
+              {/* STEP 5 — DEPOSIT (Stripe Checkout) */}
               {step===5 && (
-                <motion.div key="s5" initial={{opacity:0,scale:0.95}} animate={{opacity:1,scale:1}} className="text-center py-16">
+                <motion.div key="s5" initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-20}}>
+                  <h2 className="text-3xl font-serif mb-2">Secure Your Appointment</h2>
+                  <p className="text-ink/50 text-sm mb-8">Complete your deposit to lock in your appointment date.</p>
+                  <div className="bg-paper-dark border border-ink/10 p-6 mb-6">
+                    <p className="text-[10px] uppercase tracking-widest font-bold opacity-40 mb-5">Appointment Summary</p>
+                    <div className="space-y-3 text-sm">
+                      <div className="flex justify-between"><span className="text-ink/50">Service</span><span className="font-medium">{selectedService?.title}</span></div>
+                      <div className="flex justify-between"><span className="text-ink/50">Date</span><span className="font-medium">{selectedDate ? fmtShort(selectedDate) : '—'}</span></div>
+                      <div className="flex justify-between"><span className="text-ink/50">Time</span><span className="font-medium">{selectedTime}</span></div>
+                      <div className="flex justify-between pt-3 border-t border-ink/10">
+                        <span className="text-ink/50">Deposit Due Now</span>
+                        <span className="font-bold text-accent text-lg">{selectedService?.deposit}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-4 mb-6 text-[9px] uppercase tracking-widest font-bold text-ink/40">
+                    {['256-bit SSL','Stripe secured','Instant confirmation'].map(t => (
+                      <span key={t} className="flex items-center gap-1.5"><Shield className="w-3 h-3"/> {t}</span>
+                    ))}
+                  </div>
+                  {checkoutError && (
+                    <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 text-xs font-medium rounded">{checkoutError}</div>
+                  )}
+                  <button onClick={handleCheckout} disabled={isSubmitting}
+                    className="w-full py-6 bg-accent text-paper text-xs uppercase tracking-[0.3em] font-bold hover:bg-ink transition-colors shadow-xl flex items-center justify-center gap-3 disabled:opacity-60 disabled:cursor-not-allowed">
+                    {isSubmitting
+                      ? <><span className="animate-pulse">Connecting to Stripe</span><span>…</span></>
+                      : <><Shield className="w-4 h-4" /> Pay Deposit &amp; Confirm Booking</>}
+                  </button>
+                  <button onClick={()=>setStep(4)} className="w-full mt-4 text-[10px] uppercase tracking-widest opacity-40 hover:opacity-100 transition-opacity py-2">← Go Back</button>
+                  <p className="text-center text-[9px] uppercase tracking-widest opacity-25 mt-4">You will be redirected to Stripe's secure checkout page.</p>
+                </motion.div>
+              )}
+
+              {/* STEP 6 — CONFIRMED (fallback if Stripe redirect fails) */}
+              {step===6 && (
+                <motion.div key="s6" initial={{opacity:0,scale:0.95}} animate={{opacity:1,scale:1}} className="text-center py-16">
                   <motion.div initial={{scale:0}} animate={{scale:1}} transition={{delay:0.2,type:'spring',stiffness:200}}
                     className="w-24 h-24 bg-accent rounded-full flex items-center justify-center mx-auto mb-8">
                     <Check className="w-12 h-12 text-paper"/>
@@ -1819,6 +1883,8 @@ export default function App() {
             <Routes location={location}>
               <Route path="/" element={<HomePage onNavigate={handleNavigate} onSelectService={handleSelectService} />} />
               <Route path="/booking" element={<BookingPage onNavigate={handleNavigate} />} />
+              <Route path="/booking/success" element={<BookingSuccess />} />
+              <Route path="/booking/cancelled" element={<BookingCancelled />} />
               <Route path="/gallery" element={<GalleryPage />} />
               <Route path="/services" element={<Services onSelectService={handleSelectService} onNavigate={handleNavigate} />} />
               <Route path="/artist" element={<ArtistPage />} />
