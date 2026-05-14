@@ -8,9 +8,6 @@ import { Menu, ArrowRight, Instagram, Facebook, Mail, Calendar, User, Star, X, C
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from './lib/supabase';
-import { loadStripe } from '@stripe/stripe-js';
-
-const stripePromise = loadStripe((import.meta as any).env.VITE_STRIPE_PUBLIC_KEY || 'pk_test_placeholder');
 
 import AdminDashboard from './AdminDashboard';
 import { BookingSuccess, BookingCancelled } from './BookingResultPages';
@@ -756,7 +753,6 @@ const PoliciesPage = () => (
   </div>
 );
 
-const CONTACT_ENDPOINT = 'https://formspree.io/f/xdkopqna'; // Replace with your contact form Formspree ID
 
 const ContactPage = () => {
   const [formData, setFormData] = useState({
@@ -1120,8 +1116,6 @@ const HomePage = ({ onNavigate, onSelectService }: { onNavigate: (page: Page) =>
   </>
 );
 
-// Replace with your Formspree form ID from https://formspree.io
-const BOOKING_ENDPOINT = 'https://formspree.io/f/xdkopqna';
 
 const serviceMenu = [
   { id: 'brows', title: 'Signature Brows', price: '$650', deposit: '$100 deposit', duration: '2.5 hrs', description: 'Soft powder-shaded brows. All skin types.' },
