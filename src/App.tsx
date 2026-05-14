@@ -406,7 +406,7 @@ const About = () => (
 );
 
 const Services = ({ onSelectService, onNavigate }: { onSelectService: (service: any) => void, onNavigate: (page: any) => void }) => (
-  <section className="py-24 bg-white px-6">
+  <section className="py-24 bg-paper-dark px-6">
     <div className="max-w-7xl mx-auto">
       <div className="mb-20 text-center">
         <h2 className="text-4xl md:text-6xl font-serif mb-4">Curated Aesthetics</h2>
@@ -473,7 +473,7 @@ const Testimonials = () => (
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ delay: idx * 0.2, duration: 0.7, ease: 'easeOut' }}
-          className="flex flex-col p-8 bg-white border border-ink/5 hover:shadow-xl transition-shadow duration-500"
+          className="flex flex-col p-8 bg-paper-dark border border-ink/5 hover:shadow-xl transition-shadow duration-500"
         >
           <div className="flex gap-1 mb-8">
             {[...Array(t.rating)].map((_, i) => <Star key={i} className="w-3 h-3 fill-accent text-accent" />)}
@@ -490,7 +490,7 @@ const Testimonials = () => (
 );
 
 const Footer = ({ onNavigate }: { onNavigate: (page: Page) => void }) => (
-  <footer className="bg-ink text-paper py-20 px-6">
+  <footer style={{ backgroundColor: '#333D29' }} className="text-paper py-20 px-6">
     <div className="max-w-7xl mx-auto grid md:grid-cols-4 gap-12">
       <div className="col-span-1 md:col-span-2">
          <h2 className="text-3xl font-display uppercase tracking-[0.3em] mb-6">Ashley M. Brows</h2>
@@ -1051,7 +1051,7 @@ const HomePage = ({ onNavigate, onSelectService }: { onNavigate: (page: Page) =>
     <Services onSelectService={onSelectService} onNavigate={onNavigate} />
     <Testimonials />
     <FAQSection />
-    <section className="py-40 bg-accent-light px-6 text-center overflow-hidden relative">
+    <section className="py-40 bg-sage-light px-6 text-center overflow-hidden relative">
        <motion.div initial={{ opacity: 0, y: 50 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.9 }}>
          <h2 className="text-5xl md:text-8xl font-serif mb-12">Begin Your <br /> Transformation</h2>
          <p className="max-w-xl mx-auto text-ink/70 mb-12">Booking is by request. Pick a service, send Ashley a few details about your goals, and she will follow up to confirm your appointment and walk you through pre-care.</p>
