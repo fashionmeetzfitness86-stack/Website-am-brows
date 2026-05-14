@@ -8,6 +8,7 @@ import { Menu, ArrowRight, Instagram, Facebook, Mail, Calendar, User, Star, X, C
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from './lib/supabase';
+import { useSEO } from './hooks/useSEO';
 
 import AdminDashboard from './AdminDashboard';
 import { BookingSuccess, BookingCancelled } from './BookingResultPages';
@@ -1436,24 +1437,12 @@ const BookingPage = ({ onNavigate }: { onNavigate: (page: Page) => void }) => {
                           className="w-full p-4 bg-paper border border-ink/10 focus:border-accent outline-none text-sm resize-none"/>
                       </div>
                     </div>
-                    {/* Photo uploads */}
-                    <div>
+                                  <div>
                       <p className="text-[10px] uppercase tracking-widest font-bold opacity-40 mb-5 border-b border-ink/5 pb-3">Clinical Photos (Optional)</p>
                       <div className="grid md:grid-cols-2 gap-5">
-                        {(['currentAreaPhoto','Current Area Photo','Makeup-free, natural light'] as const).length > 0 && (
-                          [['currentAreaPhoto','Current Area Photo','Makeup-free, natural light'],['referencePhoto','Reference / Inspiration','Optional — inspired look']].map(([key,label,sub])=>(
-                            <label key={key as string} className="block cursor-pointer">
-                              <input type="file" accept="image/*" className="hidden" onChange={e=>setFormData({...formData,[key as string]:e.target.files?.[0]??null})}/>
-                              <div className={`aspect-[4/3] border-2 border-dashed flex flex-col items-center justify-center gap-2 transition-colors ${formData[key as string]?'border-accent bg-accent/5':'border-ink/15 hover:border-accent/40'}`}>
-                                {formData[key as string]
-                                  ? <img src={URL.createObjectURL(formData[key as string] as File)} alt="" className="w-full h-full object-cover"/>
-                                  : <><Plus className="w-5 h-5 text-accent/50"/>
-                                    <p className="text-[10px] uppercase tracking-widest font-bold text-ink/40">{label as string}</p>
-                                    <p className="text-[9px] uppercase tracking-widest font-bold text-ink/25">{sub as string}</p></>}
-                              </div>
-                            </label>
-                          ))
-                        )}
+                        {[['currentAreaPhoto','Current Area Photo','Makeup-free, natural light'],['referencePhoto','Reference / Inspiration','Optional — inspired look']].map(([key,label,sub])=>(
+                          <PhotoUpload key={key as string} fieldKey={key as string} label={label as string} sub={sub as string} formData={formData} setFormData={setFormData} />
+                        ))}
                       </div>
                     </div>
                     {/* Policy */}
@@ -1632,7 +1621,7 @@ const InstagramFeed = () => {
               className="relative group cursor-pointer aspect-square overflow-hidden bg-warm-gray focus-visible:outline-accent"
               aria-label={`View Instagram post with ${post.likes} likes`}
             >
-              <img src={`${post.image}?auto=format&fit=crop&q=80&w=400`} alt="" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+              <img src={`${post.image}?auto=format&fit=crop&q=80&w=400`} alt="" loading="lazy" decoding="async" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
               <div className="absolute inset-0 bg-ink/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-8 text-paper">
                 <div className="flex items-center gap-2">
                   <Star className="w-4 h-4 fill-paper" aria-hidden="true" />
@@ -1710,6 +1699,8 @@ const GalleryPage = () => {
                        <img 
                         src={`${item.image}?auto=format&fit=crop&q=80&w=800`} 
                         alt={item.title} 
+                        loading="lazy"
+                        decoding="async"
                         className="w-full h-full object-cover transition-transform duration-1000 ease-out group-hover:scale-110" 
                        />
                        <div className="absolute inset-0 bg-ink/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -1818,6 +1809,39 @@ const ArtistPage = () => (
   </div>
 );
 
+// Photo upload with proper object URL memory management
+const PhotoUpload = ({ fieldKey, label, sub, formData, setFormData }: {
+  fieldKey: string; label: string; sub: string; formData: any; setFormData: (d: any) => void; key?: string | number;
+}) => {
+  const [preview, setPreview] = useState<string | null>(null);
+
+  useEffect(() => {
+    const file = formData[fieldKey];
+    if (!file) { setPreview(null); return; }
+    const url = URL.createObjectURL(file);
+    setPreview(url);
+    return () => URL.revokeObjectURL(url); // cleanup on unmount / file change
+  }, [formData[fieldKey]]);
+
+  return (
+    <label className="block cursor-pointer">
+      <input type="file" accept="image/*" className="hidden"
+        onChange={e => setFormData({ ...formData, [fieldKey]: e.target.files?.[0] ?? null })} />
+      <div className={`aspect-[4/3] border-2 border-dashed flex flex-col items-center justify-center gap-2 transition-colors ${
+        preview ? 'border-accent bg-accent/5' : 'border-ink/15 hover:border-accent/40'
+      }`}>
+        {preview
+          ? <img src={preview} alt="" className="w-full h-full object-cover" />
+          : <>
+              <Plus className="w-5 h-5 text-accent/50" />
+              <p className="text-[10px] uppercase tracking-widest font-bold text-ink/40">{label}</p>
+              <p className="text-[9px] uppercase tracking-widest font-bold text-ink/25">{sub}</p>
+            </>}
+      </div>
+    </label>
+  );
+};
+
 // --- Main App ---
 
 export default function App() {
@@ -1857,6 +1881,53 @@ export default function App() {
   };
   const currentPage = getCurrentPage();
 
+  // Dynamic SEO — updates title + meta per route
+  useSEO();
+
+  // LocalBusiness structured data (injected once)
+  useEffect(() => {
+    const id = 'ld-local-business';
+    if (document.getElementById(id)) return;
+    const script = document.createElement('script');
+    script.id = id;
+    script.type = 'application/ld+json';
+    script.textContent = JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'BeautySalon',
+      name: 'Ashley M. Brows',
+      description: 'Luxury cosmetic tattoo studio specializing in powder brows, lip blush, and defining liner in Brighton, Michigan.',
+      url: 'https://ashleymbrows.netlify.app',
+      image: 'https://ashleymbrows.netlify.app/ashley-portrait.jpg',
+      telephone: '',
+      email: 'ashleymbrows@gmail.com',
+      address: {
+        '@type': 'PostalAddress',
+        streetAddress: '8105 Grand River Rd.',
+        addressLocality: 'Brighton',
+        addressRegion: 'MI',
+        postalCode: '48114',
+        addressCountry: 'US',
+      },
+      geo: { '@type': 'GeoCoordinates', latitude: 42.5262, longitude: -83.7799 },
+      openingHours: ['Tu-Fr 09:00-17:00'],
+      priceRange: '$400–$650',
+      sameAs: [
+        'https://www.instagram.com/ashleymbrows',
+        'https://www.facebook.com/ashleymbrows',
+      ],
+      hasOfferCatalog: {
+        '@type': 'OfferCatalog',
+        name: 'Cosmetic Tattoo Services',
+        itemListElement: [
+          { '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'Signature Brows' }, price: '650', priceCurrency: 'USD' },
+          { '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'Lip Blush' }, price: '650', priceCurrency: 'USD' },
+          { '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'Defining Liner' }, price: '400', priceCurrency: 'USD' },
+        ],
+      },
+    });
+    document.head.appendChild(script);
+  }, []);
+
   if (location.pathname === '/admin') {
     return <AdminDashboard />;
   }
@@ -1894,15 +1965,17 @@ export default function App() {
 
       <Footer onNavigate={handleNavigate} />
       
-      {/* Sticky mobile Book Now button */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-paper border-t border-ink/10 p-4 shadow-2xl">
-        <button
-          onClick={() => handleNavigate('booking')}
-          className="w-full py-4 bg-accent text-paper text-[10px] uppercase tracking-[0.3em] font-bold hover:bg-ink transition-colors flex items-center justify-center gap-3"
-        >
-          <Calendar className="w-4 h-4" /> Book Now
-        </button>
-      </div>
+      {/* Sticky mobile Book Now — hidden on result pages */}
+      {!['/booking/success', '/booking/cancelled', '/booking'].includes(location.pathname) && (
+        <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-paper border-t border-ink/10 p-4 shadow-2xl">
+          <button
+            onClick={() => handleNavigate('booking')}
+            className="w-full py-4 bg-accent text-paper text-[10px] uppercase tracking-[0.3em] font-bold hover:bg-ink transition-colors flex items-center justify-center gap-3"
+          >
+            <Calendar className="w-4 h-4" /> Book Now
+          </button>
+        </div>
+      )}
 
       {/* Scroll to Top helper */}
       <div 
