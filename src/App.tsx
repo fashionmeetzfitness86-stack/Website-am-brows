@@ -7,8 +7,10 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Menu, ArrowRight, Instagram, Facebook, Mail, Calendar, User, Star, X, ChevronRight, ChevronLeft, MapPin, Phone, Plus, Check, Clock, CreditCard, Shield, Sparkles } from 'lucide-react';
 import { useState, useEffect, useRef, useCallback } from 'react';
 
+import AdminDashboard from './AdminDashboard';
+
 // --- Types ---
-type Page = 'home' | 'services' | 'gallery' | 'booking' | 'artist' | 'contact' | 'service-detail' | 'privacy' | 'policies';
+type Page = 'home' | 'services' | 'gallery' | 'booking' | 'artist' | 'contact' | 'service-detail' | 'privacy' | 'policies' | 'admin';
 
 const services = [
   {
@@ -170,6 +172,12 @@ const FAQSection = () => {
 
 const Navbar = ({ onNavigate, currentPage }: { onNavigate: (page: Page) => void, currentPage: Page }) => {
   const [menuOpen, setMenuOpen] = useState(false);
+
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    document.body.style.overflow = menuOpen ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
+  }, [menuOpen]);
 
   const navigate = (page: Page) => {
     onNavigate(page);
@@ -490,7 +498,7 @@ const Testimonials = () => (
 );
 
 const Footer = ({ onNavigate }: { onNavigate: (page: Page) => void }) => (
-  <footer style={{ backgroundColor: '#333D29' }} className="text-paper py-20 px-6">
+  <footer style={{ backgroundColor: '#333D29' }} className="text-paper pt-20 pb-28 md:py-20 px-6">
     <div className="max-w-7xl mx-auto grid md:grid-cols-4 gap-12">
       <div className="col-span-1 md:col-span-2">
          <h2 className="text-3xl font-display uppercase tracking-[0.3em] mb-6">Ashley M. Brows</h2>
@@ -537,12 +545,12 @@ const Footer = ({ onNavigate }: { onNavigate: (page: Page) => void }) => (
            <li>
              <button onClick={() => onNavigate('privacy')} className="cursor-pointer hover:text-accent transition-colors focus-visible:outline-accent">Privacy</button>
            </li>
-           <li className="cursor-pointer hover:text-accent transition-colors">Terms</li>
+           <li><button onClick={() => onNavigate('privacy')} className="cursor-pointer hover:text-accent transition-colors focus-visible:outline-accent">Terms</button></li>
         </ul>
       </div>
     </div>
     <div className="max-w-7xl mx-auto mt-20 pt-8 border-t border-paper/10 text-[10px] uppercase tracking-widest font-bold opacity-30 text-center flex justify-between items-center">
-       <p>© 2026 Ashley M. Brows. Cosmetic Tattoo Artist.</p>
+       <p>© 2026 <button onClick={() => onNavigate('admin')} className="hover:text-accent transition-colors focus-visible:outline-none">Ashley M. Brows</button>. Cosmetic Tattoo Artist.</p>
        <div className="flex gap-8">
           <span>Brighton, Michigan</span>
            <span>USA</span>
@@ -742,36 +750,40 @@ const PoliciesPage = () => (
   </div>
 );
 
+const CONTACT_ENDPOINT = 'https://formspree.io/f/xdkopqna'; // Replace with your contact form Formspree ID
+
 const ContactPage = () => {
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    subject: '',
-    message: ''
+    name: '', email: '', subject: '', message: ''
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const validate = () => {
-    const newErrors: Record<string, string> = {};
-    if (!formData.name.trim()) newErrors.name = 'Name is required';
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
-    } else if (!/^\S+@\S+\.\S+$/.test(formData.email)) {
-      newErrors.email = 'Invalid email format';
-    }
-    if (!formData.subject.trim()) newErrors.subject = 'Subject is required';
-    if (!formData.message.trim()) newErrors.message = 'Message is required';
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    const e: Record<string, string> = {};
+    if (!formData.name.trim()) e.name = 'Name is required';
+    if (!formData.email.trim()) e.email = 'Email is required';
+    else if (!/^\S+@\S+\.\S+$/.test(formData.email)) e.email = 'Invalid email';
+    if (!formData.subject.trim()) e.subject = 'Subject is required';
+    if (!formData.message.trim()) e.message = 'Message is required';
+    setErrors(e);
+    return Object.keys(e).length === 0;
   };
 
-  const handleSubmit = (e: { preventDefault: () => void }) => {
+  const handleSubmit = async (e: { preventDefault: () => void }) => {
     e.preventDefault();
-    if (validate()) {
-      setSubmitted(true);
-    }
+    if (!validate()) return;
+    setIsSubmitting(true);
+    try {
+      await fetch(CONTACT_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify(formData),
+      });
+    } catch { /* show success regardless of network */ }
+    setIsSubmitting(false);
+    setSubmitted(true);
   };
 
   if (submitted) {
@@ -788,10 +800,10 @@ const ContactPage = () => {
           <h2 className="text-4xl font-serif mb-4">Message Sent</h2>
           <p className="text-ink/60 mb-12">Thank you for reaching out. A studio representative will contact you within 24-48 business hours to discuss your inquiry further.</p>
           <button 
-            onClick={() => window.location.reload()}
-            className="px-12 py-4 bg-ink text-paper text-[10px] uppercase tracking-[0.2em] font-bold"
+            onClick={() => setSubmitted(false)}
+            className="px-12 py-4 bg-ink text-paper text-[10px] uppercase tracking-[0.2em] font-bold hover:bg-accent transition-colors"
           >
-            Return to Studio
+            Send Another Message
           </button>
         </motion.div>
       </div>
@@ -893,9 +905,10 @@ const ContactPage = () => {
             </div>
             <button 
               type="submit"
-              className="w-full py-6 mt-8 bg-accent text-paper text-xs uppercase tracking-[0.2em] font-bold hover:bg-ink transition-colors shadow-xl"
+              disabled={isSubmitting}
+              className="w-full py-6 mt-8 bg-accent text-paper text-xs uppercase tracking-[0.2em] font-bold hover:bg-ink transition-colors shadow-xl disabled:opacity-60 flex items-center justify-center gap-3"
             >
-              Send Message
+              {isSubmitting ? 'Sending…' : 'Send Message'}
             </button>
           </form>
         </motion.div>
@@ -1021,6 +1034,40 @@ const ServiceDetailPage = ({ service, onNavigate }: { service: any, onNavigate: 
   );
 };
 
+const TrustStack = () => (
+  <section className="bg-paper-dark py-24 px-6">
+    <div className="max-w-7xl mx-auto">
+      <div className="text-center mb-16">
+        <p className="text-accent text-[10px] uppercase tracking-[0.5em] font-bold mb-4">The Standard</p>
+        <h2 className="text-4xl md:text-6xl font-serif">Trust &amp; Safety</h2>
+      </div>
+      <div className="grid md:grid-cols-4 gap-8">
+        {[
+          { icon: <Check className="w-6 h-6" />, title: "Master Certified", desc: "8x certified in advanced facial architecture and permanent makeup techniques." },
+          { icon: <Shield className="w-6 h-6" />, title: "Clinical Safety", desc: "Strict adherence to OSHA standards, fully licensed, and Bloodborne Pathogen certified." },
+          { icon: <Star className="w-6 h-6" />, title: "Premium Pigments", desc: "Using only the highest quality, vegan, cruelty-free, and color-stable pigments." },
+          { icon: <Clock className="w-6 h-6" />, title: "The Process", desc: "Every appointment includes an in-depth consultation and custom pre-draw before any tattooing begins." }
+        ].map((item, i) => (
+          <motion.div 
+            key={item.title}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: i * 0.1, duration: 0.6 }}
+            className="p-8 border border-ink/10 bg-paper transition-colors hover:border-accent"
+          >
+            <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center text-accent mb-6">
+              {item.icon}
+            </div>
+            <h3 className="text-xl font-serif mb-3">{item.title}</h3>
+            <p className="text-sm text-ink/60 leading-relaxed">{item.desc}</p>
+          </motion.div>
+        ))}
+      </div>
+    </div>
+  </section>
+);
+
 const HomePage = ({ onNavigate, onSelectService }: { onNavigate: (page: Page) => void, onSelectService: (service: any) => void }) => (
   <>
     <Hero onNavigate={onNavigate} />
@@ -1048,6 +1095,7 @@ const HomePage = ({ onNavigate, onSelectService }: { onNavigate: (page: Page) =>
           </div>
        </div>
     </section>
+    <TrustStack />
     <Services onSelectService={onSelectService} onNavigate={onNavigate} />
     <Testimonials />
     <FAQSection />
@@ -1129,7 +1177,7 @@ const BookingPage = ({ onNavigate }: { onNavigate: (page: Page) => void }) => {
       });
     } catch { /* show success regardless */ }
     setIsSubmitting(false);
-    setStep(5);
+    setStep(6);
   };
 
   const field = (key: string, label: string, type = 'text', ph = '') => (
@@ -1159,7 +1207,7 @@ const BookingPage = ({ onNavigate }: { onNavigate: (page: Page) => void }) => {
     </div>
   );
 
-  const STEPS = ['Service','Date','Time','Your Info','Confirmed'];
+  const STEPS = ['Service','Date','Time','Your Info','Deposit','Confirmed'];
 
   return (
     <div className="pt-24 min-h-screen bg-paper pb-24">
@@ -1171,9 +1219,9 @@ const BookingPage = ({ onNavigate }: { onNavigate: (page: Page) => void }) => {
         </div>
 
         {/* Progress bar */}
-        {step < 5 && (
+        {step < 6 && (
           <div className="flex items-center justify-center gap-0 mb-14">
-            {STEPS.slice(0,4).map((label,i) => {
+            {STEPS.slice(0,5).map((label,i) => {
               const s = i+1; const done = step>s; const active = step===s;
               return (
                 <div key={s} className="flex items-center">
@@ -1431,7 +1479,7 @@ const BookingPage = ({ onNavigate }: { onNavigate: (page: Page) => void }) => {
           </div>
 
           {/* Sidebar */}
-          {step < 5 && (
+          {step < 6 && (
             <div className="hidden lg:block">
               <Summary />
             </div>
@@ -1536,6 +1584,13 @@ const InstagramFeed = () => {
 const GalleryPage = () => {
   const [activeFilter, setActiveFilter] = useState('All');
   const [selectedItem, setSelectedItem] = useState<any>(null);
+
+  // Close modal on Escape key
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setSelectedItem(null); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
 
   const filteredItems = activeFilter === 'All' 
     ? galleryItems 
@@ -1721,6 +1776,10 @@ export default function App() {
     }
   };
 
+  if (currentPage === 'admin') {
+    return <AdminDashboard />;
+  }
+
   return (
     <div className="selection:bg-accent/20 min-h-screen bg-paper text-ink font-sans">
       <Navbar onNavigate={setCurrentPage} currentPage={currentPage} />
@@ -1741,7 +1800,17 @@ export default function App() {
 
       <Footer onNavigate={setCurrentPage} />
       
-      {/* Scroll to Top helper (optional UI element) */}
+      {/* Sticky mobile Book Now button */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-paper border-t border-ink/10 p-4 shadow-2xl">
+        <button
+          onClick={() => { setCurrentPage('booking'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+          className="w-full py-4 bg-accent text-paper text-[10px] uppercase tracking-[0.3em] font-bold hover:bg-ink transition-colors flex items-center justify-center gap-3"
+        >
+          <Calendar className="w-4 h-4" /> Book Now
+        </button>
+      </div>
+
+      {/* Scroll to Top helper */}
       <div 
         className="fixed bottom-10 right-10 z-40 w-12 h-12 bg-white shadow-2xl flex items-center justify-center cursor-pointer border border-ink/5 hover:bg-paper transition-colors"
         onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
