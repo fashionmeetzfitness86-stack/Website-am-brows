@@ -68,6 +68,21 @@ const services = [
       { step: 'Pigment Fill', description: 'Worked between or above the lashes for a dense, natural-looking line or wing.' }
     ],
     testimonials: []
+  },
+  {
+    id: 'tooth-gems',
+    title: 'Tooth Gems',
+    price: '$60+',
+    shortDescription: 'Crystal and gold tooth gems &mdash; from a single crystal to a full disco tooth.',
+    description: 'Tooth gems are non-permanent decorative jewels applied to the surface of the tooth. Single crystals start at $60, with options for multi-crystal sets ($100 / $125), gold applications ($120 and up), and a full "disco tooth" ($250). Gems are sourced from Tegan&rsquo;s Tooth Gems, Tooth Kandy and Isisngold &mdash; email ashleymbrows@gmail.com with a screenshot of your pick to book.',
+    image: '/gallery/tooth-gems.jpg',
+    tags: ['Crystals', 'Gold Gems', 'Non-Permanent'],
+    process: [
+      { step: 'Pick Your Gem', description: 'Browse vendor catalogues (Tegan&rsquo;s, Tooth Kandy, Isisngold) and email your selection.' },
+      { step: 'Application', description: 'A quick, non-invasive application with dental-grade adhesive &mdash; no drilling, no damage.' },
+      { step: 'Wear & Enjoy', description: 'Gems typically last several months to a year with normal wear; they can be added to or removed any time.' }
+    ],
+    testimonials: []
   }
 ];
 
@@ -211,10 +226,10 @@ const Navbar = ({ onNavigate, currentPage }: { onNavigate: (page: Page) => void,
           </button>
           <button
             onClick={() => navigate('home')}
-            className="text-xl font-display uppercase tracking-[0.2em] cursor-pointer focus-visible:outline-accent"
-            aria-label="Ashley M. Brows Home"
+            className="cursor-pointer focus-visible:outline-accent flex items-center"
+            aria-label="Ashley Brows Home"
           >
-            Ashley M. Brows
+            <img src="/logo.png" alt="Ashley Brows" className="h-28 w-auto" />
           </button>
         </div>
         <div className="hidden md:flex items-center gap-10">
@@ -708,11 +723,10 @@ const PoliciesPage = () => (
           <li>Under Body Art Licensure, <strong className="text-ink">no person</strong> under the age of 18 is allowed servicing &mdash; even with parental consent.</li>
           <li><strong className="text-ink">Valid ID</strong> is required at the time of your service.</li>
           <li>Guidelines are provided to achieve optimal results, but there are <strong className="text-ink">no guarantees</strong> due to different skin types reacting differently to procedures. Please check the FAQ section to make sure you are an eligible candidate. If you are unsure, please contact us.</li>
-          <li><strong className="text-ink">Deposits:</strong> a minimum of $100 deposit is required to book and is <strong className="text-ink">non-refundable</strong> under any circumstance. Your deposit goes towards the overall cost. This ensures you are serious about your appointment.</li>
-          <li>A minimum of <strong className="text-ink">48 hours</strong> is required to reschedule your appointment without penalty. Less than 48 hours will result in forfeiture of your deposit and a new deposit will be required to reschedule.</li>
-          <li><strong className="text-ink">One reschedule</strong> is allowed within the minimum time frame before a new deposit will be required.</li>
-          <li><strong className="text-ink">Any and all cancellations without notice</strong> will result in a charge of the full cost of the service to the card on file. A new deposit will be required to reschedule.</li>
-          <li>Being more than <strong className="text-ink">15 minutes late</strong> to your appointment can result in forfeiture of your deposit and/or cancellation of your appointment.</li>
+          <li><strong className="text-ink">Booking is a request, not a payment.</strong> Ashley will personally follow up to confirm your appointment &mdash; no card, no deposit at the time of request.</li>
+          <li>A minimum of <strong className="text-ink">48 hours notice</strong> is required to reschedule your appointment.</li>
+          <li>If you cancel without notice, please understand it may make it harder to accommodate you in the future. Let us know as soon as possible if you can no longer make your appointment.</li>
+          <li>Being more than <strong className="text-ink">15 minutes late</strong> to your appointment may result in your appointment being cancelled.</li>
           <li>We accept all major credit cards, however <strong className="text-ink">cash is preferred</strong>. The remaining balance is due at the time of your appointment.</li>
           <li>A minimum of <strong className="text-ink">2 sessions</strong> is highly recommended for desired results. Additional sessions may be needed.</li>
           <li><strong className="text-ink">Touch-up appointments are for existing clientele only.</strong></li>
@@ -1149,6 +1163,7 @@ const serviceMenu = [
   { id: 'brows', title: 'Signature Brows', price: '$650', duration: '2.5 hrs', description: 'Soft powder-shaded brows. All skin types.' },
   { id: 'lips',  title: 'Ashley M. Lip Blush', price: '$650', duration: '2 hrs', description: 'Watercolor tint for fuller, defined lips.' },
   { id: 'liner', title: 'Defining Liner', price: '$400+', duration: '1.5 hrs', description: 'Lash enhancement to full shaded wing.' },
+  { id: 'tooth-gems', title: 'Tooth Gems', price: '$60+', duration: '30 min', description: 'Crystal and gold tooth gems from $60 to full disco tooth.' },
 ];
 
 const BookingPage = ({ onNavigate }: { onNavigate: (page: Page) => void }) => {
@@ -1473,8 +1488,8 @@ const BookingPage = ({ onNavigate }: { onNavigate: (page: Page) => void }) => {
                           onChange={e=>setFormData({...formData,policyAcknowledged:e.target.checked})}
                           className="mt-1 w-4 h-4 accent-[var(--color-accent)] shrink-0"/>
                         <span className="text-sm leading-relaxed">
-                          <span className="font-bold text-ink">Policy &amp; Deposit Acknowledgment *</span><br/>
-                          <span className="text-ink/50 text-xs">I understand a non-refundable deposit is required to confirm my appointment. I have reviewed all pre/post-care instructions and cancellation policies.</span>
+                          <span className="font-bold text-ink">Policy Acknowledgment *</span><br/>
+                          <span className="text-ink/50 text-xs">I have reviewed Ashley&rsquo;s policies, pre-care and post-care instructions, and understand that this is a request &mdash; Ashley will personally follow up to confirm my appointment.</span>
                         </span>
                       </label>
                       {errors.policy && <p className="text-red-500 text-[9px] uppercase font-bold tracking-widest mt-2">{errors.policy}</p>}
