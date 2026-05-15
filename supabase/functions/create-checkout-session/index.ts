@@ -3,21 +3,31 @@
 //
 // Environment variables required (set via Supabase Dashboard > Edge Functions > Secrets):
 //   STRIPE_SECRET_KEY  — your Stripe secret key (sk_live_... or sk_test_...)
+//   SITE_URL           — your production URL (https://ashleymbrows.netlify.app)
 //   SUPABASE_URL       — auto-injected by Supabase runtime
 //   SUPABASE_SERVICE_ROLE_KEY — auto-injected by Supabase runtime
 
 import Stripe from 'npm:stripe@14';
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+const ALLOWED_ORIGINS = [
+  'https://ashleymbrows.netlify.app',
+  'http://localhost:3000',
+  'http://localhost:5173',
+];
+
+function getCorsHeaders(req: Request) {
+  const origin = req.headers.get('Origin') ?? '';
+  const allowed = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  return {
+    'Access-Control-Allow-Origin': allowed,
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  };
+}
 
 Deno.serve(async (req: Request) => {
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return new Response('ok', { headers: getCorsHeaders(req) });
   }
 
   try {
@@ -26,7 +36,7 @@ Deno.serve(async (req: Request) => {
     if (!booking_id) {
       return new Response(JSON.stringify({ error: 'booking_id is required' }), {
         status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' },
       });
     }
 
@@ -47,22 +57,18 @@ Deno.serve(async (req: Request) => {
       console.error('Booking not found:', bookingError);
       return new Response(JSON.stringify({ error: 'Booking not found' }), {
         status: 404,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' },
       });
     }
 
-    // Parse deposit amount — "  $100 deposit" → 10000 (cents)
-    const depositStr: string = booking.service_price || '100';
-    const depositDollars = parseInt(depositStr.replace(/[^0-9]/g, ''), 10) || 100;
-    // Use a fixed deposit amount per service rather than full price
-    const depositAmount = booking.deposit_amount_cents || 10000; // default $100
+    // Use the stored deposit amount in cents (default $100)
+    const depositAmount = booking.deposit_amount_cents || 10000;
 
     // Initialize Stripe
     const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') ?? '', {
       apiVersion: '2024-06-20',
     });
 
-    // Determine the site URL (set SITE_URL env var in Supabase secrets)
     const siteUrl = Deno.env.get('SITE_URL') || 'https://ashleymbrows.netlify.app';
 
     // Create Stripe Checkout Session
@@ -95,22 +101,23 @@ Deno.serve(async (req: Request) => {
       cancel_url: `${siteUrl}/booking/cancelled?booking_id=${booking.id}`,
     });
 
-    // Update booking with Stripe session ID (status still Pending Deposit until webhook fires)
+    // Store the Stripe Checkout Session ID separately from payment_intent_id.
+    // The webhook will populate stripe_payment_intent_id when payment completes.
     await supabase
       .from('bookings')
-      .update({ stripe_payment_intent_id: session.id, status: 'Pending Deposit' })
+      .update({ stripe_session_id: session.id })
       .eq('id', booking.id);
 
     return new Response(JSON.stringify({ url: session.url, session_id: session.id }), {
       status: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' },
     });
 
   } catch (err) {
     console.error('create-checkout-session error:', err);
     return new Response(JSON.stringify({ error: 'Internal server error' }), {
       status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' },
     });
   }
 });
