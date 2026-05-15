@@ -6,15 +6,16 @@
 import { motion, AnimatePresence } from 'motion/react';
 import { Menu, ArrowRight, Instagram, Facebook, Mail, Calendar, User, Star, X, ChevronRight, ChevronLeft, MapPin, Phone, Plus, Check, Clock, CreditCard, Shield, Sparkles } from 'lucide-react';
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { Routes, Route, useNavigate, useLocation, useParams, useSearchParams, Navigate } from 'react-router-dom';
 import { supabase } from './lib/supabase';
+import LoginPage from './pages/LoginPage';
+import AdminRoute from './components/AdminRoute';
 import { useSEO } from './hooks/useSEO';
 
 import AdminDashboard from './AdminDashboard';
-import { BookingSuccess, BookingCancelled } from './BookingResultPages';
 
 // --- Types ---
-type Page = 'home' | 'services' | 'gallery' | 'booking' | 'artist' | 'contact' | 'service-detail' | 'privacy' | 'policies' | 'admin';
+type Page = 'home' | 'services' | 'gallery' | 'booking' | 'artist' | 'contact' | 'service-detail' | 'privacy' | 'policies' | 'admin' | 'login';
 
 const services = [
   {
@@ -533,10 +534,10 @@ const Footer = ({ onNavigate }: { onNavigate: (page: Page) => void }) => (
              </button>
            </li>
            <li className="hover:text-accent transition-colors">
-             <button className="focus-visible:outline-accent uppercase text-[10px] font-bold">Our Standards</button>
+             <button className="focus-visible:outline-accent uppercase text-[10px] font-bold" onClick={() => onNavigate('policies')}>Studio Policies</button>
            </li>
            <li className="hover:text-accent transition-colors">
-             <button className="focus-visible:outline-accent uppercase text-[10px] font-bold">Aftercare</button>
+             <button className="focus-visible:outline-accent uppercase text-[10px] font-bold" onClick={() => onNavigate('contact')}>Contact Studio</button>
            </li>
         </ul>
       </div>
@@ -549,7 +550,7 @@ const Footer = ({ onNavigate }: { onNavigate: (page: Page) => void }) => (
            <li>
              <button onClick={() => onNavigate('privacy')} className="cursor-pointer hover:text-accent transition-colors focus-visible:outline-accent">Privacy</button>
            </li>
-           <li><button onClick={() => onNavigate('privacy')} className="cursor-pointer hover:text-accent transition-colors focus-visible:outline-accent">Terms</button></li>
+            <li><button onClick={() => onNavigate('policies')} className="cursor-pointer hover:text-accent transition-colors focus-visible:outline-accent">Terms</button></li>
         </ul>
       </div>
     </div>
@@ -924,8 +925,30 @@ const ContactPage = () => {
 
 // --- Page Content ---
 
-const ServiceDetailPage = ({ service, onNavigate }: { service: any, onNavigate: (page: Page) => void }) => {
-  if (!service) return null;
+// Look up a service by its URL slug (id)
+const getServiceBySlug = (slug: string) => services.find(s => s.id === slug) ?? null;
+
+const ServiceDetailPage = ({ onNavigate }: { onNavigate: (page: Page) => void }) => {
+  const { slug } = useParams<{ slug: string }>();
+  const service = slug ? getServiceBySlug(slug) : null;
+
+  if (!service) {
+    return (
+      <div className="pt-24 min-h-screen bg-paper flex flex-col items-center justify-center px-6">
+        <div className="text-center max-w-md">
+          <p className="text-accent text-[10px] uppercase tracking-[0.5em] font-bold mb-4">Not Found</p>
+          <h1 className="text-4xl font-serif mb-6">Service Not Found</h1>
+          <p className="text-ink/60 mb-10 leading-relaxed">The service you’re looking for doesn’t exist or the link may be incorrect.</p>
+          <button
+            onClick={() => onNavigate('services')}
+            className="px-10 py-4 bg-accent text-paper text-[10px] uppercase tracking-widest font-bold hover:bg-ink transition-colors"
+          >
+            View All Services
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="pt-24 min-h-screen bg-paper pb-20">
@@ -1014,6 +1037,9 @@ const ServiceDetailPage = ({ service, onNavigate }: { service: any, onNavigate: 
             className="bg-white p-12 shadow-sm border border-ink/5"
            >
               <h3 className="text-3xl font-serif mb-12">Testimonials</h3>
+              {service.testimonials.length === 0 ? (
+                <p className="text-ink/40 italic text-sm">Client testimonials for this service coming soon.</p>
+              ) : (
               <div className="space-y-12">
                  {service.testimonials.map((t: any, i: number) => (
                    <motion.div 
@@ -1032,6 +1058,7 @@ const ServiceDetailPage = ({ service, onNavigate }: { service: any, onNavigate: 
                    </motion.div>
                  ))}
               </div>
+              )}
            </motion.div>
         </div>
       </div>
@@ -1109,7 +1136,7 @@ const HomePage = ({ onNavigate, onSelectService }: { onNavigate: (page: Page) =>
          <h2 className="text-5xl md:text-8xl font-serif mb-12">Begin Your <br /> Transformation</h2>
          <p className="max-w-xl mx-auto text-ink/70 mb-12">Booking is by request. Pick a service, send Ashley a few details about your goals, and she will follow up to confirm your appointment and walk you through pre-care.</p>
          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }} onClick={() => onNavigate('booking')} className="px-16 py-6 bg-accent text-paper text-xs uppercase tracking-widest font-bold shadow-2xl">
-            Secure A Consultation
+            Request a Consultation
          </motion.button>
          <p className="mt-8 opacity-40 text-[10px] uppercase font-bold tracking-widest">Current Waitlist: 6 Weeks</p>
        </motion.div>
@@ -1119,9 +1146,9 @@ const HomePage = ({ onNavigate, onSelectService }: { onNavigate: (page: Page) =>
 
 
 const serviceMenu = [
-  { id: 'brows', title: 'Signature Brows', price: '$650', deposit: '$100 deposit', duration: '2.5 hrs', description: 'Soft powder-shaded brows. All skin types.' },
-  { id: 'lips',  title: 'Ashley M. Lip Blush', price: '$650', deposit: '$100 deposit', duration: '2 hrs', description: 'Watercolor tint for fuller, defined lips.' },
-  { id: 'liner', title: 'Defining Liner', price: '$400+', deposit: '$75 deposit', duration: '1.5 hrs', description: 'Lash enhancement to full shaded wing.' },
+  { id: 'brows', title: 'Signature Brows', price: '$650', duration: '2.5 hrs', description: 'Soft powder-shaded brows. All skin types.' },
+  { id: 'lips',  title: 'Ashley M. Lip Blush', price: '$650', duration: '2 hrs', description: 'Watercolor tint for fuller, defined lips.' },
+  { id: 'liner', title: 'Defining Liner', price: '$400+', duration: '1.5 hrs', description: 'Lash enhancement to full shaded wing.' },
 ];
 
 const BookingPage = ({ onNavigate }: { onNavigate: (page: Page) => void }) => {
@@ -1162,53 +1189,47 @@ const BookingPage = ({ onNavigate }: { onNavigate: (page: Page) => void }) => {
     return Object.keys(e).length === 0;
   };
 
-  const [bookingId, setBookingId] = useState<string | null>(null);
-  const [checkoutError, setCheckoutError] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
-  // Step 4 → 5: validate + save booking row to Supabase
+  // Steps 4 → 5: validate, upload photos, save request to Supabase
   const handleSubmit = async () => {
     if (!validate()) return;
     setIsSubmitting(true);
-    setCheckoutError(null);
+    setSubmitError(null);
     try {
-      const depositMap: Record<string, number> = {
-        'Signature Brows': 10000, 'Ashley M. Lip Blush': 10000, 'Defining Liner': 7500,
+      // Upload intake photos (non-blocking)
+      const uploadPhoto = async (file: File): Promise<string | null> => {
+        const ext = file.name.split('.').pop() ?? 'jpg';
+        const path = `${crypto.randomUUID()}/${Date.now()}.${ext}`;
+        const { data: upload, error: upErr } = await supabase.storage
+          .from('booking-photos')
+          .upload(path, file, { cacheControl: '3600', upsert: false });
+        if (upErr) { console.warn('Photo upload failed:', upErr.message); return null; }
+        return upload.path;
       };
-      const { data, error } = await supabase.from('bookings').insert({
+      const [currentPhotoUrl, referencePhotoUrl] = await Promise.all([
+        formData.currentAreaPhoto ? uploadPhoto(formData.currentAreaPhoto as File) : Promise.resolve(null),
+        formData.referencePhoto   ? uploadPhoto(formData.referencePhoto as File)   : Promise.resolve(null),
+      ]);
+      const { error } = await supabase.from('bookings').insert({
         client_name: formData.fullName, client_email: formData.email,
         client_phone: formData.phone, service_name: selectedService?.title || '',
         service_price: selectedService?.price || '',
-        deposit_amount_cents: depositMap[selectedService?.title] ?? 10000,
         booking_date: selectedDate ? fmtDate(selectedDate) : '',
         booking_time: selectedTime || '', referral_source: formData.referralSource,
         health_conditions: (formData.healthConditions as string[]).join(', '),
         previous_pmu: formData.previousPMU, skin_type: formData.skinType,
-        notes: formData.notes, status: 'Pending Deposit', deposit_status: 'Unpaid',
-      }).select('id').single();
-      if (error || !data) {
-        setCheckoutError('Failed to save your booking. Please try again.');
-        setIsSubmitting(false); return;
-      }
-      setBookingId(data.id);
-      setStep(5);
-    } catch { setCheckoutError('Something went wrong. Please try again.'); }
-    setIsSubmitting(false);
-  };
-
-  // Step 5: call Edge Function → redirect to Stripe Checkout
-  const handleCheckout = async () => {
-    if (!bookingId) return;
-    setIsSubmitting(true); setCheckoutError(null);
-    try {
-      const { data, error } = await supabase.functions.invoke('create-checkout-session', {
-        body: { booking_id: bookingId },
+        notes: formData.notes, status: 'New Request',
+        current_area_photo_url: currentPhotoUrl,
+        reference_photo_url: referencePhotoUrl,
       });
-      if (error || !data?.url) {
-        setCheckoutError('Unable to connect to payment. Please try again or contact us directly.');
+      if (error) {
+        setSubmitError('Failed to submit your request. Please try again.');
         setIsSubmitting(false); return;
       }
-      window.location.href = data.url;
-    } catch { setCheckoutError('Payment service unavailable. Please try again.'); setIsSubmitting(false); }
+      setStep(5);
+    } catch { setSubmitError('Something went wrong. Please try again.'); }
+    setIsSubmitting(false);
   };
 
   const field = (key: string, label: string, type = 'text', ph = '') => (
@@ -1226,31 +1247,30 @@ const BookingPage = ({ onNavigate }: { onNavigate: (page: Page) => void }) => {
       <div className="space-y-3 text-sm">
         {selectedService && <><div className="flex justify-between"><span className="text-ink/50">Service</span><span className="font-medium">{selectedService.title}</span></div>
         <div className="flex justify-between"><span className="text-ink/50">Price</span><span className="font-medium text-accent">{selectedService.price}</span></div></>}
-        {selectedDate && <div className="flex justify-between"><span className="text-ink/50">Date</span><span className="font-medium">{fmtShort(selectedDate)}</span></div>}
-        {selectedTime && <div className="flex justify-between"><span className="text-ink/50">Time</span><span className="font-medium">{selectedTime}</span></div>}
-        {selectedService && <div className="pt-3 border-t border-ink/10"><p className="text-[9px] uppercase tracking-widest opacity-30 mb-1">Deposit to confirm</p><p className="font-bold text-lg">{selectedService.deposit}</p></div>}
+        {selectedDate && <div className="flex justify-between"><span className="text-ink/50">Requested Date</span><span className="font-medium">{fmtShort(selectedDate)}</span></div>}
+        {selectedTime && <div className="flex justify-between"><span className="text-ink/50">Requested Time</span><span className="font-medium">{selectedTime}</span></div>}
       </div>
       <div className="pt-4 border-t border-ink/10 space-y-2">
-        {[['Shield','Secure booking'],['Check','24hr confirmation'],['Clock','Free cancellation 48h']].map(([,t])=>(
+        {['No deposit required','Concierge review','Ashley confirms personally'].map(t=>(
           <div key={t} className="flex items-center gap-2 text-[9px] uppercase tracking-widest font-bold opacity-40"><Check className="w-3 h-3"/>{t}</div>
         ))}
       </div>
     </div>
   );
 
-  const STEPS = ['Service','Date','Time','Your Info','Deposit','Confirmed'];
+  const STEPS = ['Service','Date','Time','Your Info','Submitted'];
 
   return (
     <div className="pt-24 min-h-screen bg-paper pb-24">
       <div className="max-w-6xl mx-auto px-6">
         <div className="text-center py-12 mb-4">
           <p className="text-accent text-[10px] uppercase tracking-[0.5em] font-bold mb-3">Reservation</p>
-          <h1 className="text-4xl md:text-5xl font-serif mb-3">Book Your Appointment</h1>
-          <p className="text-ink/50 text-sm max-w-md mx-auto">A luxury, personalized experience crafted around your aesthetic vision.</p>
+          <h1 className="text-4xl md:text-5xl font-serif mb-3">Request a Consultation</h1>
+          <p className="text-ink/50 text-sm max-w-md mx-auto">Tell Ashley about your aesthetic vision. She will personally review your request and reach out to confirm.</p>
         </div>
 
         {/* Progress bar */}
-        {step < 6 && (
+        {step < 5 && (
           <div className="flex items-center justify-center gap-0 mb-14">
             {STEPS.slice(0,5).map((label,i) => {
               const s = i+1; const done = step>s; const active = step===s;
@@ -1287,7 +1307,7 @@ const BookingPage = ({ onNavigate }: { onNavigate: (page: Page) => void }) => {
                             <p className="text-sm text-ink/50 mb-3">{svc.description}</p>
                             <div className="flex gap-4 text-[9px] uppercase tracking-widest font-bold">
                               <span className="flex items-center gap-1 opacity-40"><Clock className="w-3 h-3"/>{svc.duration}</span>
-                              <span className="text-accent/70">{svc.deposit}</span>
+
                             </div>
                           </div>
                           <div className="text-right">
@@ -1307,7 +1327,8 @@ const BookingPage = ({ onNavigate }: { onNavigate: (page: Page) => void }) => {
                   <button onClick={()=>setStep(1)} className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold opacity-40 hover:opacity-100 mb-8 transition-opacity">
                     <ChevronLeft className="w-4 h-4"/> Back
                   </button>
-                  <h2 className="text-3xl font-serif mb-8">Select a Date</h2>
+                  <h2 className="text-3xl font-serif mb-8">Request a Preferred Date</h2>
+                  <p className="text-ink/50 text-sm mb-6">Select your preferred date. Ashley will review and confirm your official consultation date.</p>
                   <div className="bg-paper border border-ink/10 p-8">
                     <div className="flex justify-between items-center mb-6">
                       <h3 className="text-xl font-serif">{MONTH_NAMES[calMonth.getMonth()]} {calMonth.getFullYear()}</h3>
@@ -1360,7 +1381,7 @@ const BookingPage = ({ onNavigate }: { onNavigate: (page: Page) => void }) => {
                   <button onClick={()=>setStep(2)} className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold opacity-40 hover:opacity-100 mb-8 transition-opacity">
                     <ChevronLeft className="w-4 h-4"/> Back
                   </button>
-                  <h2 className="text-3xl font-serif mb-2">Select a Time</h2>
+                  <h2 className="text-3xl font-serif mb-2">Request a Preferred Time</h2>
                   {selectedDate && <p className="text-ink/50 text-sm mb-8">{fmtDate(selectedDate)}</p>}
                   <div className="grid grid-cols-2 gap-4">
                     {['9:00 AM','11:00 AM','1:00 PM','3:00 PM'].map(t=>(
@@ -1458,73 +1479,38 @@ const BookingPage = ({ onNavigate }: { onNavigate: (page: Page) => void }) => {
                       </label>
                       {errors.policy && <p className="text-red-500 text-[9px] uppercase font-bold tracking-widest mt-2">{errors.policy}</p>}
                     </div>
-                    {checkoutError && (
-                      <div className="p-4 bg-red-50 border border-red-200 text-red-700 text-xs font-medium rounded">{checkoutError}</div>
+                    {submitError && (
+                      <div className="p-4 bg-red-50 border border-red-200 text-red-700 text-xs font-medium rounded">{submitError}</div>
                     )}
                     <button onClick={handleSubmit} disabled={isSubmitting}
                       className="w-full py-6 bg-accent text-paper text-xs uppercase tracking-[0.3em] font-bold hover:bg-ink transition-colors shadow-xl flex items-center justify-center gap-3 disabled:opacity-60">
-                      {isSubmitting ? 'Saving…' : <>Continue to Payment <ArrowRight className="w-4 h-4"/></>}
+                      {isSubmitting ? 'Submitting…' : <>Submit Consultation Request <ArrowRight className="w-4 h-4"/></>}
                     </button>
                     <p className="text-center text-[9px] uppercase tracking-widest opacity-30">Ashley will personally review and confirm within 1–2 business days.</p>
                   </div>
                 </motion.div>
               )}
 
-              {/* STEP 5 — DEPOSIT (Stripe Checkout) */}
+              {/* STEP 5 — REQUEST SUBMITTED ─────────────────────────────── */}
               {step===5 && (
-                <motion.div key="s5" initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-20}}>
-                  <h2 className="text-3xl font-serif mb-2">Secure Your Appointment</h2>
-                  <p className="text-ink/50 text-sm mb-8">Complete your deposit to lock in your appointment date.</p>
-                  <div className="bg-paper-dark border border-ink/10 p-6 mb-6">
-                    <p className="text-[10px] uppercase tracking-widest font-bold opacity-40 mb-5">Appointment Summary</p>
-                    <div className="space-y-3 text-sm">
-                      <div className="flex justify-between"><span className="text-ink/50">Service</span><span className="font-medium">{selectedService?.title}</span></div>
-                      <div className="flex justify-between"><span className="text-ink/50">Date</span><span className="font-medium">{selectedDate ? fmtShort(selectedDate) : '—'}</span></div>
-                      <div className="flex justify-between"><span className="text-ink/50">Time</span><span className="font-medium">{selectedTime}</span></div>
-                      <div className="flex justify-between pt-3 border-t border-ink/10">
-                        <span className="text-ink/50">Deposit Due Now</span>
-                        <span className="font-bold text-accent text-lg">{selectedService?.deposit}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex flex-wrap gap-4 mb-6 text-[9px] uppercase tracking-widest font-bold text-ink/40">
-                    {['256-bit SSL','Stripe secured','Instant confirmation'].map(t => (
-                      <span key={t} className="flex items-center gap-1.5"><Shield className="w-3 h-3"/> {t}</span>
-                    ))}
-                  </div>
-                  {checkoutError && (
-                    <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 text-xs font-medium rounded">{checkoutError}</div>
-                  )}
-                  <button onClick={handleCheckout} disabled={isSubmitting}
-                    className="w-full py-6 bg-accent text-paper text-xs uppercase tracking-[0.3em] font-bold hover:bg-ink transition-colors shadow-xl flex items-center justify-center gap-3 disabled:opacity-60 disabled:cursor-not-allowed">
-                    {isSubmitting
-                      ? <><span className="animate-pulse">Connecting to Stripe</span><span>…</span></>
-                      : <><Shield className="w-4 h-4" /> Pay Deposit &amp; Confirm Booking</>}
-                  </button>
-                  <button onClick={()=>setStep(4)} className="w-full mt-4 text-[10px] uppercase tracking-widest opacity-40 hover:opacity-100 transition-opacity py-2">← Go Back</button>
-                  <p className="text-center text-[9px] uppercase tracking-widest opacity-25 mt-4">You will be redirected to Stripe's secure checkout page.</p>
-                </motion.div>
-              )}
-
-              {/* STEP 6 — CONFIRMED (fallback if Stripe redirect fails) */}
-              {step===6 && (
-                <motion.div key="s6" initial={{opacity:0,scale:0.95}} animate={{opacity:1,scale:1}} className="text-center py-16">
+                <motion.div key="s5" initial={{opacity:0,scale:0.95}} animate={{opacity:1,scale:1}} className="text-center py-16">
                   <motion.div initial={{scale:0}} animate={{scale:1}} transition={{delay:0.2,type:'spring',stiffness:200}}
                     className="w-24 h-24 bg-accent rounded-full flex items-center justify-center mx-auto mb-8">
                     <Check className="w-12 h-12 text-paper"/>
                   </motion.div>
-                  <h2 className="text-4xl font-serif mb-4">Request Received</h2>
+                  <p className="text-accent text-[10px] uppercase tracking-[0.5em] font-bold mb-4">Request Received</p>
+                  <h2 className="text-4xl font-serif mb-6">We'll Be In Touch</h2>
                   <p className="text-ink/60 mb-4 max-w-md mx-auto leading-relaxed">
-                    Thank you, <strong>{formData.fullName}</strong>. Your consultation request for <strong>{selectedService?.title}</strong> on <strong>{selectedDate ? fmtShort(selectedDate) : ''}</strong> at <strong>{selectedTime}</strong> has been received.
+                    Thank you, <strong>{formData.fullName}</strong>. Your consultation request for <strong>{selectedService?.title}</strong> has been received. Your requested date and time are under review.
                   </p>
-                  <p className="text-ink/50 mb-12 text-sm max-w-md mx-auto">Ashley will personally reach out to <strong>{formData.email}</strong> within 1–2 business days to confirm your appointment and share pre-care instructions.</p>
+                  <p className="text-ink/50 mb-12 text-sm max-w-md mx-auto">
+                    Ashley will review your request and contact you at <strong>{formData.email}</strong> to confirm your official consultation date and time. Please do not consider your requested date/time as confirmed until you receive a confirmation email.
+                  </p>
                   <div className="bg-paper-dark p-6 max-w-sm mx-auto mb-10 text-left space-y-3 text-sm">
-                    <p className="text-[10px] uppercase tracking-widest font-bold opacity-40 mb-4">Booking Summary</p>
+                    <p className="text-[10px] uppercase tracking-widest font-bold opacity-40 mb-4">Request Summary</p>
                     <div className="flex justify-between"><span className="text-ink/50">Service</span><span>{selectedService?.title}</span></div>
-                    <div className="flex justify-between"><span className="text-ink/50">Date</span><span>{selectedDate ? fmtShort(selectedDate) : '—'}</span></div>
-                    <div className="flex justify-between"><span className="text-ink/50">Time</span><span>{selectedTime}</span></div>
-                    <div className="flex justify-between"><span className="text-ink/50">Price</span><span className="text-accent font-bold">{selectedService?.price}</span></div>
-                    <div className="flex justify-between border-t border-ink/10 pt-3"><span className="text-ink/50">Deposit Due</span><span className="font-bold">{selectedService?.deposit}</span></div>
+                    <div className="flex justify-between"><span className="text-ink/50">Requested Date</span><span>{selectedDate ? fmtShort(selectedDate) : '—'}</span></div>
+                    <div className="flex justify-between"><span className="text-ink/50">Requested Time</span><span>{selectedTime}</span></div>
                   </div>
                   <button onClick={()=>onNavigate('home')}
                     className="px-12 py-4 bg-ink text-paper text-[10px] uppercase tracking-[0.3em] font-bold hover:bg-accent transition-colors">
@@ -1533,11 +1519,13 @@ const BookingPage = ({ onNavigate }: { onNavigate: (page: Page) => void }) => {
                 </motion.div>
               )}
 
+
+
             </AnimatePresence>
           </div>
 
           {/* Sidebar */}
-          {step < 6 && (
+          {step < 5 && (
             <div className="hidden lg:block">
               <Summary />
             </div>
@@ -1847,19 +1835,17 @@ const PhotoUpload = ({ fieldKey, label, sub, formData, setFormData }: {
 export default function App() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [selectedService, setSelectedService] = useState<any>(null);
 
   const handleSelectService = (service: any) => {
-    setSelectedService(service);
-    navigate('/service-detail');
+    navigate(`/services/${service.id}`);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleNavigate = (page: Page) => {
     const routes: Record<Page, string> = {
       home: '/', services: '/services', gallery: '/gallery', booking: '/booking',
-      artist: '/artist', contact: '/contact', 'service-detail': '/service-detail',
-      privacy: '/privacy', policies: '/policies', admin: '/admin'
+      artist: '/artist', contact: '/contact', 'service-detail': '/services',
+      privacy: '/privacy', policies: '/policies', admin: '/admin', login: '/login'
     };
     navigate(routes[page] || '/');
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1869,6 +1855,7 @@ export default function App() {
     const path = location.pathname;
     if (path === '/') return 'home';
     if (path === '/services') return 'services';
+    if (path.startsWith('/services/')) return 'services';
     if (path === '/gallery') return 'gallery';
     if (path === '/booking') return 'booking';
     if (path === '/contact') return 'contact';
@@ -1876,6 +1863,7 @@ export default function App() {
     if (path === '/privacy') return 'privacy';
     if (path === '/policies') return 'policies';
     if (path === '/admin') return 'admin';
+    if (path === '/login') return 'login';
     if (path === '/service-detail') return 'service-detail';
     return 'home';
   };
@@ -1928,8 +1916,16 @@ export default function App() {
     document.head.appendChild(script);
   }, []);
 
+  if (location.pathname === '/login') {
+    return <LoginPage />;
+  }
+
   if (location.pathname === '/admin') {
-    return <AdminDashboard />;
+    return (
+      <AdminRoute>
+        <AdminDashboard />
+      </AdminRoute>
+    );
   }
 
   return (
@@ -1948,15 +1944,14 @@ export default function App() {
             <Routes location={location}>
               <Route path="/" element={<HomePage onNavigate={handleNavigate} onSelectService={handleSelectService} />} />
               <Route path="/booking" element={<BookingPage onNavigate={handleNavigate} />} />
-              <Route path="/booking/success" element={<BookingSuccess />} />
-              <Route path="/booking/cancelled" element={<BookingCancelled />} />
+
               <Route path="/gallery" element={<GalleryPage />} />
               <Route path="/services" element={<Services onSelectService={handleSelectService} onNavigate={handleNavigate} />} />
               <Route path="/artist" element={<ArtistPage />} />
               <Route path="/contact" element={<ContactPage />} />
               <Route path="/privacy" element={<PrivacyPage />} />
               <Route path="/policies" element={<PoliciesPage />} />
-              <Route path="/service-detail" element={<ServiceDetailPage service={selectedService} onNavigate={handleNavigate} />} />
+              <Route path="/services/:slug" element={<ServiceDetailPage onNavigate={handleNavigate} />} />
               <Route path="*" element={<HomePage onNavigate={handleNavigate} onSelectService={handleSelectService} />} />
             </Routes>
           </motion.div>
@@ -1966,7 +1961,7 @@ export default function App() {
       <Footer onNavigate={handleNavigate} />
       
       {/* Sticky mobile Book Now — hidden on result pages */}
-      {!['/booking/success', '/booking/cancelled', '/booking'].includes(location.pathname) && (
+      {location.pathname !== '/booking' && (
         <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-paper border-t border-ink/10 p-4 shadow-2xl">
           <button
             onClick={() => handleNavigate('booking')}
@@ -1978,12 +1973,13 @@ export default function App() {
       )}
 
       {/* Scroll to Top helper */}
-      <div 
-        className="fixed bottom-10 right-10 z-40 w-12 h-12 bg-white shadow-2xl flex items-center justify-center cursor-pointer border border-ink/5 hover:bg-paper transition-colors"
+      <button
+        aria-label="Scroll to top"
+        className="fixed bottom-10 right-10 z-40 w-12 h-12 bg-white shadow-2xl flex items-center justify-center cursor-pointer border border-ink/5 hover:bg-paper transition-colors focus-visible:outline-accent"
         onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
       >
         <ChevronRight className="w-5 h-5 -rotate-90 opacity-40" />
-      </div>
+      </button>
     </div>
   );
 }

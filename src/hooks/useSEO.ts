@@ -21,8 +21,8 @@ const META: Record<string, SEOMeta> = {
     description: 'Browse before & after results from Ashley M. Brows — Signature Brows, Lip Blush, and Eyeliner. Real clients, real results in Brighton, Michigan.',
   },
   '/booking': {
-    title: `Book Your Appointment | ${SITE_NAME}`,
-    description: 'Reserve your luxury cosmetic tattoo appointment with Ashley Miller. Select your service, date, and time. A $100 deposit secures your spot.',
+    title: `Request a Consultation | ${SITE_NAME}`,
+    description: 'Submit a consultation request with Ashley Miller. Select your service, preferred date and time. No deposit required — Ashley will personally confirm your appointment.',
   },
   '/artist': {
     title: `Meet Ashley Miller | ${SITE_NAME}`,
@@ -41,12 +41,12 @@ const META: Record<string, SEOMeta> = {
     description: 'Deposit requirements, cancellation policy, and booking terms for Ashley M. Brows cosmetic tattoo services.',
   },
   '/booking/success': {
-    title: `Deposit Confirmed | ${SITE_NAME}`,
-    description: 'Your deposit has been received. Your cosmetic tattoo appointment is now confirmed with Ashley M. Brows.',
+    title: `Request Received | ${SITE_NAME}`,
+    description: 'Your consultation request has been received. Ashley will review and contact you to confirm availability.',
   },
   '/booking/cancelled': {
-    title: `Deposit Incomplete | ${SITE_NAME}`,
-    description: 'Your deposit was not completed. Your booking request is still pending.',
+    title: `Request Incomplete | ${SITE_NAME}`,
+    description: 'Your consultation request was not completed. Return to the booking page to try again.',
   },
 };
 

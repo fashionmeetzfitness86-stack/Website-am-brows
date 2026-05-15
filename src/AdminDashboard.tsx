@@ -7,18 +7,16 @@ import { motion, AnimatePresence } from 'motion/react';
 
 // ─── Status helpers ───────────────────────────────────────────────────────────
 const STATUS_STYLES: Record<string, string> = {
-  'Confirmed':       'bg-emerald-50 text-emerald-700 border-emerald-200',
-  'Pending Deposit': 'bg-amber-50 text-amber-700 border-amber-200',
-  'Cancelled':       'bg-red-50 text-red-600 border-red-200',
-  'Failed':          'bg-red-50 text-red-600 border-red-200',
-  'Waitlist':        'bg-purple-50 text-purple-700 border-purple-200',
+  'New Request':   'bg-blue-50 text-blue-700 border-blue-200',
+  'Under Review':  'bg-amber-50 text-amber-700 border-amber-200',
+  'Confirmed':     'bg-emerald-50 text-emerald-700 border-emerald-200',
+  'Rescheduled':   'bg-purple-50 text-purple-700 border-purple-200',
+  'Completed':     'bg-teal-50 text-teal-700 border-teal-200',
+  'Cancelled':     'bg-red-50 text-red-600 border-red-200',
+  'No Show':       'bg-gray-100 text-gray-500 border-gray-200',
 };
-const DEPOSIT_STYLES: Record<string, string> = {
-  'Paid':     'bg-emerald-50 text-emerald-700',
-  'Unpaid':   'bg-amber-50 text-amber-700',
-  'Failed':   'bg-red-50 text-red-600',
-  'Refunded': 'bg-gray-100 text-gray-500',
-};
+const ALL_STATUSES = ['New Request','Under Review','Confirmed','Rescheduled','Completed','Cancelled','No Show'];
+
 
 // ─── Skeleton row ─────────────────────────────────────────────────────────────
 const SkeletonRow = ({ cols }: { cols: number; key?: string | number }) => (
@@ -64,11 +62,10 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('appointments');
   const [session, setSession] = useState<any>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
+  // roleChecked prevents a flash of "Access Denied" while the role is being fetched
+  const [roleChecked, setRoleChecked] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [dataLoading, setDataLoading] = useState(false);
-  const [authError, setAuthError] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   // Team management state
   const [teamMembers, setTeamMembers] = useState<any[]>([]);
   const [newStaffEmail, setNewStaffEmail] = useState('');
@@ -81,18 +78,36 @@ export default function AdminDashboard() {
   const [contacts, setContacts] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
-  const [depositFilter, setDepositFilter] = useState('All');
+  // Booking detail panel state
+  const [selectedBooking, setSelectedBooking] = useState<any>(null);
+  const [confirmDate, setConfirmDate] = useState('');
+  const [confirmTime, setConfirmTime] = useState('');
+  const [notesEdit, setNotesEdit] = useState('');
+  const [actionLoading, setActionLoading] = useState(false);
+  const [actionMsg, setActionMsg] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    // Await role fetch before clearing initialLoading so we never flash
+    // "Access Denied" for a valid user whose role hasn't loaded yet.
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
-      if (session) { fetchData(); fetchRole(session.user.id); }
+      if (session) {
+        fetchData();
+        await fetchRole(session.user.id);
+      }
       setInitialLoading(false);
     });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
-      if (session) { fetchData(); fetchRole(session.user.id); }
+      if (!session) {
+        // Signed out — reset role state
+        setUserRole(null);
+        setRoleChecked(false);
+      } else {
+        fetchData();
+        fetchRole(session.user.id);
+      }
     });
     return () => subscription.unsubscribe();
   }, []);
@@ -110,8 +125,12 @@ export default function AdminDashboard() {
 
   const fetchRole = async (userId: string) => {
     const { data } = await supabase.from('user_roles').select('role').eq('user_id', userId).single();
-    setUserRole(data?.role ?? 'staff');
-    if (data?.role === 'super_admin') fetchTeam();
+    // SECURITY: Default to null — not 'staff'. Any user without an approved
+    // user_roles row is denied access, even if they have a valid Auth session.
+    const role = data?.role ?? null;
+    setUserRole(role);
+    setRoleChecked(true);
+    if (role === 'super_admin') fetchTeam();
   };
 
   const fetchTeam = async () => {
@@ -137,29 +156,138 @@ export default function AdminDashboard() {
   };
 
   const handleRemoveStaff = async (userId: string, memberEmail: string) => {
-    if (!confirm(`Remove ${memberEmail} from staff?`)) return;
-    await supabase.from('user_roles').delete().eq('user_id', userId);
-    fetchTeam();
+    if (!confirm(`Remove ${memberEmail} from staff? This will also delete their login account.`)) return;
+    setTeamLoading(true); setTeamError(''); setTeamSuccess('');
+    const { data, error } = await supabase.functions.invoke('remove-staff-user', {
+      body: { user_id: userId },
+    });
+    if (error || data?.error) {
+      setTeamError(data?.error || 'Failed to remove staff user. Please try again.');
+    } else {
+      const msg = data?.warning
+        ? `Role removed. Note: ${data.warning}`
+        : `${memberEmail} has been removed and their account deleted.`;
+      setTeamSuccess(msg);
+      fetchTeam();
+    }
+    setTeamLoading(false);
   };
 
-  const handleLogin = async (e: any) => {
-    e.preventDefault();
-    setAuthError('');
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) setAuthError(error.message);
+  const handleStatusChange = async (bookingId: string, newStatus: string) => {
+    await supabase.from('bookings').update({ status: newStatus }).eq('id', bookingId);
+    fetchData();
   };
+
+  // Open detail panel and pre-fill fields
+  const openBooking = (b: any) => {
+    setSelectedBooking(b);
+    setConfirmDate(b.confirmed_date || b.booking_date || '');
+    setConfirmTime(b.confirmed_time || b.booking_time || '');
+    setNotesEdit(b.admin_notes || '');
+    setActionMsg('');
+  };
+
+  // Approve the client's requested date/time as-is
+  const handleApproveTime = async () => {
+    if (!selectedBooking) return;
+    setActionLoading(true); setActionMsg('');
+    const { error } = await supabase.from('bookings').update({
+      confirmed_date: selectedBooking.booking_date,
+      confirmed_time: selectedBooking.booking_time,
+      status: 'Confirmed',
+    }).eq('id', selectedBooking.id);
+    if (!error) {
+      const updated = { ...selectedBooking, confirmed_date: selectedBooking.booking_date, confirmed_time: selectedBooking.booking_time, status: 'Confirmed' };
+      setSelectedBooking(updated);
+      fetchData();
+      setActionMsg('Requested time approved and marked Confirmed.');
+    } else { setActionMsg('Error: ' + error.message); }
+    setActionLoading(false);
+  };
+
+  // Save admin-specified confirmed date/time
+  const handleConfirmTime = async () => {
+    if (!selectedBooking || !confirmDate || !confirmTime) return;
+    setActionLoading(true); setActionMsg('');
+    const { error } = await supabase.from('bookings').update({
+      confirmed_date: confirmDate,
+      confirmed_time: confirmTime,
+      status: 'Confirmed',
+    }).eq('id', selectedBooking.id);
+    if (!error) {
+      const updated = { ...selectedBooking, confirmed_date: confirmDate, confirmed_time: confirmTime, status: 'Confirmed' };
+      setSelectedBooking(updated);
+      fetchData();
+      setActionMsg('Confirmed date/time saved. Status set to Confirmed.');
+    } else { setActionMsg('Error: ' + error.message); }
+    setActionLoading(false);
+  };
+
+  // Save admin notes
+  const handleSaveNotes = async () => {
+    if (!selectedBooking) return;
+    setActionLoading(true); setActionMsg('');
+    const { error } = await supabase.from('bookings').update({ admin_notes: notesEdit }).eq('id', selectedBooking.id);
+    if (!error) {
+      setSelectedBooking({ ...selectedBooking, admin_notes: notesEdit });
+      fetchData();
+      setActionMsg('Notes saved.');
+    } else { setActionMsg('Error: ' + error.message); }
+    setActionLoading(false);
+  };
+
+  // Send confirmation email
+  const handleSendEmail = async (emailType: string) => {
+    if (!selectedBooking) return;
+    if (!selectedBooking.confirmed_date) { setActionMsg('Set a confirmed date/time first before sending email.'); return; }
+    setActionLoading(true); setActionMsg('');
+    const { data, error } = await supabase.functions.invoke('send-confirmation-email', {
+      body: { booking_id: selectedBooking.id, email_type: emailType },
+    });
+    if (error || data?.error) {
+      setActionMsg('Email failed: ' + (data?.error || error?.message));
+    } else {
+      const updated = { ...selectedBooking, email_confirmation_sent: true };
+      setSelectedBooking(updated);
+      fetchData();
+      setActionMsg(`Confirmation email sent to ${selectedBooking.client_email}`);
+    }
+    setActionLoading(false);
+  };
+
+  // Cancel a request
+  const handleCancelRequest = async () => {
+    if (!selectedBooking || !confirm('Cancel this consultation request?')) return;
+    setActionLoading(true);
+    await supabase.from('bookings').update({ status: 'Cancelled' }).eq('id', selectedBooking.id);
+    setSelectedBooking({ ...selectedBooking, status: 'Cancelled' });
+    fetchData();
+    setActionMsg('Request cancelled.');
+    setActionLoading(false);
+  };
+
+  // Mark completed
+  const handleMarkCompleted = async () => {
+    if (!selectedBooking) return;
+    setActionLoading(true);
+    await supabase.from('bookings').update({ status: 'Completed' }).eq('id', selectedBooking.id);
+    setSelectedBooking({ ...selectedBooking, status: 'Completed' });
+    fetchData();
+    setActionMsg('Marked as Completed.');
+    setActionLoading(false);
+  };
+
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    navigate('/');
+    navigate('/login', { replace: true });
   };
 
   // ── Filtered bookings ──────────────────────────────────────────────────────
   const filteredBookings = useMemo(() => {
     let list = bookings;
     if (statusFilter !== 'All') list = list.filter(b => b.status === statusFilter);
-    if (depositFilter !== 'All') list = list.filter(b => b.deposit_status === depositFilter);
-    if (searchQuery.trim()) {
+if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       list = list.filter(b =>
         b.client_name?.toLowerCase().includes(q) ||
@@ -169,7 +297,7 @@ export default function AdminDashboard() {
       );
     }
     return list;
-  }, [bookings, searchQuery, statusFilter, depositFilter]);
+  }, [bookings, searchQuery, statusFilter]);
 
   // ── Filtered contacts ──────────────────────────────────────────────────────
   const filteredContacts = useMemo(() => {
@@ -183,15 +311,11 @@ export default function AdminDashboard() {
   }, [contacts, searchQuery]);
 
   // ── Stats ──────────────────────────────────────────────────────────────────
-  const confirmedRevenue = bookings
-    .filter(b => b.deposit_status === 'Paid')
-    .reduce((acc, b) => acc + (parseInt(b.service_price?.replace(/\D/g, ''), 10) || 0), 0);
-
   const stats = [
-    { label: 'Confirmed Revenue', value: `$${confirmedRevenue.toLocaleString()}`, sub: 'Paid deposits', icon: <DollarSign className="w-5 h-5 text-accent" /> },
-    { label: 'Total Bookings', value: bookings.length.toString(), sub: 'All time', icon: <Calendar className="w-5 h-5 text-accent" /> },
+    { label: 'Total Requests', value: bookings.length.toString(), sub: 'All time', icon: <Calendar className="w-5 h-5 text-accent" /> },
+    { label: 'New Requests', value: bookings.filter(b => b.status === 'New Request').length.toString(), sub: 'Awaiting review', icon: <Bell className="w-5 h-5 text-accent" /> },
+    { label: 'Confirmed', value: bookings.filter(b => b.status === 'Confirmed').length.toString(), sub: 'Appointments', icon: <Check className="w-5 h-5 text-accent" /> },
     { label: 'New Leads', value: contacts.length.toString(), sub: 'Contact forms', icon: <Users className="w-5 h-5 text-accent" /> },
-    { label: 'Pending Deposits', value: bookings.filter(b => b.deposit_status === 'Unpaid').length.toString(), sub: 'Awaiting payment', icon: <Clock className="w-5 h-5 text-accent" /> },
   ];
 
   // ── Loading state ──────────────────────────────────────────────────────────
@@ -206,56 +330,36 @@ export default function AdminDashboard() {
     );
   }
 
-  // ── Login gate ─────────────────────────────────────────────────────────────
-  if (!session) {
+  // ── Access denied — logged in but no approved role ────────────────────────
+  if (session && roleChecked && !userRole) {
     return (
       <div className="min-h-screen bg-paper flex flex-col items-center justify-center px-6">
-        <div className="w-full max-w-md bg-paper-dark p-10 border border-ink/10 shadow-2xl">
-          <div className="flex justify-center mb-8">
-            <div className="w-16 h-16 bg-accent rounded-full flex items-center justify-center shadow-lg">
-              <Lock className="w-8 h-8 text-paper" />
-            </div>
+        <div className="w-full max-w-md bg-paper-dark p-10 border border-red-200 shadow-2xl text-center">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <AlertCircle className="w-8 h-8 text-red-500" />
           </div>
-          <h2 className="text-3xl font-serif text-center mb-2">Studio Admin</h2>
-          <p className="text-center text-ink/40 text-sm mb-8">Ashley M. Brows back office</p>
-          <AnimatePresence>
-            {authError && (
-              <motion.div
-                initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 text-xs font-bold uppercase tracking-widest flex items-center gap-2"
-              >
-                <AlertCircle className="w-4 h-4 shrink-0" /> {authError}
-              </motion.div>
-            )}
-          </AnimatePresence>
-          <form onSubmit={handleLogin} className="space-y-5">
-            <div className="space-y-2">
-              <label className="text-[10px] uppercase tracking-widest font-bold opacity-40">Email</label>
-              <input type="email" value={email} onChange={e => setEmail(e.target.value)} required
-                className="w-full p-4 bg-paper border border-ink/10 focus:border-accent outline-none text-sm transition-colors" />
-            </div>
-            <div className="space-y-2">
-              <label className="text-[10px] uppercase tracking-widest font-bold opacity-40">Password</label>
-              <input type="password" value={password} onChange={e => setPassword(e.target.value)} required
-                className="w-full p-4 bg-paper border border-ink/10 focus:border-accent outline-none text-sm transition-colors" />
-            </div>
-            <button type="submit" className="w-full py-4 bg-ink text-paper text-[10px] uppercase tracking-[0.3em] font-bold hover:bg-accent transition-colors">
-              Sign In
-            </button>
-          </form>
-          <button onClick={() => navigate('/')} className="w-full mt-6 text-xs uppercase tracking-widest opacity-40 hover:opacity-100 transition-opacity py-2">
-            ← Return to Public Site
+          <h2 className="text-2xl font-serif mb-2">Access Denied</h2>
+          <p className="text-ink/50 text-sm mb-8">
+            Your account does not have permission to access the studio dashboard.
+            Contact the studio owner to be added as a staff member.
+          </p>
+          <button
+            onClick={handleLogout}
+            className="w-full py-4 bg-ink text-paper text-[10px] uppercase tracking-[0.3em] font-bold hover:bg-red-600 transition-colors"
+          >
+            Sign Out
           </button>
         </div>
       </div>
     );
   }
 
+
   const TABS = userRole === 'super_admin'
     ? ['appointments', 'leads', 'team']
     : ['appointments', 'leads'];
 
-  const TAB_LABELS: Record<string, string> = { appointments: 'Bookings', leads: 'Leads', team: 'Team' };
+  const TAB_LABELS: Record<string, string> = { appointments: 'Requests', leads: 'Leads', team: 'Team' };
 
   return (
     <div className="min-h-screen bg-[#fafaf8] flex font-sans text-ink">
@@ -322,7 +426,7 @@ export default function AdminDashboard() {
           <div className="mb-8 flex items-center justify-between">
             <div>
               <h2 className="text-3xl font-serif mb-1">Studio Overview</h2>
-              <p className="text-ink/50 text-sm">Welcome back, Ashley.</p>
+              <p className="text-ink/50 text-sm">Consultation Requests Dashboard</p>
             </div>
             <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold text-ink/30">
               <TrendingUp className="w-4 h-4" />
@@ -356,17 +460,7 @@ export default function AdminDashboard() {
                         {s}
                       </button>
                     ))}
-                  </div>
-                  {/* Deposit filter */}
-                  <div className="flex gap-1 bg-paper-dark rounded-lg p-1">
-                    {['All', 'Paid', 'Unpaid'].map(d => (
-                      <button key={d} onClick={() => setDepositFilter(d)}
-                        className={`px-3 py-1.5 text-[9px] uppercase font-bold tracking-wider rounded-md transition-all ${depositFilter === d ? 'bg-white shadow-sm text-ink' : 'text-ink/40 hover:text-ink'}`}>
-                        {d}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                  </div></div>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
@@ -382,11 +476,11 @@ export default function AdminDashboard() {
                   </thead>
                   <tbody className="text-sm">
                     {dataLoading
-                      ? Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} cols={6} />)
+                      ? Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} cols={7} />)
                       : filteredBookings.length === 0
                         ? (
                           <tr>
-                            <td colSpan={6}>
+                            <td colSpan={7}>
                               <EmptyState
                                 icon={<Calendar className="w-7 h-7" />}
                                 title={bookings.length === 0 ? 'No bookings yet' : 'No matching bookings'}
@@ -410,21 +504,18 @@ export default function AdminDashboard() {
                               <div className="font-medium">{b.booking_date || '—'}</div>
                               <div className="text-xs mt-0.5 text-ink/50">{b.booking_time || '—'}</div>
                             </td>
-                            <td className="p-4">
-                              <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${STATUS_STYLES[b.status] || 'bg-gray-50 text-gray-500 border-gray-200'}`}>
-                                {b.status === 'Confirmed' && <Check className="w-3 h-3 mr-1" />}
-                                {b.status}
-                              </span>
-                            </td>
-                            <td className="p-4">
-                              <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${DEPOSIT_STYLES[b.deposit_status] || 'bg-gray-50 text-gray-500'}`}>
-                                {b.deposit_status === 'Paid' && <Check className="w-3 h-3 mr-1" />}
-                                {b.deposit_status}
-                              </span>
-                            </td>
-                            <td className="p-4 text-xs text-ink/40">
-                              {b.created_at ? new Date(b.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—'}
-                            </td>
+                             <td className="p-4">
+                               <select value={b.status} onChange={e => handleStatusChange(b.id, e.target.value)}
+                                 className={`text-[10px] font-bold uppercase tracking-wider border rounded-full px-2.5 py-1 outline-none cursor-pointer ${STATUS_STYLES[b.status] || 'bg-gray-50 text-gray-500 border-gray-200'}`}>
+                                 {ALL_STATUSES.map(s => <option key={s}>{s}</option>)}
+                               </select>
+                             </td>
+                             <td className="p-4 text-xs text-ink/40 max-w-[120px]">
+                               <p className="truncate">{b.notes || '—'}</p>
+                             </td>
+                             <td className="p-4 text-xs text-ink/40">
+                               {b.created_at ? new Date(b.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—'}
+                             </td>
                           </tr>
                         ))
                     }
