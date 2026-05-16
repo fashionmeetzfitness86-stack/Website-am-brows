@@ -127,6 +127,9 @@ export default function AdminDashboard() {
   const [editPassword, setEditPassword] = useState('');
   const [memberMsg, setMemberMsg] = useState('');
   const [memberLoading, setMemberLoading] = useState(false);
+  // Notification state
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [showNotifPanel, setShowNotifPanel] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -165,14 +168,45 @@ export default function AdminDashboard() {
     setDataLoading(false);
   };
 
+  const fetchNotifications = async (userId: string) => {
+    const { data } = await supabase
+      .from('notifications')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(20);
+    if (data) setNotifications(data);
+  };
+
+  const markAllRead = async () => {
+    if (!session) return;
+    await supabase.from('notifications').update({ read: true }).eq('user_id', session.user.id).eq('read', false);
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+  };
+
+  const clearNotification = async (id: string) => {
+    await supabase.from('notifications').delete().eq('id', id);
+    setNotifications(prev => prev.filter(n => n.id !== id));
+  };
+
   const fetchRole = async (userId: string) => {
     const { data } = await supabase.from('user_roles').select('role').eq('user_id', userId).single();
-    // SECURITY: Default to null — not 'staff'. Any user without an approved
-    // user_roles row is denied access, even if they have a valid Auth session.
     const role = data?.role ?? null;
     setUserRole(role);
     setRoleChecked(true);
     if (role === 'super_admin') fetchTeam();
+    // Fetch notifications for this user and subscribe to new ones
+    fetchNotifications(userId);
+    const channel = supabase
+      .channel('notifications-' + userId)
+      .on('postgres_changes', {
+        event: 'INSERT', schema: 'public', table: 'notifications',
+        filter: `user_id=eq.${userId}`,
+      }, (payload) => {
+        setNotifications(prev => [payload.new, ...prev]);
+      })
+      .subscribe();
+    return () => supabase.removeChannel(channel);
   };
 
   const fetchTeam = async () => {
@@ -510,9 +544,55 @@ if (searchQuery.trim()) {
           </div>
           <div className="flex items-center gap-3">
             {dataLoading && <span className="text-[10px] uppercase tracking-widest text-ink/40 animate-pulse">Syncing…</span>}
-            <button className="w-9 h-9 rounded-full border border-ink/10 flex items-center justify-center text-ink/40 hover:text-accent hover:border-accent transition-colors">
-              <Bell className="w-4 h-4" />
-            </button>
+            {/* Bell with live badge */}
+            <div className="relative">
+              <button
+                onClick={() => { setShowNotifPanel(v => !v); if (!showNotifPanel) markAllRead(); }}
+                className="w-9 h-9 rounded-full border border-ink/10 flex items-center justify-center text-ink/40 hover:text-accent hover:border-accent transition-colors relative">
+                <Bell className="w-4 h-4" />
+                {notifications.filter(n => !n.read).length > 0 && (
+                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+                    {notifications.filter(n => !n.read).length > 9 ? '9+' : notifications.filter(n => !n.read).length}
+                  </span>
+                )}
+              </button>
+
+              {/* Notification dropdown */}
+              <AnimatePresence>
+                {showNotifPanel && (
+                  <motion.div initial={{ opacity: 0, y: 8, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 8, scale: 0.97 }}
+                    className="absolute right-0 top-12 w-80 bg-white border border-ink/10 rounded-xl shadow-2xl overflow-hidden z-50">
+                    <div className="flex items-center justify-between px-4 py-3 border-b border-ink/5">
+                      <p className="text-[10px] uppercase font-bold tracking-widest">Notifications</p>
+                      {notifications.length > 0 && (
+                        <button onClick={() => { setNotifications([]); supabase.from('notifications').delete().eq('user_id', session.user.id); }}
+                          className="text-[10px] uppercase tracking-widest text-ink/40 hover:text-red-500 transition-colors">Clear all</button>
+                      )}
+                    </div>
+                    <div className="max-h-80 overflow-y-auto">
+                      {notifications.length === 0 ? (
+                        <div className="py-8 text-center">
+                          <Bell className="w-6 h-6 mx-auto text-ink/20 mb-2" />
+                          <p className="text-xs text-ink/40">No notifications yet</p>
+                        </div>
+                      ) : notifications.map(n => (
+                        <div key={n.id} className={`flex gap-3 p-3 border-b border-ink/5 last:border-0 hover:bg-paper-dark/30 transition-colors ${!n.read ? 'bg-accent/5' : ''}`}>
+                          <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${!n.read ? 'bg-accent' : 'bg-ink/20'}`} />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-bold">{n.title}</p>
+                            <p className="text-xs text-ink/50 leading-relaxed mt-0.5">{n.body}</p>
+                            <p className="text-[10px] text-ink/30 mt-1">{n.created_at ? new Date(n.created_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : ''}</p>
+                          </div>
+                          <button onClick={() => clearNotification(n.id)} className="text-ink/20 hover:text-red-400 transition-colors flex-shrink-0">
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
         </header>
 
@@ -745,6 +825,7 @@ if (searchQuery.trim()) {
                     <tr className="bg-paper-dark/40 text-[10px] uppercase tracking-widest text-ink/40">
                       <th className="p-4 font-bold">Member</th>
                       <th className="p-4 font-bold">Role</th>
+                      <th className="p-4 font-bold">Email Alerts</th>
                       <th className="p-4 font-bold">Added</th>
                       <th className="p-4 font-bold">Actions</th>
                     </tr>
@@ -764,6 +845,26 @@ if (searchQuery.trim()) {
                           }`}>
                             {m.role === 'super_admin' ? 'Super Admin' : 'Staff'}
                           </span>
+                        </td>
+                        <td className="p-4">
+                          <button
+                            onClick={async () => {
+                              const next = !m.email_notifications;
+                              await supabase.from('user_roles').update({ email_notifications: next }).eq('user_id', m.user_id);
+                              fetchTeam();
+                            }}
+                            title={m.role === 'super_admin' ? 'Super admin always receives alerts' : (m.email_notifications ? 'Disable email alerts' : 'Enable email alerts')}
+                            className={`relative w-10 h-5 rounded-full transition-colors ${
+                              m.email_notifications || m.role === 'super_admin' ? 'bg-emerald-400' : 'bg-gray-200'
+                            } ${m.role === 'super_admin' ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}
+                            disabled={m.role === 'super_admin'}>
+                            <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${
+                              m.email_notifications || m.role === 'super_admin' ? 'translate-x-5' : 'translate-x-0'
+                            }`} />
+                          </button>
+                          <p className="text-[10px] text-ink/30 mt-1">
+                            {m.role === 'super_admin' ? 'Always on' : (m.email_notifications ? 'On' : 'Off')}
+                          </p>
                         </td>
                         <td className="p-4 text-xs text-ink/40">
                           {m.created_at ? new Date(m.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}
