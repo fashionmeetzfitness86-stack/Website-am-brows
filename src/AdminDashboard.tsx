@@ -140,13 +140,15 @@ export default function AdminDashboard() {
 
   const handleCreateStaff = async (e: any) => {
     e.preventDefault();
+    if (!confirm(`Are you sure you want to create a new staff account for ${newStaffName} (${newStaffEmail})? They will immediately be granted access to the admin dashboard.`)) return;
+    
     setTeamLoading(true); setTeamError(''); setTeamSuccess('');
-    const { data: { session: s } } = await supabase.auth.getSession();
     const { data, error } = await supabase.functions.invoke('create-staff-user', {
       body: { email: newStaffEmail, full_name: newStaffName, password: newStaffPassword },
     });
+    
     if (error || data?.error) {
-      setTeamError(data?.error || 'Failed to create staff user');
+      setTeamError(data?.error || error?.message || 'Failed to create staff user. Make sure the create-staff-user Edge Function is deployed with the SUPABASE_SERVICE_ROLE_KEY secret.');
     } else {
       setTeamSuccess(`Staff user ${newStaffEmail} created successfully!`);
       setNewStaffEmail(''); setNewStaffName(''); setNewStaffPassword('');
