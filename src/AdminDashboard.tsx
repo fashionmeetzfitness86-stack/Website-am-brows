@@ -454,7 +454,7 @@ if (searchQuery.trim()) {
                 <div className="flex flex-wrap gap-2">
                   {/* Status filter */}
                   <div className="flex gap-1 bg-paper-dark rounded-lg p-1">
-                    {['All', 'Confirmed', 'Pending Deposit', 'Cancelled'].map(s => (
+                    {['All', 'New Request', 'Confirmed', 'Cancelled'].map(s => (
                       <button key={s} onClick={() => setStatusFilter(s)}
                         className={`px-3 py-1.5 text-[9px] uppercase font-bold tracking-wider rounded-md transition-all ${statusFilter === s ? 'bg-white shadow-sm text-ink' : 'text-ink/40 hover:text-ink'}`}>
                         {s}
@@ -470,7 +470,7 @@ if (searchQuery.trim()) {
                       <th className="p-4 font-bold">Service</th>
                       <th className="p-4 font-bold">Appointment</th>
                       <th className="p-4 font-bold">Status</th>
-                      <th className="p-4 font-bold">Deposit</th>
+                      <th className="p-4 font-bold">Notes</th>
                       <th className="p-4 font-bold">Created</th>
                     </tr>
                   </thead>
