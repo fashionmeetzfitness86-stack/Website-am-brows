@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { Printer, ArrowLeft } from 'lucide-react';
 
 export default function PrintBookingPage() {
-  const { id } = useParams();
+  const location = useLocation();
+  // Extract the ID from the end of the path: /admin/print/<uuid>
+  const id = location.pathname.split('/admin/print/')[1]?.split('/')[0];
   const navigate = useNavigate();
   const [booking, setBooking] = useState<any>(null);
   const [loading, setLoading] = useState(true);
