@@ -8,7 +8,9 @@ import { Menu, ArrowRight, Instagram, Facebook, Mail, Calendar, User, Star, X, C
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Routes, Route, useNavigate, useLocation, useParams, useSearchParams, Navigate } from 'react-router-dom';
 import { supabase } from './lib/supabase';
+import { BookingResultSuccess, BookingResultFailed } from './BookingResultPages';
 import LoginPage from './pages/LoginPage';
+import StaffJoinPage from './pages/StaffJoinPage';
 import AdminRoute from './components/AdminRoute';
 import { useSEO } from './hooks/useSEO';
 
@@ -1933,6 +1935,10 @@ export default function App() {
 
   if (location.pathname === '/login') {
     return <LoginPage />;
+  }
+
+  if (location.pathname === '/staff-join') {
+    return <StaffJoinPage />;
   }
 
   if (location.pathname === '/admin') {

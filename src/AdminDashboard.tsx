@@ -140,36 +140,31 @@ export default function AdminDashboard() {
 
   const handleCreateStaff = async (e: any) => {
     e.preventDefault();
-    if (!confirm(`Are you sure you want to create a new staff account for ${newStaffName} (${newStaffEmail})? They will immediately be granted access to the admin dashboard.`)) return;
+    if (!confirm(`Are you sure you want to invite ${newStaffName} (${newStaffEmail}) as a staff member?`)) return;
     
     setTeamLoading(true); setTeamError(''); setTeamSuccess('');
-    const { data, error } = await supabase.functions.invoke('create-staff-user', {
-      body: { email: newStaffEmail, full_name: newStaffName, password: newStaffPassword },
+    const { error } = await supabase.from('staff_invites').insert({
+      email: newStaffEmail,
+      role: 'staff'
     });
     
-    if (error || data?.error) {
-      setTeamError(data?.error || error?.message || 'Failed to create staff user. Make sure the create-staff-user Edge Function is deployed with the SUPABASE_SERVICE_ROLE_KEY secret.');
+    if (error) {
+      setTeamError(error.message || 'Failed to invite staff user. Please run the SQL migration.');
     } else {
-      setTeamSuccess(`Staff user ${newStaffEmail} created successfully!`);
+      setTeamSuccess(`Invitation created! Send the link: https://ashleymbrows.netlify.app/staff-join to ${newStaffEmail}`);
       setNewStaffEmail(''); setNewStaffName(''); setNewStaffPassword('');
-      fetchTeam();
     }
     setTeamLoading(false);
   };
 
   const handleRemoveStaff = async (userId: string, memberEmail: string) => {
-    if (!confirm(`Remove ${memberEmail} from staff? This will also delete their login account.`)) return;
+    if (!confirm(`Remove ${memberEmail} from staff? They will lose access to the dashboard instantly.`)) return;
     setTeamLoading(true); setTeamError(''); setTeamSuccess('');
-    const { data, error } = await supabase.functions.invoke('remove-staff-user', {
-      body: { user_id: userId },
-    });
-    if (error || data?.error) {
-      setTeamError(data?.error || 'Failed to remove staff user. Please try again.');
+    const { error } = await supabase.from('user_roles').delete().eq('user_id', userId);
+    if (error) {
+      setTeamError('Failed to remove staff user: ' + error.message);
     } else {
-      const msg = data?.warning
-        ? `Role removed. Note: ${data.warning}`
-        : `${memberEmail} has been removed and their account deleted.`;
-      setTeamSuccess(msg);
+      setTeamSuccess(`${memberEmail} has been removed from staff.`);
       fetchTeam();
     }
     setTeamLoading(false);
@@ -628,7 +623,7 @@ if (searchQuery.trim()) {
                     </motion.div>
                   )}
                 </AnimatePresence>
-                <form onSubmit={handleCreateStaff} className="grid md:grid-cols-3 gap-4">
+                <form onSubmit={handleCreateStaff} className="grid md:grid-cols-2 gap-4">
                   <div className="space-y-1">
                     <label className="text-[10px] uppercase tracking-widest font-bold opacity-40">Full Name</label>
                     <input value={newStaffName} onChange={e=>setNewStaffName(e.target.value)} required
@@ -639,17 +634,12 @@ if (searchQuery.trim()) {
                     <input type="email" value={newStaffEmail} onChange={e=>setNewStaffEmail(e.target.value)} required
                       className="w-full p-3 border border-ink/10 focus:border-accent outline-none text-sm rounded-lg" placeholder="jane@example.com" />
                   </div>
-                  <div className="space-y-1">
-                    <label className="text-[10px] uppercase tracking-widest font-bold opacity-40">Temp Password</label>
-                    <input type="password" value={newStaffPassword} onChange={e=>setNewStaffPassword(e.target.value)} required minLength={8}
-                      className="w-full p-3 border border-ink/10 focus:border-accent outline-none text-sm rounded-lg" placeholder="Min 8 characters" />
-                  </div>
-                  <div className="md:col-span-3">
+                  <div className="md:col-span-2">
                     <button type="submit" disabled={teamLoading}
                       className="flex items-center gap-2 px-6 py-3 bg-accent text-paper text-[10px] uppercase tracking-[0.3em] font-bold hover:bg-ink transition-colors disabled:opacity-50">
-                      {teamLoading ? 'Creating…' : <><UserPlus className="w-4 h-4" /> Add Staff Member</>}
+                      {teamLoading ? 'Inviting…' : <><UserPlus className="w-4 h-4" /> Invite Staff Member</>}
                     </button>
-                    <p className="text-xs text-ink/40 mt-2">Staff can view and edit bookings. Share the temp password with them — they can change it after logging in.</p>
+                    <p className="text-xs text-ink/40 mt-2">Generate an invite link. The staff member will use it to securely create their own password.</p>
                   </div>
                 </form>
               </div>
