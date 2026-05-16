@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import type { ReactNode } from 'react';
-import { Calendar, Users, DollarSign, Clock, Bell, ChevronRight, Search, Lock, Mail, Check, X, RefreshCw, TrendingUp, AlertCircle, UserPlus, Trash2, ShieldCheck, Printer } from 'lucide-react';
+import { Calendar, Users, DollarSign, Clock, Bell, ChevronRight, Search, Lock, Mail, Check, X, RefreshCw, TrendingUp, AlertCircle, UserPlus, Trash2, ShieldCheck, Printer, Pencil } from 'lucide-react';
 import { supabase } from './lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
@@ -85,6 +85,14 @@ export default function AdminDashboard() {
   const [notesEdit, setNotesEdit] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
   const [actionMsg, setActionMsg] = useState('');
+  // Edit member panel state
+  const [selectedMember, setSelectedMember] = useState<any>(null);
+  const [editName, setEditName] = useState('');
+  const [editEmail, setEditEmail] = useState('');
+  const [editRole, setEditRole] = useState('');
+  const [editPassword, setEditPassword] = useState('');
+  const [memberMsg, setMemberMsg] = useState('');
+  const [memberLoading, setMemberLoading] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -165,9 +173,39 @@ export default function AdminDashboard() {
       setTeamError('Failed to remove staff user: ' + error.message);
     } else {
       setTeamSuccess(`${memberEmail} has been removed from staff.`);
+      setSelectedMember(null);
       fetchTeam();
     }
     setTeamLoading(false);
+  };
+
+  const openEditMember = (m: any) => {
+    setSelectedMember(m);
+    setEditName(m.full_name || '');
+    setEditEmail(m.email || '');
+    setEditRole(m.role || 'staff');
+    setEditPassword('');
+    setMemberMsg('');
+  };
+
+  const handleUpdateMember = async () => {
+    if (!selectedMember) return;
+    setMemberLoading(true); setMemberMsg('');
+    const body: any = { user_id: selectedMember.user_id };
+    if (editName !== selectedMember.full_name) body.full_name = editName;
+    if (editEmail !== selectedMember.email) body.email = editEmail;
+    if (editRole !== selectedMember.role) body.role = editRole;
+    if (editPassword.trim()) body.password = editPassword.trim();
+
+    const { data, error } = await supabase.functions.invoke('update-staff-user', { body });
+    if (error || data?.error) {
+      setMemberMsg('Error: ' + (data?.error || error?.message));
+    } else {
+      setMemberMsg('Member updated successfully.');
+      setEditPassword('');
+      fetchTeam();
+    }
+    setMemberLoading(false);
   };
 
   const handleStatusChange = async (bookingId: string, newStatus: string) => {
@@ -678,13 +716,22 @@ if (searchQuery.trim()) {
                           {m.created_at ? new Date(m.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}
                         </td>
                         <td className="p-4">
-                          {m.role !== 'super_admin' && (
-                            <button onClick={() => handleRemoveStaff(m.user_id, m.email)}
-                              className="flex items-center gap-1.5 text-xs text-red-400 hover:text-red-600 transition-colors">
-                              <Trash2 className="w-3.5 h-3.5" /> Remove
-                            </button>
-                          )}
-                          {m.role === 'super_admin' && <span className="text-xs text-ink/30">Owner</span>}
+                          <div className="flex items-center gap-3">
+                            {m.role !== 'super_admin' ? (
+                              <>
+                                <button onClick={() => openEditMember(m)}
+                                  className="flex items-center gap-1.5 text-xs text-ink/50 hover:text-accent transition-colors font-medium">
+                                  <Pencil className="w-3.5 h-3.5" /> Edit
+                                </button>
+                                <button onClick={() => handleRemoveStaff(m.user_id, m.email)}
+                                  className="flex items-center gap-1.5 text-xs text-red-400 hover:text-red-600 transition-colors">
+                                  <Trash2 className="w-3.5 h-3.5" /> Remove
+                                </button>
+                              </>
+                            ) : (
+                              <span className="text-xs text-ink/30">Owner</span>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -820,6 +867,108 @@ if (searchQuery.trim()) {
                   <button onClick={() => handleDeleteBooking(selectedBooking.id)} disabled={actionLoading}
                     className="flex-1 py-2 bg-red-600 text-white text-[10px] font-bold uppercase tracking-widest hover:bg-red-700 transition-colors flex items-center justify-center gap-1">
                     <Trash2 className="w-3.5 h-3.5" /> Delete
+                  </button>
+                </section>
+
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Edit Staff Member Panel ──────────────────────────────────────── */}
+      <AnimatePresence>
+        {selectedMember && (
+          <div className="fixed inset-0 z-50 flex justify-end">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setSelectedMember(null)} className="absolute inset-0 bg-ink/20 backdrop-blur-sm cursor-pointer" />
+            <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="relative w-full max-w-md bg-white h-full shadow-2xl border-l border-ink/10 flex flex-col z-10 overflow-hidden">
+
+              {/* Header */}
+              <div className="flex items-center justify-between p-6 border-b border-ink/8">
+                <div>
+                  <p className="text-[10px] uppercase font-bold tracking-widest text-accent mb-1">Edit Staff Member</p>
+                  <h3 className="text-xl font-serif">{selectedMember.full_name || selectedMember.email}</h3>
+                </div>
+                <button onClick={() => setSelectedMember(null)} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-ink/5">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Body */}
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+
+                {/* Feedback message */}
+                <AnimatePresence>
+                  {memberMsg && (
+                    <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                      className={`p-3 text-xs font-bold uppercase tracking-widest ${memberMsg.startsWith('Error') ? 'bg-red-50 text-red-600 border border-red-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'}`}>
+                      {memberMsg}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Info Section */}
+                <section className="space-y-4">
+                  <h4 className="text-[10px] uppercase font-bold tracking-widest opacity-40 border-b border-ink/5 pb-2">Profile Information</h4>
+                  <div className="space-y-1">
+                    <label className="text-[10px] uppercase font-bold tracking-widest opacity-40">Full Name</label>
+                    <input value={editName} onChange={e => setEditName(e.target.value)}
+                      className="w-full p-3 border border-ink/10 focus:border-accent outline-none text-sm rounded-lg" placeholder="Jane Smith" />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] uppercase font-bold tracking-widest opacity-40">Email Address</label>
+                    <input type="email" value={editEmail} onChange={e => setEditEmail(e.target.value)}
+                      className="w-full p-3 border border-ink/10 focus:border-accent outline-none text-sm rounded-lg" placeholder="jane@example.com" />
+                  </div>
+                </section>
+
+                {/* Access Level */}
+                <section className="space-y-4">
+                  <h4 className="text-[10px] uppercase font-bold tracking-widest opacity-40 border-b border-ink/5 pb-2">Access Level</h4>
+                  <div className="grid grid-cols-2 gap-3">
+                    {['staff', 'super_admin'].map(r => (
+                      <button key={r} onClick={() => setEditRole(r)}
+                        className={`py-3 px-4 border-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${
+                          editRole === r
+                            ? r === 'super_admin' ? 'border-purple-400 bg-purple-50 text-purple-700' : 'border-accent bg-accent/10 text-accent'
+                            : 'border-ink/10 text-ink/40 hover:border-ink/30'
+                        }`}>
+                        {r === 'super_admin' ? '👑 Super Admin' : '👤 Staff'}
+                      </button>
+                    ))}
+                  </div>
+                  <div className={`p-3 rounded-lg text-xs leading-relaxed ${editRole === 'super_admin' ? 'bg-purple-50 text-purple-700' : 'bg-blue-50 text-blue-700'}`}>
+                    {editRole === 'super_admin'
+                      ? '⚠️ Super Admin has full access — can manage team, all bookings, and invite/remove staff.'
+                      : 'Staff can view and manage bookings but cannot add/remove team members or change roles.'}
+                  </div>
+                </section>
+
+                {/* Password Reset */}
+                <section className="space-y-4">
+                  <h4 className="text-[10px] uppercase font-bold tracking-widest opacity-40 border-b border-ink/5 pb-2">Reset Password</h4>
+                  <div className="space-y-1">
+                    <label className="text-[10px] uppercase font-bold tracking-widest opacity-40">New Password</label>
+                    <input type="password" value={editPassword} onChange={e => setEditPassword(e.target.value)}
+                      className="w-full p-3 border border-ink/10 focus:border-accent outline-none text-sm rounded-lg" placeholder="Leave blank to keep current" minLength={6} />
+                    <p className="text-[10px] text-ink/40 pt-1">Min 6 characters. Leave blank if you don't want to change it.</p>
+                  </div>
+                </section>
+
+                {/* Save */}
+                <button onClick={handleUpdateMember} disabled={memberLoading}
+                  className="w-full py-4 bg-ink text-paper text-[10px] uppercase tracking-[0.3em] font-bold hover:bg-accent transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
+                  {memberLoading ? 'Saving…' : <><Check className="w-4 h-4" /> Save Changes</>}
+                </button>
+
+                {/* Danger Zone */}
+                <section className="pt-4 border-t border-red-100">
+                  <h4 className="text-[10px] uppercase font-bold tracking-widest text-red-400 mb-3">Danger Zone</h4>
+                  <button onClick={() => { handleRemoveStaff(selectedMember.user_id, selectedMember.email); }}
+                    className="w-full py-3 bg-red-50 text-red-600 border border-red-200 text-[10px] font-bold uppercase tracking-widest hover:bg-red-100 transition-colors flex items-center justify-center gap-2">
+                    <Trash2 className="w-3.5 h-3.5" /> Remove from Staff
                   </button>
                 </section>
 
