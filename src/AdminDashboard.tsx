@@ -279,6 +279,18 @@ export default function AdminDashboard() {
     setActionLoading(false);
   };
 
+  const handleDeleteBooking = async (id: string) => {
+    if (!confirm("Are you sure you want to completely delete this consultation request? This action cannot be undone.")) return;
+    setActionLoading(true);
+    const { error } = await supabase.from('bookings').delete().eq('id', id);
+    setActionLoading(false);
+    if (error) {
+      setActionMsg('Failed to delete booking: ' + error.message);
+    } else {
+      setSelectedBooking(null);
+      fetchData();
+    }
+  };
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -492,7 +504,7 @@ if (searchQuery.trim()) {
                           </tr>
                         )
                         : filteredBookings.map(b => (
-                          <tr key={b.id} className="border-b border-ink/5 hover:bg-paper-dark/20 transition-colors">
+                          <tr key={b.id} onClick={() => openBooking(b)} className="border-b border-ink/5 hover:bg-paper-dark/20 transition-colors cursor-pointer">
                             <td className="p-4">
                               <div className="font-semibold">{b.client_name}</div>
                               <div className="text-xs text-ink/50 mt-0.5">{b.client_email}</div>
@@ -507,7 +519,7 @@ if (searchQuery.trim()) {
                               <div className="text-xs mt-0.5 text-ink/50">{b.booking_time || '—'}</div>
                             </td>
                              <td className="p-4">
-                               <select value={b.status} onChange={e => handleStatusChange(b.id, e.target.value)}
+                               <select value={b.status} onClick={e => e.stopPropagation()} onChange={e => { e.stopPropagation(); handleStatusChange(b.id, e.target.value); }}
                                  className={`text-[10px] font-bold uppercase tracking-wider border rounded-full px-2.5 py-1 outline-none cursor-pointer ${STATUS_STYLES[b.status] || 'bg-gray-50 text-gray-500 border-gray-200'}`}>
                                  {ALL_STATUSES.map(s => <option key={s}>{s}</option>)}
                                </select>
@@ -693,6 +705,115 @@ if (searchQuery.trim()) {
           )}
         </div>
       </main>
+
+      {/* Slide-over / Modal for Booking Details */}
+      <AnimatePresence>
+        {selectedBooking && (
+          <div className="fixed inset-0 z-50 flex justify-end">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setSelectedBooking(null)} className="absolute inset-0 bg-ink/20 backdrop-blur-sm cursor-pointer" />
+            <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="relative w-full max-w-lg bg-white h-full shadow-2xl border-l border-ink/10 flex flex-col z-10 overflow-hidden">
+              {/* Header */}
+              <div className="flex items-center justify-between p-6 border-b border-ink/8">
+                <div>
+                  <p className="text-[10px] uppercase font-bold tracking-widest text-accent mb-1">Consultation Request</p>
+                  <h3 className="text-2xl font-serif">{selectedBooking.client_name}</h3>
+                </div>
+                <button onClick={() => setSelectedBooking(null)} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-ink/5">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Body */}
+              <div className="flex-1 overflow-y-auto p-6 space-y-8">
+                {/* Action Msg */}
+                <AnimatePresence>
+                  {actionMsg && (
+                    <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                      className={`p-3 text-xs font-bold uppercase tracking-widest ${actionMsg.startsWith('Error') || actionMsg.startsWith('Failed') ? 'bg-red-50 text-red-600 border border-red-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'}`}>
+                      {actionMsg}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Client Info */}
+                <section>
+                  <h4 className="text-[10px] uppercase font-bold tracking-widest opacity-40 mb-3 border-b border-ink/5 pb-2">Client Details</h4>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div><span className="opacity-40 block text-xs">Email</span>{selectedBooking.client_email}</div>
+                    <div><span className="opacity-40 block text-xs">Phone</span>{selectedBooking.client_phone}</div>
+                    <div><span className="opacity-40 block text-xs">Service</span>{selectedBooking.service_name}</div>
+                    <div><span className="opacity-40 block text-xs">Requested</span>{selectedBooking.booking_date} @ {selectedBooking.booking_time}</div>
+                  </div>
+                </section>
+
+                {/* Confirm Date/Time */}
+                <section className="bg-paper-dark p-4 border border-ink/5 rounded-xl space-y-4">
+                  <h4 className="text-[10px] uppercase font-bold tracking-widest opacity-40">Confirm Appointment</h4>
+                  
+                  <button onClick={handleApproveTime} disabled={actionLoading}
+                    className="w-full py-3 bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-emerald-100 transition-colors">
+                    <Check className="w-4 h-4" /> Approve Requested Time
+                  </button>
+
+                  <div className="pt-3 border-t border-ink/5">
+                    <p className="text-[10px] uppercase font-bold tracking-widest opacity-40 mb-2">Or set custom time</p>
+                    <div className="grid grid-cols-2 gap-2 mb-2">
+                      <input type="text" placeholder="Date (e.g. Nov 15, 2024)" value={confirmDate} onChange={e=>setConfirmDate(e.target.value)}
+                        className="w-full p-2 border border-ink/10 text-xs focus:border-accent outline-none" />
+                      <input type="text" placeholder="Time (e.g. 10:00 AM)" value={confirmTime} onChange={e=>setConfirmTime(e.target.value)}
+                        className="w-full p-2 border border-ink/10 text-xs focus:border-accent outline-none" />
+                    </div>
+                    <button onClick={handleConfirmTime} disabled={actionLoading || !confirmDate || !confirmTime}
+                      className="w-full py-2 bg-ink text-paper text-xs font-bold uppercase tracking-widest hover:bg-accent transition-colors disabled:opacity-50">
+                      Save Confirmed Time
+                    </button>
+                  </div>
+                </section>
+
+                {/* Communication */}
+                <section>
+                  <h4 className="text-[10px] uppercase font-bold tracking-widest opacity-40 mb-3 border-b border-ink/5 pb-2">Communication</h4>
+                  <div className="flex gap-2">
+                    <button onClick={() => handleSendEmail('confirmation')} disabled={actionLoading}
+                      className="flex-1 py-2 border border-ink/10 text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 hover:border-accent transition-colors">
+                        <Mail className="w-3.5 h-3.5" /> Send Confirmation Email
+                    </button>
+                  </div>
+                  {selectedBooking.email_confirmation_sent && (
+                     <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-widest mt-2 flex items-center gap-1"><Check className="w-3 h-3"/> Email sent</p>
+                  )}
+                </section>
+
+                {/* Admin Notes */}
+                <section>
+                  <h4 className="text-[10px] uppercase font-bold tracking-widest opacity-40 mb-3 border-b border-ink/5 pb-2">Admin Notes (Private)</h4>
+                  <textarea rows={3} value={notesEdit} onChange={e=>setNotesEdit(e.target.value)} placeholder="Internal staff notes..."
+                    className="w-full p-3 border border-ink/10 text-sm focus:border-accent outline-none resize-none mb-2" />
+                  <button onClick={handleSaveNotes} disabled={actionLoading}
+                    className="w-full py-2 border border-ink/10 text-xs font-bold uppercase tracking-widest hover:border-accent transition-colors">
+                    Save Notes
+                  </button>
+                </section>
+
+                {/* Actions */}
+                <section className="pt-4 border-t border-ink/5 flex gap-2">
+                  <button onClick={handleCancelRequest} disabled={actionLoading}
+                    className="flex-1 py-2 bg-red-50 text-red-600 text-[10px] font-bold uppercase tracking-widest hover:bg-red-100 transition-colors">
+                    Cancel Request
+                  </button>
+                  <button onClick={() => handleDeleteBooking(selectedBooking.id)} disabled={actionLoading}
+                    className="flex-1 py-2 bg-red-600 text-white text-[10px] font-bold uppercase tracking-widest hover:bg-red-700 transition-colors flex items-center justify-center gap-1">
+                    <Trash2 className="w-3.5 h-3.5" /> Delete
+                  </button>
+                </section>
+
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
