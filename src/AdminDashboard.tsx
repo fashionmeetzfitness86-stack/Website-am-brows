@@ -365,9 +365,9 @@ if (searchQuery.trim()) {
     <div className="min-h-screen bg-[#fafaf8] flex font-sans text-ink">
       {/* Sidebar */}
       <aside className="w-64 bg-white border-r border-ink/8 flex flex-col fixed top-0 bottom-0 left-0 z-10">
-        <div className="p-6 border-b border-ink/8">
-          <h1 className="text-lg font-serif">Ashley M. Brows</h1>
-          <p className="text-[9px] uppercase tracking-widest font-bold opacity-30 mt-1">Studio Admin</p>
+        <div className="p-6 border-b border-ink/8 flex flex-col items-center text-center">
+          <img src="/logo.png" alt="Ashley Brows" className="h-20 w-auto mb-2" />
+          <p className="text-[9px] uppercase tracking-widest font-bold opacity-30">Studio Admin</p>
         </div>
         <nav className="flex-1 p-4 space-y-1">
           {TABS.map(tab => (
