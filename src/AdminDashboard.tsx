@@ -57,6 +57,40 @@ const EmptyState = ({ icon, title, subtitle }: { icon: ReactNode; title: string;
   </div>
 );
 
+// ─── Signed-URL photo thumbnail (private bucket) ──────────────────────────────
+function getStoragePath(url: string): string | null {
+  if (!url) return null;
+  const match = url.match(/booking-photos\/(.+?)(?:\?|$)/);
+  return match ? match[1] : null;
+}
+
+function ModalPhoto({ url, label }: { url: string; label: string }) {
+  const [src, setSrc] = useState<string | null>(null);
+  const [err, setErr] = useState(false);
+  useEffect(() => {
+    if (!url) return;
+    const path = getStoragePath(url);
+    if (!path) { setSrc(url); return; }
+    supabase.storage.from('booking-photos').createSignedUrl(path, 3600)
+      .then(({ data }) => { if (data?.signedUrl) setSrc(data.signedUrl); else setErr(true); })
+      .catch(() => setErr(true));
+  }, [url]);
+  return (
+    <div className="flex-1">
+      <p className="text-[10px] uppercase font-bold tracking-widest opacity-40 mb-1.5">{label}</p>
+      <div className="aspect-square rounded-lg overflow-hidden border border-ink/10 bg-paper-dark flex items-center justify-center">
+        {err ? (
+          <span className="text-[10px] text-ink/30 uppercase font-bold tracking-widest">Unavailable</span>
+        ) : src ? (
+          <img src={src} alt={label} className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-5 h-5 rounded-full border-2 border-accent border-t-transparent animate-spin" />
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Dashboard ───────────────────────────────────────────────────────────
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('appointments');
@@ -821,9 +855,15 @@ if (searchQuery.trim()) {
                   {selectedBooking.notes && <div><span className="opacity-40 block text-[10px] uppercase font-bold tracking-wider">Client Notes</span><p className="italic mt-0.5">"{selectedBooking.notes}"</p></div>}
                   {(selectedBooking.current_area_photo_url || selectedBooking.reference_photo_url) && (
                     <div className="pt-2">
-                       <p className="text-[10px] font-bold uppercase tracking-widest text-accent flex items-center gap-1">
-                          <Check className="w-3 h-3"/> Photos Attached (Click 'View Document' to see them)
-                       </p>
+                      <p className="text-[10px] uppercase font-bold tracking-widest opacity-40 mb-2">Client Photos</p>
+                      <div className="flex gap-3">
+                        {selectedBooking.current_area_photo_url && (
+                          <ModalPhoto url={selectedBooking.current_area_photo_url} label="Current Brows/Lips" />
+                        )}
+                        {selectedBooking.reference_photo_url && (
+                          <ModalPhoto url={selectedBooking.reference_photo_url} label="Reference Goal" />
+                        )}
+                      </div>
                     </div>
                   )}
                 </section>
