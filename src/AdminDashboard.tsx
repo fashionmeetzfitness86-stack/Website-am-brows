@@ -132,9 +132,8 @@ export default function AdminDashboard() {
   const [showNotifPanel, setShowNotifPanel] = useState(false);
   const navigate = useNavigate();
 
+  // ── Session / data bootstrap ────────────────────────────────────────────────
   useEffect(() => {
-    // Await role fetch before clearing initialLoading so we never flash
-    // "Access Denied" for a valid user whose role hasn't loaded yet.
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       if (session) {
@@ -146,7 +145,6 @@ export default function AdminDashboard() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       if (!session) {
-        // Signed out — reset role state
         setUserRole(null);
         setRoleChecked(false);
       } else {
@@ -156,6 +154,28 @@ export default function AdminDashboard() {
     });
     return () => subscription.unsubscribe();
   }, []);
+
+  // ── Realtime notifications subscription (isolated — never blocks data load) ─
+  useEffect(() => {
+    if (!session?.user?.id) return;
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+    try {
+      channel = supabase
+        .channel('notifications-' + session.user.id)
+        .on('postgres_changes', {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${session.user.id}`,
+        }, (payload) => {
+          setNotifications(prev => [payload.new as any, ...prev]);
+        })
+        .subscribe();
+    } catch {
+      // Realtime subscription failure must not affect data loading
+    }
+    return () => { if (channel) supabase.removeChannel(channel); };
+  }, [session?.user?.id]);
 
   const fetchData = async () => {
     setDataLoading(true);
@@ -169,44 +189,52 @@ export default function AdminDashboard() {
   };
 
   const fetchNotifications = async (userId: string) => {
-    const { data } = await supabase
-      .from('notifications')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-      .limit(20);
-    if (data) setNotifications(data);
+    try {
+      const { data } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(20);
+      if (data) setNotifications(data);
+    } catch {
+      // notifications table may not exist yet — fail silently
+    }
   };
 
   const markAllRead = async () => {
     if (!session) return;
-    await supabase.from('notifications').update({ read: true }).eq('user_id', session.user.id).eq('read', false);
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    try {
+      await supabase.from('notifications').update({ read: true }).eq('user_id', session.user.id).eq('read', false);
+      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    } catch { /* ignore */ }
   };
 
   const clearNotification = async (id: string) => {
-    await supabase.from('notifications').delete().eq('id', id);
-    setNotifications(prev => prev.filter(n => n.id !== id));
+    try {
+      await supabase.from('notifications').delete().eq('id', id);
+      setNotifications(prev => prev.filter(n => n.id !== id));
+    } catch { /* ignore */ }
   };
 
   const fetchRole = async (userId: string) => {
-    const { data } = await supabase.from('user_roles').select('role').eq('user_id', userId).single();
-    const role = data?.role ?? null;
-    setUserRole(role);
-    setRoleChecked(true);
-    if (role === 'super_admin') fetchTeam();
-    // Fetch notifications for this user and subscribe to new ones
-    fetchNotifications(userId);
-    const channel = supabase
-      .channel('notifications-' + userId)
-      .on('postgres_changes', {
-        event: 'INSERT', schema: 'public', table: 'notifications',
-        filter: `user_id=eq.${userId}`,
-      }, (payload) => {
-        setNotifications(prev => [payload.new, ...prev]);
-      })
-      .subscribe();
-    return () => supabase.removeChannel(channel);
+    try {
+      const { data } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId)
+        .single();
+      const role = data?.role ?? null;
+      setUserRole(role);
+      if (role === 'super_admin') fetchTeam();
+      // Load notifications independently — must not block role resolution
+      fetchNotifications(userId);
+    } catch (e) {
+      console.error('fetchRole error:', e);
+      setUserRole(null);
+    } finally {
+      setRoleChecked(true);
+    }
   };
 
   const fetchTeam = async () => {
