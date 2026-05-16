@@ -11,6 +11,7 @@ import { supabase } from './lib/supabase';
 import { BookingResultSuccess, BookingResultFailed } from './BookingResultPages';
 import LoginPage from './pages/LoginPage';
 import StaffJoinPage from './pages/StaffJoinPage';
+import PrintBookingPage from './pages/PrintBookingPage';
 import AdminRoute from './components/AdminRoute';
 import { useSEO } from './hooks/useSEO';
 
@@ -1939,6 +1940,14 @@ export default function App() {
 
   if (location.pathname === '/staff-join') {
     return <StaffJoinPage />;
+  }
+
+  if (location.pathname.startsWith('/admin/print/')) {
+    return (
+      <AdminRoute>
+        <PrintBookingPage />
+      </AdminRoute>
+    );
   }
 
   if (location.pathname === '/admin') {

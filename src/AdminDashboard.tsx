@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import type { ReactNode } from 'react';
-import { Calendar, Users, DollarSign, Clock, Bell, ChevronRight, Search, Lock, Mail, Check, X, RefreshCw, TrendingUp, AlertCircle, UserPlus, Trash2, ShieldCheck } from 'lucide-react';
+import { Calendar, Users, DollarSign, Clock, Bell, ChevronRight, Search, Lock, Mail, Check, X, RefreshCw, TrendingUp, AlertCircle, UserPlus, Trash2, ShieldCheck, Printer } from 'lucide-react';
 import { supabase } from './lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
@@ -729,13 +729,37 @@ if (searchQuery.trim()) {
 
                 {/* Client Info */}
                 <section>
-                  <h4 className="text-[10px] uppercase font-bold tracking-widest opacity-40 mb-3 border-b border-ink/5 pb-2">Client Details</h4>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div className="flex justify-between items-end mb-3 border-b border-ink/5 pb-2">
+                    <h4 className="text-[10px] uppercase font-bold tracking-widest opacity-40">Client Details</h4>
+                    <button onClick={() => window.open(`/admin/print/${selectedBooking.id}`, '_blank')} 
+                      className="text-[10px] font-bold uppercase tracking-widest text-accent flex items-center gap-1 hover:text-ink transition-colors">
+                      <Printer className="w-3.5 h-3.5" /> View / Print Document
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4 text-sm mb-4">
                     <div><span className="opacity-40 block text-xs">Email</span>{selectedBooking.client_email}</div>
                     <div><span className="opacity-40 block text-xs">Phone</span>{selectedBooking.client_phone}</div>
                     <div><span className="opacity-40 block text-xs">Service</span>{selectedBooking.service_name}</div>
                     <div><span className="opacity-40 block text-xs">Requested</span>{selectedBooking.booking_date} @ {selectedBooking.booking_time}</div>
                   </div>
+                </section>
+
+                {/* Intake Preview */}
+                <section className="bg-paper-dark p-4 rounded-xl border border-ink/5 text-sm space-y-3">
+                  <h4 className="text-[10px] uppercase font-bold tracking-widest opacity-40">Quick Intake Preview</h4>
+                  <div><span className="opacity-40 block text-[10px] uppercase font-bold tracking-wider">Health Conditions</span><p className="mt-0.5">{selectedBooking.health_conditions || 'None'}</p></div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div><span className="opacity-40 block text-[10px] uppercase font-bold tracking-wider">Previous PMU</span><p className="mt-0.5">{selectedBooking.previous_pmu || 'No / Not specified'}</p></div>
+                    <div><span className="opacity-40 block text-[10px] uppercase font-bold tracking-wider">Skin Type</span><p className="mt-0.5">{selectedBooking.skin_type || 'Not specified'}</p></div>
+                  </div>
+                  {selectedBooking.notes && <div><span className="opacity-40 block text-[10px] uppercase font-bold tracking-wider">Client Notes</span><p className="italic mt-0.5">"{selectedBooking.notes}"</p></div>}
+                  {(selectedBooking.current_area_photo_url || selectedBooking.reference_photo_url) && (
+                    <div className="pt-2">
+                       <p className="text-[10px] font-bold uppercase tracking-widest text-accent flex items-center gap-1">
+                          <Check className="w-3 h-3"/> Photos Attached (Click 'View Document' to see them)
+                       </p>
+                    </div>
+                  )}
                 </section>
 
                 {/* Confirm Date/Time */}
