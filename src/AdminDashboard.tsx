@@ -148,19 +148,33 @@ export default function AdminDashboard() {
 
   const handleCreateStaff = async (e: any) => {
     e.preventDefault();
-    if (!confirm(`Are you sure you want to invite ${newStaffName} (${newStaffEmail}) as a staff member?`)) return;
-    
+    if (!newStaffName || !newStaffEmail || !newStaffPassword) {
+      setTeamError('Full name, email, and password are all required.');
+      return;
+    }
+    if (newStaffPassword.length < 8) {
+      setTeamError('Password must be at least 8 characters.');
+      return;
+    }
+    if (!confirm(`Create a staff account for ${newStaffName} (${newStaffEmail})?\n\nThey will be able to log in immediately with the password you set.`)) return;
+
     setTeamLoading(true); setTeamError(''); setTeamSuccess('');
-    const { error } = await supabase.from('staff_invites').insert({
-      email: newStaffEmail,
-      role: 'staff'
+    const { data, error } = await supabase.functions.invoke('create-staff-user', {
+      body: { email: newStaffEmail, full_name: newStaffName, password: newStaffPassword },
     });
-    
-    if (error) {
-      setTeamError(error.message || 'Failed to invite staff user. Please run the SQL migration.');
+
+    if (error || data?.error) {
+      const msg = data?.error || error?.message || 'Unknown error';
+      // Give a clear action if the edge function isn't deployed yet
+      setTeamError(
+        msg.includes('Failed to send') || msg.includes('Function not found')
+          ? 'Edge Function not deployed. Run: npx supabase functions deploy create-staff-user'
+          : msg
+      );
     } else {
-      setTeamSuccess(`Invitation created! Send the link: https://ashleymbrows.netlify.app/staff-join to ${newStaffEmail}`);
+      setTeamSuccess(`✓ Account created for ${newStaffEmail}. Share their credentials so they can log in at /login.`);
       setNewStaffEmail(''); setNewStaffName(''); setNewStaffPassword('');
+      fetchTeam();
     }
     setTeamLoading(false);
   };
@@ -661,7 +675,7 @@ if (searchQuery.trim()) {
                     </motion.div>
                   )}
                 </AnimatePresence>
-                <form onSubmit={handleCreateStaff} className="grid md:grid-cols-2 gap-4">
+                <form onSubmit={handleCreateStaff} className="grid md:grid-cols-3 gap-4">
                   <div className="space-y-1">
                     <label className="text-[10px] uppercase tracking-widest font-bold opacity-40">Full Name</label>
                     <input value={newStaffName} onChange={e=>setNewStaffName(e.target.value)} required
@@ -672,12 +686,17 @@ if (searchQuery.trim()) {
                     <input type="email" value={newStaffEmail} onChange={e=>setNewStaffEmail(e.target.value)} required
                       className="w-full p-3 border border-ink/10 focus:border-accent outline-none text-sm rounded-lg" placeholder="jane@example.com" />
                   </div>
-                  <div className="md:col-span-2">
+                  <div className="space-y-1">
+                    <label className="text-[10px] uppercase tracking-widest font-bold opacity-40">Password</label>
+                    <input type="password" value={newStaffPassword} onChange={e=>setNewStaffPassword(e.target.value)} required minLength={8}
+                      className="w-full p-3 border border-ink/10 focus:border-accent outline-none text-sm rounded-lg" placeholder="Min. 8 characters" />
+                  </div>
+                  <div className="md:col-span-3 flex flex-col gap-2">
                     <button type="submit" disabled={teamLoading}
-                      className="flex items-center gap-2 px-6 py-3 bg-accent text-paper text-[10px] uppercase tracking-[0.3em] font-bold hover:bg-ink transition-colors disabled:opacity-50">
-                      {teamLoading ? 'Inviting…' : <><UserPlus className="w-4 h-4" /> Invite Staff Member</>}
+                      className="flex items-center gap-2 px-6 py-3 bg-accent text-paper text-[10px] uppercase tracking-[0.3em] font-bold hover:bg-ink transition-colors disabled:opacity-50 w-fit">
+                      {teamLoading ? 'Creating account…' : <><UserPlus className="w-4 h-4" /> Create Staff Account</>}
                     </button>
-                    <p className="text-xs text-ink/40 mt-2">Generate an invite link. The staff member will use it to securely create their own password.</p>
+                    <p className="text-xs text-ink/40">You set the email and password. Share credentials with the staff member — they can log in at <strong>/login</strong> immediately.</p>
                   </div>
                 </form>
               </div>
