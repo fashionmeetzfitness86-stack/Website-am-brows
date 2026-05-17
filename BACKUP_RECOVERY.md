@@ -1,59 +1,192 @@
-# 🛡️ Ashley M. Brows — Backup & Recovery Procedures
-
-While Supabase and Netlify are highly reliable, having a structured backup and recovery plan ensures business continuity in the event of an emergency.
-
----
-
-## 1. Database Backups (Supabase)
-
-Supabase automatically handles daily backups for your database on their paid plans (Pro plan and above). For the free tier, backups must be managed manually.
-
-### How to export data manually (CSV):
-1. Log into your **Supabase Dashboard**.
-2. Go to the **Table Editor**.
-3. Select the `bookings` table.
-4. Click the **Export** button in the top right corner.
-5. Select **Export as CSV**.
-6. Repeat this process for the `contacts` table.
-7. *Recommendation:* Do this weekly or bi-weekly and save the files in a secure, encrypted cloud folder (e.g., Google Drive, Dropbox) to keep a physical copy of your clients' data.
-
-### Point-in-Time Recovery (PITR):
-If you upgrade to the Supabase Pro plan, you gain access to **Point-in-Time Recovery (PITR)**. This allows you to revert your database to any specific second in the past (up to 7 days), preventing data loss in case of accidental deletion.
+# Ashley M. Brows — Backup & Recovery Guide
+> Platform Resilience Reference · Updated May 2026
 
 ---
 
-## 2. Source Code Backups (GitHub)
+## Architecture Overview
 
-The entire application's source code is hosted on **GitHub**.
-- Every change is tracked via version control.
-- If the website code breaks or a bad deployment occurs, you can easily "revert" to the previous working commit.
-- **Action:** Ensure you do not delete the GitHub repository. It acts as the ultimate backup of the actual website structure and logic.
+The Ashley M. Brows platform has three main components:
 
----
-
-## 3. Deployment Recovery (Netlify)
-
-Netlify automatically keeps a history of every single deployment. If a new deployment introduces a bug, you can instantly rollback.
-
-### How to Rollback a Deployment:
-1. Log into your **Netlify Dashboard**.
-2. Select your site (`ashleymbrows`).
-3. Click on the **Deploys** tab.
-4. You will see a list of all historical deployments. 
-5. Find the last known working deploy (marked as "Published" in the past).
-6. Click on it, then click **Publish Deploy**.
-7. The website will instantly revert to that exact version without affecting the Supabase database.
+| Component | Service | Recovery If Lost |
+|---|---|---|
+| Frontend (React app) | Netlify | Redeploy from GitHub in 2 minutes |
+| Database | Supabase (PostgreSQL) | Restore from backup or re-run schema |
+| File Storage | Supabase Storage | Client photos (non-critical) |
+| Edge Functions | Supabase Deno | Redeploy via CLI |
 
 ---
 
-## 4. Edge Functions & Secrets
+## Regular Backup Recommendations
 
-If you ever need to recreate the Supabase project from scratch:
-1. You will need to run the `supabase/schema.sql` file to recreate the tables.
-2. You will need to re-deploy the edge functions via the CLI:
-   `supabase functions deploy remove-staff-user`
-   `supabase functions deploy send-confirmation-email`
-3. You will need to re-add your secrets to the new Supabase project:
-   `RESEND_API_KEY`, `FROM_EMAIL`, `SITE_URL`
+### 1. Database Exports (Monthly Minimum)
 
-Keep a secure record of your API Keys (Resend, Stripe if ever re-enabled) in a password manager (like 1Password or Bitwarden). Never store them in plain text files.
+Export all booking and contact data from Supabase regularly:
+
+**Option A — CSV export:**
+1. Supabase Dashboard → Table Editor
+2. Open `bookings` table
+3. Click **"Download CSV"** (top right)
+4. Repeat for `contacts` and `user_roles`
+
+**Option B — SQL dump:**
+Supabase Pro plans include automatic daily backups. For free-tier projects, set a reminder to export manually.
+
+```bash
+# If you have the Supabase CLI installed:
+supabase db dump --linked > backup-$(date +%Y%m%d).sql
+```
+
+### 2. Code Repository
+
+Ensure the codebase is pushed to GitHub regularly. All source files are in `c:\Users\Anderson\Website-am-brows`.
+
+```bash
+git add .
+git commit -m "Checkpoint — [date]"
+git push origin main
+```
+
+---
+
+## Recovery Scenarios
+
+---
+
+### Scenario A — Netlify Deploy Is Down
+
+**Symptoms:** Site is unreachable. Netlify status page shows an incident.
+
+**Recovery:**
+1. Check [https://www.netlifystatus.com](https://www.netlifystatus.com)
+2. If Netlify is down globally — wait for resolution (usually < 1 hour)
+3. If only your deploy is broken — go to Netlify Dashboard → Deploys → click the last successful deploy → "Publish Deploy"
+4. If the deploy itself is broken — check the deploy log for errors, fix, push again
+
+---
+
+### Scenario B — Lost Access to Admin Dashboard
+
+**Symptoms:** Ashley cannot log in. Credentials don't work.
+
+**Recovery:**
+1. Go to [app.supabase.com](https://app.supabase.com)
+2. Open your project → **Authentication** → **Users**
+3. Find the user email
+4. Click the user → **Reset Password** or **Send magic link**
+5. If the `user_roles` row is missing (causing "Access Denied"):
+
+```sql
+-- Run in Supabase SQL Editor:
+-- Replace the UUID with the actual user ID from Authentication > Users
+INSERT INTO public.user_roles (user_id, email, full_name, role)
+VALUES ('<paste-user-uuid-here>', 'Andersondjeemo@gmail.com', 'Anderson', 'super_admin')
+ON CONFLICT (user_id) DO NOTHING;
+```
+
+---
+
+### Scenario C — Database Accidentally Wiped / Corrupted
+
+**Symptoms:** Bookings or contacts data is missing.
+
+**Recovery — from CSV backup:**
+1. Supabase Dashboard → Table Editor → `bookings`
+2. Click **"Insert rows"** → upload the CSV
+3. Repeat for `contacts`
+
+**Recovery — full schema reset (last resort):**
+1. Supabase Dashboard → SQL Editor
+2. Paste and run the full contents of `supabase/schema.sql`
+3. Note: This uses `IF NOT EXISTS` — safe to run on a live database
+4. Re-insert the super_admin `user_roles` row (see Scenario B)
+
+---
+
+### Scenario D — Edge Function Errors
+
+**Symptoms:** Confirmation emails not sending, staff creation/removal failing.
+
+**Check:**
+1. Supabase Dashboard → Edge Functions → click the function → **Logs**
+2. Look for error messages
+
+**Common fixes:**
+| Error | Fix |
+|---|---|
+| `RESEND_API_KEY not set` | Add the key in Edge Functions → Secrets |
+| `Function not found` | Deploy with `supabase functions deploy <name>` |
+| `Unauthorized` | Check the caller is logged in with a valid JWT |
+| `Forbidden` | Verify the user has the correct role in `user_roles` |
+
+**Redeploy all functions (requires Supabase CLI):**
+```bash
+supabase link --project-ref <your-project-ref>
+supabase functions deploy create-staff-user
+supabase functions deploy remove-staff-user
+supabase functions deploy update-staff-user
+supabase functions deploy send-confirmation-email
+supabase functions deploy notify-new-booking
+supabase functions deploy stripe-webhook
+```
+
+---
+
+### Scenario E — Storage Photos Lost
+
+**Symptoms:** Client intake photos not displaying in admin dashboard.
+
+**Context:** Photos are stored in the private `booking-photos` Supabase Storage bucket. If a photo is deleted from storage, the URL in the booking row still exists but the image returns a 404.
+
+**Recovery:**
+- Photos cannot be recovered once deleted from storage.
+- The booking record itself (form data, health conditions, notes) is unaffected.
+- Ask the client to resubmit photos if needed.
+
+**Prevention:**
+- Do not manually delete files from the `booking-photos` bucket unless intentional.
+- The "Delete" button in the admin dashboard only deletes the database row, not the storage file.
+
+---
+
+### Scenario F — Netlify Environment Variables Missing
+
+**Symptoms:** Site loads but shows a startup error, or Supabase calls all fail.
+
+**Recovery:**
+1. Netlify Dashboard → Site Settings → Environment Variables
+2. Add the following:
+   - `VITE_SUPABASE_URL` — from Supabase → Settings → API
+   - `VITE_SUPABASE_ANON_KEY` — from Supabase → Settings → API (anon / public key)
+3. Trigger a new deploy: Netlify → Deploys → "Trigger deploy"
+
+---
+
+## Key Credentials & Locations
+
+> ⚠️ Keep these secure. Never commit secrets to Git.
+
+| Credential | Location |
+|---|---|
+| Supabase Project URL | Supabase Dashboard → Settings → API |
+| Supabase Anon Key | Supabase Dashboard → Settings → API |
+| Supabase Service Role Key | Supabase Dashboard → Settings → API (never expose publicly) |
+| Netlify Site URL | Netlify Dashboard → Site Overview |
+| Resend API Key | resend.com → API Keys |
+| Admin Login | Supabase Auth → Users |
+
+---
+
+## Contact & Support
+
+| Service | Support URL |
+|---|---|
+| Netlify | support.netlify.com |
+| Supabase | supabase.com/support |
+| Resend (email) | resend.com/docs |
+
+---
+
+## Emergency Contacts
+
+- **Developer:** Anderson — Andersondjeemo@gmail.com
+- **Studio Owner:** Ashley Miller — ashleymbrows@gmail.com

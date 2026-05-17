@@ -137,8 +137,9 @@ export default function AdminDashboard() {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       if (session) {
-        fetchData();
+        // Role check FIRST — then load data only once access is confirmed
         await fetchRole(session.user.id);
+        fetchData();
       }
       setInitialLoading(false);
     });
@@ -148,8 +149,7 @@ export default function AdminDashboard() {
         setUserRole(null);
         setRoleChecked(false);
       } else {
-        fetchData();
-        fetchRole(session.user.id);
+        fetchRole(session.user.id).then(() => fetchData());
       }
     });
     return () => subscription.unsubscribe();
@@ -278,11 +278,19 @@ export default function AdminDashboard() {
   const handleRemoveStaff = async (userId: string, memberEmail: string) => {
     if (!confirm(`Remove ${memberEmail} from staff? They will lose access to the dashboard instantly.`)) return;
     setTeamLoading(true); setTeamError(''); setTeamSuccess('');
-    const { error } = await supabase.from('user_roles').delete().eq('user_id', userId);
-    if (error) {
-      setTeamError('Failed to remove staff user: ' + error.message);
+    // Route through Edge Function — handles both user_roles and auth.users deletion
+    // via service_role key, which is required by RLS on user_roles.
+    const { data, error } = await supabase.functions.invoke('remove-staff-user', {
+      body: { user_id: userId },
+    });
+    if (error || data?.error) {
+      setTeamError('Failed to remove staff: ' + (data?.error || error?.message || 'Unknown error'));
     } else {
-      setTeamSuccess(`${memberEmail} has been removed from staff.`);
+      setTeamSuccess(
+        data?.warning
+          ? `Role removed for ${memberEmail}. Note: ${data.warning}`
+          : `${memberEmail} has been fully removed from staff.`
+      );
       setSelectedMember(null);
       fetchTeam();
     }

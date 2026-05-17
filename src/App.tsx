@@ -8,7 +8,7 @@ import { Menu, ArrowRight, Instagram, Facebook, Mail, Calendar, User, Star, X, C
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Routes, Route, useNavigate, useLocation, useParams, useSearchParams, Navigate } from 'react-router-dom';
 import { supabase } from './lib/supabase';
-import { BookingResultSuccess, BookingResultFailed } from './BookingResultPages';
+import { BookingSuccess, BookingCancelled } from './BookingResultPages';
 import LoginPage from './pages/LoginPage';
 import StaffJoinPage from './pages/StaffJoinPage';
 import PrintBookingPage from './pages/PrintBookingPage';
@@ -780,6 +780,7 @@ const ContactPage = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const validate = () => {
     const e: Record<string, string> = {};
@@ -796,15 +797,26 @@ const ContactPage = () => {
     e.preventDefault();
     if (!validate()) return;
     setIsSubmitting(true);
+    setSubmitError(null);
     try {
-      await supabase.from('contacts').insert({
+      const { error } = await supabase.from('contacts').insert({
         name: formData.name,
         email: formData.email,
         interested_services: formData.subject,
         message: formData.message,
         status: 'New'
       });
-    } catch (e) { console.error('Contact failed', e); }
+      if (error) {
+        setSubmitError('Unable to send your message. Please try again or email us directly.');
+        setIsSubmitting(false);
+        return;
+      }
+    } catch (e) {
+      console.error('Contact failed', e);
+      setSubmitError('Something went wrong. Please email us at ashleymbrows@gmail.com.');
+      setIsSubmitting(false);
+      return;
+    }
     setIsSubmitting(false);
     setSubmitted(true);
   };
@@ -933,6 +945,9 @@ const ContactPage = () => {
             >
               {isSubmitting ? 'Sending…' : 'Send Message'}
             </button>
+            {submitError && (
+              <p className="text-center text-red-500 text-xs font-bold mt-2">{submitError}</p>
+            )}
           </form>
         </motion.div>
       </div>
@@ -1853,6 +1868,13 @@ const PhotoUpload = ({ fieldKey, label, sub, formData, setFormData }: {
 export default function App() {
   const navigate = useNavigate();
   const location = useLocation();
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => setShowScrollTop(window.scrollY > 400);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const handleSelectService = (service: any) => {
     navigate(`/services/${service.id}`);
@@ -1982,6 +2004,8 @@ export default function App() {
               <Route path="/privacy" element={<PrivacyPage />} />
               <Route path="/policies" element={<PoliciesPage />} />
               <Route path="/services/:slug" element={<ServiceDetailPage onNavigate={handleNavigate} />} />
+              <Route path="/booking/success" element={<BookingSuccess />} />
+              <Route path="/booking/cancelled" element={<BookingCancelled />} />
               <Route path="*" element={<HomePage onNavigate={handleNavigate} onSelectService={handleSelectService} />} />
             </Routes>
           </motion.div>
@@ -2002,14 +2026,16 @@ export default function App() {
         </div>
       )}
 
-      {/* Scroll to Top helper */}
-      <button
-        aria-label="Scroll to top"
-        className="fixed bottom-10 right-10 z-40 w-12 h-12 bg-white shadow-2xl flex items-center justify-center cursor-pointer border border-ink/5 hover:bg-paper transition-colors focus-visible:outline-accent"
-        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-      >
-        <ChevronRight className="w-5 h-5 -rotate-90 opacity-40" />
-      </button>
+      {/* Scroll to Top — only visible after scrolling down */}
+      {showScrollTop && (
+        <button
+          aria-label="Scroll to top"
+          className="fixed bottom-10 right-10 z-40 w-12 h-12 bg-white shadow-2xl flex items-center justify-center cursor-pointer border border-ink/5 hover:bg-paper hover:border-accent transition-colors focus-visible:outline-accent"
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+        >
+          <ChevronRight className="w-5 h-5 -rotate-90 opacity-40" />
+        </button>
+      )}
     </div>
   );
 }

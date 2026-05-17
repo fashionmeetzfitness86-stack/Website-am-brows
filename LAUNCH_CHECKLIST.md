@@ -1,43 +1,160 @@
-# 🚀 Ashley M. Brows — Final Pre-Launch Checklist
+# Ashley M. Brows — Launch Checklist
+> Version 1.0 — Final Pre-Launch QA · Updated May 2026
 
-This document is your final QA checklist before officially opening the platform to the public. It covers technical, operational, and visual aspects of the launch.
+---
+
+## ✅ DEPLOYMENT
+
+- [ ] Netlify deploy is live at `https://ashleymbrows.netlify.app`
+- [ ] Custom domain (if applicable) has DNS pointing to Netlify
+- [ ] HTTPS is active (padlock shows in browser)
+- [ ] `public/_redirects` contains `/* /index.html 200` for SPA routing
+- [ ] `/login` loads correctly when navigated to directly (no 404)
+- [ ] `/admin` loads correctly when navigated to directly (redirects to login if unauthenticated)
+- [ ] `/gallery` loads correctly on hard refresh
+- [ ] `/booking` loads correctly on hard refresh
+- [ ] No `404` errors on any direct URL navigation
 
 ---
 
-## 1. Domain & DNS Verification
-- [ ] **Custom Domain Live:** Confirm `ashleymbrows.com` (or primary domain) is fully propagated and pointing to Netlify.
-- [ ] **SSL/HTTPS Active:** Confirm the padlock appears in the browser bar and no "Not Secure" warnings are shown.
-- [ ] **Redirects Configured:** Ensure the `.netlify.app` domain redirects to your primary custom domain (if configured in Netlify settings).
-- [ ] **SPA Routing Functional:** Directly visit `/login` and `/admin` in the browser to ensure no 404 errors appear upon refresh (handled by `public/_redirects`).
+## ✅ ENVIRONMENT VARIABLES (Netlify → Site Settings → Environment Variables)
 
-## 2. Admin & Security Readiness
-- [ ] **Admin Login Test:** Log out and log back into `/login` using the real production Supabase credentials.
-- [ ] **Access Guard Working:** Attempt to visit `/admin` in an incognito window without logging in to verify it immediately redirects you back to `/login`.
-- [ ] **Production Keys Secure:** Verify Netlify Environment Variables use the `live` keys (if applicable) and Edge Functions have all required secrets (`RESEND_API_KEY`, `FROM_EMAIL`, etc.).
-
-## 3. Real-World Booking Simulation
-Run an end-to-end test pretending to be a real client:
-- [ ] Select a service, date, and time.
-- [ ] Fill out the intake form completely (upload a test photo if possible).
-- [ ] Submit the consultation request.
-- [ ] Confirm you reach the "Request Received" success screen.
-- [ ] Log into the Admin Dashboard and verify the new request appears under the "New Request" status.
-
-## 4. Email Communication Verification
-- [ ] **Approve Request:** In the Admin Dashboard, click "Approve Requested Time" for your test booking.
-- [ ] **Check Inbox:** Verify the test email address receives the branded HTML "Consultation Confirmed" email.
-- [ ] **Visual Check:** Confirm the email looks professional on both mobile and desktop.
-- [ ] **Reschedule Test:** Send a "Reschedule" email from the dashboard and verify the copy changes correctly.
-
-## 5. Mobile & UX Polish
-- [ ] **Mobile Safari/Chrome:** Open the site on a mobile device to ensure the hero image looks correct and the "Book Consultation" sticky button is easily clickable.
-- [ ] **Navigation:** Open and close the mobile menu; ensure it prevents background scrolling while open.
-- [ ] **Animations:** Verify scroll animations are smooth and not causing performance stutter.
-
-## 6. Social & SEO Verification
-- [ ] **Favicon:** Ensure the logo icon appears in the browser tab.
-- [ ] **Open Graph (OG) Tags:** Paste your live URL into a Facebook post or iMessage and confirm the preview image and text render correctly.
-- [ ] **Google Business:** Add the live website link to your Google Business Profile.
+- [ ] `VITE_SUPABASE_URL` — set to your Supabase project URL
+- [ ] `VITE_SUPABASE_ANON_KEY` — set to your Supabase anon/public key
+- [ ] Both variables are scoped to `Production` and `Deploy Preview`
+- [ ] Site redeploys after env vars are added
 
 ---
-*Once all items are checked off, the platform is officially ready for public announcement!*
+
+## ✅ SUPABASE SETUP
+
+- [ ] Schema applied (`supabase/schema.sql` run in SQL Editor)
+- [ ] `bookings` table exists with all columns
+- [ ] `contacts` table exists
+- [ ] `user_roles` table exists
+- [ ] RLS enabled on all three tables
+- [ ] All RLS policies created (public INSERT, authenticated SELECT/UPDATE)
+- [ ] `booking-photos` storage bucket exists and is private
+- [ ] Storage policies applied (anon upload, authenticated view/delete)
+- [ ] Super admin user created in Supabase Auth → Users
+- [ ] Super admin `user_roles` row inserted with `role = 'super_admin'`
+- [ ] Anderson can log in at `/login` and access `/admin`
+
+---
+
+## ✅ EDGE FUNCTIONS (Supabase Dashboard → Edge Functions)
+
+All functions must be deployed: `supabase functions deploy <name>`
+
+- [ ] `create-staff-user` — deployed
+- [ ] `remove-staff-user` — deployed
+- [ ] `update-staff-user` — deployed
+- [ ] `send-confirmation-email` — deployed
+- [ ] `stripe-webhook` — deployed (even if Stripe is not yet active)
+- [ ] `notify-new-booking` — deployed
+
+**Edge Function Secrets** (Supabase → Edge Functions → Manage Secrets):
+- [ ] `RESEND_API_KEY` — from resend.com (required for confirmation emails)
+- [ ] `FROM_EMAIL` — e.g. `Ashley M. Brows <hello@ashleymbrows.com>`
+- [ ] `SITE_URL` — `https://ashleymbrows.netlify.app`
+- [ ] `STRIPE_SECRET_KEY` — (if Stripe active)
+- [ ] `STRIPE_WEBHOOK_SECRET` — (if Stripe active)
+
+---
+
+## ✅ FULL BOOKING FLOW TEST
+
+Run this end-to-end before launch:
+
+- [ ] Visit `/booking` as an anonymous user
+- [ ] Select a service
+- [ ] Pick a date (Tue–Fri only should be available)
+- [ ] Pick a time
+- [ ] Fill in all required fields (name, email, phone, health, policy)
+- [ ] Submit — step 5 confirmation screen appears
+- [ ] Row appears in Supabase → `bookings` table with `status = 'New Request'`
+- [ ] Admin sees it in `/admin` → Requests tab
+- [ ] Admin opens booking, sets confirmed date/time, clicks "Save Confirmed Time"
+- [ ] Admin clicks "Send Confirmation Email" — client receives email
+- [ ] `email_confirmation_sent = true` in the database row
+
+---
+
+## ✅ ADMIN LOGIN + ACCESS
+
+- [ ] Navigate to `/login` — login form appears
+- [ ] Login with wrong password — error message appears (not a crash)
+- [ ] Login with non-staff account — "Access Denied" screen appears
+- [ ] Login with super_admin credentials — dashboard loads
+- [ ] Requests tab shows bookings
+- [ ] Leads tab shows contact form submissions
+- [ ] Team tab visible for super_admin only
+- [ ] Staff member (non-super_admin) cannot see Team tab
+- [ ] Logout button works and redirects to `/login`
+
+---
+
+## ✅ CONTACT FORM TEST
+
+- [ ] Visit `/contact`
+- [ ] Submit form with empty fields — validation errors appear
+- [ ] Submit valid form — "Message Sent" confirmation appears
+- [ ] Row appears in Supabase → `contacts` table
+- [ ] Admin sees the lead in `/admin` → Leads tab
+
+---
+
+## ✅ SEO / META
+
+- [ ] Favicon appears in browser tab (logo.png)
+- [ ] Page title updates per route (check `/gallery`, `/booking`, `/artist`)
+- [ ] Meta description updates per route
+- [ ] OG preview looks correct when shared on iMessage/WhatsApp (paste URL in WhatsApp to test)
+- [ ] Twitter card renders with image
+- [ ] `robots.txt` allows crawling (`/public/robots.txt`)
+- [ ] `sitemap.xml` present at `/sitemap.xml`
+- [ ] Structured data (BeautySalon schema) visible in browser source
+
+---
+
+## ✅ MOBILE QA
+
+Test on real device or Chrome DevTools mobile emulation (375px, 414px):
+
+- [ ] Hero text scales — no overflow
+- [ ] Sticky "Book Now" bar appears at bottom on mobile
+- [ ] Mobile menu opens and closes
+- [ ] Mobile menu scroll lock works (background does not scroll)
+- [ ] Booking flow steps are readable on small screens
+- [ ] Gallery grid is 2 columns on mobile
+- [ ] Gallery modal is usable on mobile (not cut off)
+- [ ] Admin dashboard — not required to be fully mobile-optimised (desktop tool)
+
+---
+
+## ✅ PERFORMANCE
+
+- [ ] Images load with `loading="lazy"` (gallery, Instagram feed)
+- [ ] `ashley-portrait.jpg` (hero/about) loads fast — consider compressing if >500KB
+- [ ] No console errors in production build
+- [ ] No failed network requests (check Network tab in DevTools)
+- [ ] Animations are smooth (no jank on mid-range Android)
+
+---
+
+## ✅ SECURITY
+
+- [ ] `/admin` redirects to `/login` for unauthenticated users
+- [ ] Non-staff authenticated user sees "Access Denied" (not dashboard data)
+- [ ] No API keys visible in browser DevTools → Sources (search for `sk_`, `eyJ`)
+- [ ] Supabase anon key is safe to be public (it is — RLS protects the data)
+- [ ] `VITE_` prefix keys are the only ones in the frontend bundle
+
+---
+
+## 🚀 LAUNCH
+
+- [ ] All items above checked
+- [ ] Final Netlify deploy triggered
+- [ ] Ashley has logged in and confirmed she can see the dashboard
+- [ ] Instagram bio / other links updated to point to the new URL
