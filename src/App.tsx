@@ -1,24 +1,13 @@
-﻿/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
-import { motion, AnimatePresence } from 'motion/react';
-import { Menu, ArrowRight, Instagram, Facebook, Mail, Calendar, User, Star, X, ChevronRight, ChevronLeft, MapPin, Phone, Plus, Check, Clock, CreditCard, Shield, Sparkles } from 'lucide-react';
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { Routes, Route, useNavigate, useLocation, useParams, useSearchParams, Navigate } from 'react-router-dom';
+﻿import { motion, AnimatePresence } from 'motion/react';
+import { Menu, ArrowRight, Instagram, Facebook, Mail, Calendar, User, Star, X, ChevronRight, ChevronLeft, MapPin, Phone, Plus, Check, Clock, Shield, Sparkles } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Routes, Route, useNavigate, useLocation, useParams, Navigate } from 'react-router-dom';
 import { supabase } from './lib/supabase';
-import { BookingSuccess, BookingCancelled } from './BookingResultPages';
-import LoginPage from './pages/LoginPage';
-import StaffJoinPage from './pages/StaffJoinPage';
-import PrintBookingPage from './pages/PrintBookingPage';
-import AdminRoute from './components/AdminRoute';
 import { useSEO } from './hooks/useSEO';
 
-import AdminDashboard from './AdminDashboard';
-
 // --- Types ---
-type Page = 'home' | 'services' | 'gallery' | 'booking' | 'artist' | 'contact' | 'service-detail' | 'privacy' | 'policies' | 'admin' | 'login';
+type Page = 'home' | 'services' | 'gallery' | 'booking' | 'artist' | 'contact' | 'service-detail' | 'privacy' | 'policies';
+
 
 // --- Booking URL ---
 // Update this constant when Ashley's Jotform URL changes.
@@ -325,7 +314,7 @@ const Hero = ({ onNavigate }: { onNavigate: (page: Page) => void }) => (
       animate={{ opacity: 1, y: 0 }}
       className="text-accent text-[10px] uppercase tracking-[0.6em] mb-8 font-bold"
     >
-      Ashley Miller â€¢ Founder
+      Ashley Miller Ã¢â‚¬Â¢ Founder
     </motion.p>
     <motion.h1 
       initial={{ opacity: 0, scale: 0.95 }}
@@ -342,7 +331,7 @@ const Hero = ({ onNavigate }: { onNavigate: (page: Page) => void }) => (
       transition={{ delay: 0.5 }}
       className="max-w-xl text-ink/60 leading-relaxed mb-12 text-sm md:text-base font-sans"
     >
-      Permanent makeup in Brighton, Michigan. Brows, lip blush, lashes, eyeliner and decorative work â€” meticulous, customized, and made to look like you.
+      Permanent makeup in Brighton, Michigan. Brows, lip blush, lashes, eyeliner and decorative work Ã¢â‚¬â€ meticulous, customized, and made to look like you.
     </motion.p>
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
@@ -581,7 +570,7 @@ const Footer = ({ onNavigate }: { onNavigate: (page: Page) => void }) => (
       </div>
     </div>
     <div className="max-w-7xl mx-auto mt-20 pt-8 border-t border-paper/10 text-[10px] uppercase tracking-widest font-bold opacity-30 text-center flex justify-between items-center">
-       <p>Â© 2026 <button onClick={() => onNavigate('admin')} className="hover:text-accent transition-colors focus-visible:outline-none">Ashley M. Brows</button>. Cosmetic Tattoo Artist.</p>
+       <p>Ã‚Â© 2026 Ashley M. Brows. Cosmetic Tattoo Artist.</p>
        <div className="flex gap-8">
           <span>Brighton, Michigan</span>
            <span>USA</span>
@@ -783,7 +772,7 @@ const PoliciesPage = () => (
 
 const ContactPage = () => {
   const [formData, setFormData] = useState({
-    name: '', email: '', subject: '', message: ''
+    name: '', email: '', phone: '', service: '', city: '', preferredDate: '', message: '', consent: false
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitted, setSubmitted] = useState(false);
@@ -794,9 +783,9 @@ const ContactPage = () => {
     const e: Record<string, string> = {};
     if (!formData.name.trim()) e.name = 'Name is required';
     if (!formData.email.trim()) e.email = 'Email is required';
-    else if (!/^\S+@\S+\.\S+$/.test(formData.email)) e.email = 'Invalid email';
-    if (!formData.subject.trim()) e.subject = 'Subject is required';
-    if (!formData.message.trim()) e.message = 'Message is required';
+    else if (!/^\S+@\S+\.\S+$/.test(formData.email)) e.email = 'Invalid email address';
+    if (!formData.message.trim()) e.message = 'Please tell Ashley a bit about your goals';
+    if (!formData.consent) e.consent = 'Please confirm your consent to continue';
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -807,21 +796,25 @@ const ContactPage = () => {
     setIsSubmitting(true);
     setSubmitError(null);
     try {
-      const { error } = await supabase.from('contacts').insert({
-        name: formData.name,
-        email: formData.email,
-        interested_services: formData.subject,
-        message: formData.message,
-        status: 'New'
+      const { data, error } = await supabase.functions.invoke('send-inquiry', {
+        body: {
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone || undefined,
+          service: formData.service || undefined,
+          city: formData.city || undefined,
+          preferredDate: formData.preferredDate || undefined,
+          message: formData.message,
+          consent: formData.consent,
+        },
       });
-      if (error) {
-        setSubmitError('Unable to send your message. Please try again or email us directly.');
+      if (error || data?.error) {
+        setSubmitError('Unable to send your message. Please try again or email ashleymbrows@gmail.com directly.');
         setIsSubmitting(false);
         return;
       }
-    } catch (e) {
-      console.error('Contact failed', e);
-      setSubmitError('Something went wrong. Please email us at ashleymbrows@gmail.com.');
+    } catch {
+      setSubmitError('Something went wrong. Please email ashleymbrows@gmail.com directly.');
       setIsSubmitting(false);
       return;
     }
@@ -829,24 +822,41 @@ const ContactPage = () => {
     setSubmitted(true);
   };
 
+  const field = (key: keyof typeof formData, label: string, type = 'text', placeholder = '', required = false) => (
+    <div className="space-y-2">
+      <label className="text-[10px] uppercase tracking-widest font-bold opacity-40">{label}{required && ' *'}</label>
+      <input
+        type={type}
+        value={formData[key] as string}
+        onChange={(e) => setFormData({ ...formData, [key]: e.target.value })}
+        placeholder={placeholder}
+        className={`w-full p-4 bg-paper/30 border ${
+          errors[key] ? 'border-red-400' : 'border-ink/5'
+        } focus:border-accent outline-none text-sm transition-colors`}
+      />
+      {errors[key] && <p className="text-red-500 text-[9px] uppercase font-bold tracking-widest">{errors[key]}</p>}
+    </div>
+  );
+
   if (submitted) {
     return (
       <div className="pt-24 min-h-screen bg-paper flex items-center justify-center px-6">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           className="text-center max-w-md"
         >
           <div className="w-20 h-20 bg-accent rounded-full flex items-center justify-center mx-auto mb-8">
-            <Mail className="w-10 h-10 text-paper" />
+            <Check className="w-10 h-10 text-paper" />
           </div>
-          <h2 className="text-4xl font-serif mb-4">Message Sent</h2>
-          <p className="text-ink/60 mb-12">Thank you for reaching out. A studio representative will contact you within 24-48 business hours to discuss your inquiry further.</p>
-          <button 
-            onClick={() => setSubmitted(false)}
+          <h2 className="text-4xl font-serif mb-4">Inquiry Sent</h2>
+          <p className="text-ink/60 mb-4 leading-relaxed">Thank you, {formData.name}. Your inquiry has been sent directly to Ashley.</p>
+          <p className="text-ink/50 text-sm mb-12 leading-relaxed">Ashley personally reviews every message and will be in touch within 1â€“2 business days. Check your inbox for a confirmation email.</p>
+          <button
+            onClick={() => { setSubmitted(false); setFormData({ name: '', email: '', phone: '', service: '', city: '', preferredDate: '', message: '', consent: false }); }}
             className="px-12 py-4 bg-ink text-paper text-[10px] uppercase tracking-[0.2em] font-bold hover:bg-accent transition-colors"
           >
-            Send Another Message
+            Send Another Inquiry
           </button>
         </motion.div>
       </div>
@@ -856,13 +866,14 @@ const ContactPage = () => {
   return (
     <div className="pt-24 min-h-screen bg-paper pb-20">
       <div className="max-w-7xl mx-auto px-6 py-20 flex flex-col md:flex-row gap-20">
+        {/* Left column â€” studio info */}
         <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8 }} className="flex-1">
           <p className="text-accent text-[10px] uppercase tracking-[0.6em] mb-4 font-bold">Get In Touch</p>
-          <h2 className="text-4xl md:text-7xl font-serif mb-12">Contact the Studio</h2>
+          <h1 className="text-4xl md:text-6xl font-serif mb-8">Contact the Studio</h1>
           <p className="text-ink/70 leading-relaxed mb-12 max-w-md">
-            Need additional help? Reach out! Fill out the form and we will be in touch.
+            Fill out the form and Ashley will respond personally within 1â€“2 business days. For immediate questions, email or DM on Instagram.
           </p>
-          <div className="space-y-12">
+          <div className="space-y-10">
             <div>
               <h4 className="text-[10px] uppercase tracking-[0.3em] font-bold opacity-30 mb-4">Located Within</h4>
               <div className="flex items-start gap-4">
@@ -877,82 +888,87 @@ const ContactPage = () => {
             </div>
             <div>
               <h4 className="text-[10px] uppercase tracking-[0.3em] font-bold opacity-30 mb-4">Direct Contact</h4>
-              <div className="space-y-4">
-                <div className="flex items-center gap-4">
-                  <Mail className="w-5 h-5 text-accent" />
-                  <a href="mailto:ashleymbrows@gmail.com" className="text-lg text-ink/80 hover:text-accent transition-colors">ashleymbrows@gmail.com</a>
-                </div>
+              <div className="flex items-center gap-4">
+                <Mail className="w-5 h-5 text-accent" />
+                <a href="mailto:ashleymbrows@gmail.com" className="text-lg text-ink/80 hover:text-accent transition-colors">ashleymbrows@gmail.com</a>
               </div>
             </div>
             <div>
-               <h4 className="text-[10px] uppercase tracking-[0.3em] font-bold opacity-30 mb-4">Follow Our Work</h4>
-               <div className="flex gap-6">
-                <a href="https://www.instagram.com/ashleymbrows?igsh=YXQyM290NW1uMG9n" target="_blank" rel="noopener noreferrer" aria-label="Instagram Profile" className="text-ink/40 hover:text-accent transition-colors focus-visible:outline-accent">
-                  <Instagram className="w-6 h-6" />
-                </a>
-                <a href="https://www.facebook.com/ashleymbrows" target="_blank" rel="noopener noreferrer" aria-label="Facebook Page" className="text-ink/40 hover:text-accent transition-colors focus-visible:outline-accent">
-                  <Facebook className="w-6 h-6" />
-                </a>
-                <a href="mailto:ashleymbrows@gmail.com" aria-label="Email studio" className="text-ink/40 hover:text-accent transition-colors focus-visible:outline-accent">
-                  <Mail className="w-6 h-6" />
-                </a>
-               </div>
+              <h4 className="text-[10px] uppercase tracking-[0.3em] font-bold opacity-30 mb-4">Follow Our Work</h4>
+              <div className="flex gap-6">
+                <a href="https://www.instagram.com/ashleymbrows?igsh=YXQyM290NW1uMG9n" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="text-ink/40 hover:text-accent transition-colors"><Instagram className="w-6 h-6" /></a>
+                <a href="https://www.facebook.com/ashleymbrows" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="text-ink/40 hover:text-accent transition-colors"><Facebook className="w-6 h-6" /></a>
+                <a href="mailto:ashleymbrows@gmail.com" aria-label="Email" className="text-ink/40 hover:text-accent transition-colors"><Mail className="w-6 h-6" /></a>
+              </div>
             </div>
           </div>
         </motion.div>
+
+        {/* Right column â€” inquiry form */}
         <motion.div initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8, delay: 0.15 }} className="flex-1 bg-white p-8 md:p-12 shadow-sm">
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <p className="text-accent text-[10px] uppercase tracking-[0.5em] font-bold mb-2">Consultation Inquiry</p>
+          <h2 className="text-2xl font-serif mb-8">Tell Ashley About Your Goals</h2>
+          <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+            {field('name', 'Full Name', 'text', 'Your full name', true)}
+            {field('email', 'Email Address', 'email', 'email@example.com', true)}
+            {field('phone', 'Phone Number', 'tel', '(555) 000-0000')}
+
             <div className="space-y-2">
-              <label className="text-[10px] uppercase tracking-widest font-bold opacity-40">Your Name *</label>
-              <input 
-                type="text"
-                value={formData.name}
-                onChange={(e) => setFormData({...formData, name: e.target.value})}
-                className={`w-full p-4 bg-paper/30 border ${errors.name ? 'border-red-400' : 'border-ink/5'} focus:border-accent outline-none text-sm transition-colors`}
-                placeholder="Enter your name"
-              />
-              {errors.name && <p className="text-red-500 text-[9px] uppercase font-bold tracking-widest">{errors.name}</p>}
+              <label className="text-[10px] uppercase tracking-widest font-bold opacity-40">Service of Interest</label>
+              <select
+                value={formData.service}
+                onChange={(e) => setFormData({ ...formData, service: e.target.value })}
+                className="w-full p-4 bg-paper/30 border border-ink/5 focus:border-accent outline-none text-sm transition-colors appearance-none"
+              >
+                <option value="">Select a serviceâ€¦</option>
+                <option>Signature Brows ($650)</option>
+                <option>Ashley M. Lip Blush ($650)</option>
+                <option>Defining Liner ($400+)</option>
+                <option>Tooth Gems ($60+)</option>
+                <option>Not sure yet</option>
+              </select>
             </div>
+
+            {field('city', 'Preferred City / Location', 'text', 'Brighton, Miami, or other')}
+            {field('preferredDate', 'Preferred Date or Timeframe', 'text', 'e.g. June, weekdays, flexible')}
+
             <div className="space-y-2">
-              <label className="text-[10px] uppercase tracking-widest font-bold opacity-40">Email Address *</label>
-              <input 
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({...formData, email: e.target.value})}
-                className={`w-full p-4 bg-paper/30 border ${errors.email ? 'border-red-400' : 'border-ink/5'} focus:border-accent outline-none text-sm transition-colors`}
-                placeholder="email@example.com"
-              />
-              {errors.email && <p className="text-red-500 text-[9px] uppercase font-bold tracking-widest">{errors.email}</p>}
-            </div>
-            <div className="space-y-2">
-              <label className="text-[10px] uppercase tracking-widest font-bold opacity-40">Subject *</label>
-              <input 
-                type="text"
-                value={formData.subject}
-                onChange={(e) => setFormData({...formData, subject: e.target.value})}
-                className={`w-full p-4 bg-paper/30 border ${errors.subject ? 'border-red-400' : 'border-ink/5'} focus:border-accent outline-none text-sm transition-colors`}
-                placeholder="Service inquiry, media, etc."
-              />
-              {errors.subject && <p className="text-red-500 text-[9px] uppercase font-bold tracking-widest">{errors.subject}</p>}
-            </div>
-            <div className="space-y-2">
-              <label className="text-[10px] uppercase tracking-widest font-bold opacity-40">Message *</label>
-              <textarea 
-                rows={6}
+              <label className="text-[10px] uppercase tracking-widest font-bold opacity-40">Message / Notes *</label>
+              <textarea
+                rows={5}
                 value={formData.message}
-                onChange={(e) => setFormData({...formData, message: e.target.value})}
-                className={`w-full p-4 bg-paper/30 border ${errors.message ? 'border-red-400' : 'border-ink/5'} focus:border-accent outline-none text-sm transition-colors resize-none`}
-                placeholder="How can we assist you today?"
+                onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                placeholder="Tell Ashley about your goals, skin concerns, or any questionsâ€¦"
+                className={`w-full p-4 bg-paper/30 border ${
+                  errors.message ? 'border-red-400' : 'border-ink/5'
+                } focus:border-accent outline-none text-sm transition-colors resize-none`}
               />
               {errors.message && <p className="text-red-500 text-[9px] uppercase font-bold tracking-widest">{errors.message}</p>}
             </div>
-            <button 
+
+            <div className="space-y-2">
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.consent}
+                  onChange={(e) => setFormData({ ...formData, consent: e.target.checked })}
+                  className="mt-1 accent-accent w-4 h-4 flex-shrink-0"
+                />
+                <span className="text-xs text-ink/60 leading-relaxed">
+                  I consent to Ashley M. Brows collecting and using the information above to respond to my inquiry. I understand this does not create a confirmed appointment.
+                </span>
+              </label>
+              {errors.consent && <p className="text-red-500 text-[9px] uppercase font-bold tracking-widest">{errors.consent}</p>}
+            </div>
+
+            <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full py-6 mt-8 bg-accent text-paper text-xs uppercase tracking-[0.2em] font-bold hover:bg-ink transition-colors shadow-xl disabled:opacity-60 flex items-center justify-center gap-3"
+              className="w-full py-5 mt-4 bg-accent text-paper text-xs uppercase tracking-[0.2em] font-bold hover:bg-ink transition-colors shadow-xl disabled:opacity-60 flex items-center justify-center gap-3"
             >
-              {isSubmitting ? 'Sendingâ€¦' : 'Send Message'}
+              {isSubmitting ? 'Sendingâ€¦' : 'Send Inquiry to Ashley'}
             </button>
+
             {submitError && (
               <p className="text-center text-red-500 text-xs font-bold mt-2">{submitError}</p>
             )}
@@ -978,7 +994,7 @@ const ServiceDetailPage = ({ onNavigate }: { onNavigate: (page: Page) => void })
         <div className="text-center max-w-md">
           <p className="text-accent text-[10px] uppercase tracking-[0.5em] font-bold mb-4">Not Found</p>
           <h1 className="text-4xl font-serif mb-6">Service Not Found</h1>
-          <p className="text-ink/60 mb-10 leading-relaxed">The service youâ€™re looking for doesnâ€™t exist or the link may be incorrect.</p>
+          <p className="text-ink/60 mb-10 leading-relaxed">The service youÃ¢â‚¬â„¢re looking for doesnÃ¢â‚¬â„¢t exist or the link may be incorrect.</p>
           <button
             onClick={() => onNavigate('services')}
             className="px-10 py-4 bg-accent text-paper text-[10px] uppercase tracking-widest font-bold hover:bg-ink transition-colors"
@@ -1242,7 +1258,7 @@ const BookingRedirectPage = () => {
           You're being redirected to Ashley's official booking form.
         </p>
         <p className="text-ink/30 text-sm mb-10">
-          Redirecting in {countdown > 0 ? countdown : '0'}â€¦
+          Redirecting in {countdown > 0 ? countdown : '0'}Ã¢â‚¬Â¦
         </p>
 
         <a
@@ -1255,41 +1271,51 @@ const BookingRedirectPage = () => {
         </a>
 
         <p className="mt-8 text-[9px] text-ink/25 uppercase tracking-widest">
-          Secure form Â· Ashley M. Brows Official Booking
+          Secure form Ã‚Â· Ashley M. Brows Official Booking
         </p>
       </motion.div>
     </div>
   );
 };
 
+const galleryCategories = ['All', 'Signature Brows', 'Lip Blush', 'Defining Liner'];
+
+const galleryItems = [
+  {
+    image: '/gallery/brows-nano-portrait.jpg',
+    title: 'Signature Stroke Restoration',
+    category: 'Signature Brows',
+    description: '2.5 Hour Procedure \u00b7 Signature Stroke'
+  },
+  {
     image: '/gallery/lip-blush-before-healed.jpg',
     title: 'Nude Velvet Blush',
     category: 'Lip Blush',
-    description: '2 Hour Procedure â€¢ Sheer Application'
+    description: '2 Hour Procedure \u00b7 Sheer Application'
   },
   {
     image: '/gallery/brows-before-after.jpg',
     title: 'Architectural Lamination',
     category: 'Signature Brows',
-    description: '1.5 Hour Procedure â€¢ Hybrid Technique'
+    description: '1.5 Hour Procedure \u00b7 Hybrid Technique'
   },
   {
     image: '/gallery/lash-enhancement-before-after.jpg',
     title: 'Ethereal Wing',
     category: 'Defining Liner',
-    description: '2 Hour Procedure â€¢ Soft Shading'
+    description: '2 Hour Procedure \u00b7 Soft Shading'
   },
   {
     image: '/gallery/lip-blush-glossy.jpg',
     title: 'Full Satin Lips',
     category: 'Lip Blush',
-    description: '2.5 Hour Procedure â€¢ Saturated Tint'
+    description: '2.5 Hour Procedure \u00b7 Saturated Tint'
   },
   {
     image: '/gallery/powder-brows-portrait.jpg',
     title: 'Feathered Arch',
     category: 'Signature Brows',
-    description: '3 Hour Procedure â€¢ Nano Strokes'
+    description: '3 Hour Procedure \u00b7 Nano Strokes'
   }
 ];
 
@@ -1572,7 +1598,7 @@ export default function App() {
     const routes: Record<Page, string> = {
       home: '/', services: '/services', gallery: '/gallery', booking: '/booking',
       artist: '/artist', contact: '/contact', 'service-detail': '/services',
-      privacy: '/privacy', policies: '/policies', admin: '/admin', login: '/login'
+      privacy: '/privacy', policies: '/policies',
     };
     navigate(routes[page] || '/');
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1589,14 +1615,11 @@ export default function App() {
     if (path === '/artist') return 'artist';
     if (path === '/privacy') return 'privacy';
     if (path === '/policies') return 'policies';
-    if (path === '/admin') return 'admin';
-    if (path === '/login') return 'login';
-    if (path === '/service-detail') return 'service-detail';
     return 'home';
   };
   const currentPage = getCurrentPage();
 
-  // Dynamic SEO â€” updates title + meta per route
+  // Dynamic SEO Ã¢â‚¬â€ updates title + meta per route
   useSEO();
 
   // LocalBusiness structured data (injected once)
@@ -1625,7 +1648,7 @@ export default function App() {
       },
       geo: { '@type': 'GeoCoordinates', latitude: 42.5262, longitude: -83.7799 },
       openingHours: ['Tu-Fr 09:00-17:00'],
-      priceRange: '$400â€“$650',
+      priceRange: '$400Ã¢â‚¬â€œ$650',
       sameAs: [
         'https://www.instagram.com/ashleymbrows',
         'https://www.facebook.com/ashleymbrows',
@@ -1643,34 +1666,17 @@ export default function App() {
     document.head.appendChild(script);
   }, []);
 
-  if (location.pathname === '/login') {
-    return <LoginPage />;
-  }
-
-  if (location.pathname === '/staff-join') {
-    return <StaffJoinPage />;
-  }
-
-  if (location.pathname.startsWith('/admin/print/')) {
-    return (
-      <AdminRoute>
-        <PrintBookingPage />
-      </AdminRoute>
-    );
-  }
-
-  if (location.pathname === '/admin') {
-    return (
-      <AdminRoute>
-        <AdminDashboard />
-      </AdminRoute>
-    );
+  if (location.pathname === '/login' ||
+      location.pathname === '/admin' ||
+      location.pathname.startsWith('/admin/') ||
+      location.pathname === '/staff-join') {
+    return <Navigate to="/" replace />;
   }
 
   return (
     <div className="selection:bg-accent/20 min-h-screen bg-paper text-ink font-sans">
       <Navbar onNavigate={handleNavigate} currentPage={currentPage} />
-      
+
       <main>
         <AnimatePresence mode="wait">
           <motion.div
@@ -1683,7 +1689,6 @@ export default function App() {
             <Routes location={location}>
               <Route path="/" element={<HomePage onNavigate={handleNavigate} onSelectService={handleSelectService} />} />
               <Route path="/booking" element={<BookingRedirectPage />} />
-
               <Route path="/gallery" element={<GalleryPage />} />
               <Route path="/services" element={<Services onSelectService={handleSelectService} onNavigate={handleNavigate} />} />
               <Route path="/artist" element={<ArtistPage />} />
@@ -1691,9 +1696,8 @@ export default function App() {
               <Route path="/privacy" element={<PrivacyPage />} />
               <Route path="/policies" element={<PoliciesPage />} />
               <Route path="/services/:slug" element={<ServiceDetailPage onNavigate={handleNavigate} />} />
-              <Route path="/booking/success" element={<BookingSuccess />} />
-              <Route path="/booking/cancelled" element={<BookingCancelled />} />
-              <Route path="*" element={<HomePage onNavigate={handleNavigate} onSelectService={handleSelectService} />} />
+              {/* Catch-all â€” redirect any unmatched URL to home */}
+              <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </motion.div>
         </AnimatePresence>
@@ -1701,7 +1705,7 @@ export default function App() {
 
       <Footer onNavigate={handleNavigate} />
       
-      {/* Sticky mobile Book Now â€” hidden on result pages */}
+      {/* Sticky mobile Book Now Ã¢â‚¬â€ hidden on result pages */}
       {location.pathname !== '/booking' && (
         <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-paper border-t border-ink/10 p-4 shadow-2xl">
           <button
@@ -1713,7 +1717,7 @@ export default function App() {
         </div>
       )}
 
-      {/* Scroll to Top â€” only visible after scrolling down */}
+      {/* Scroll to Top Ã¢â‚¬â€ only visible after scrolling down */}
       {showScrollTop && (
         <button
           aria-label="Scroll to top"
