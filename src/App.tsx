@@ -73,13 +73,35 @@ const services = [
     id: 'tooth-gems',
     title: 'Tooth Gems',
     price: '$60+',
-    shortDescription: 'Crystal and gold tooth gems &mdash; from a single crystal to a full disco tooth.',
-    description: 'Tooth gems are non-permanent decorative jewels applied to the surface of the tooth. Single crystals start at $60, with options for multi-crystal sets ($100 / $125), gold applications ($120 and up), and a full "disco tooth" ($250). Gems are sourced from Tegan&rsquo;s Tooth Gems, Tooth Kandy and Isisngold &mdash; email ashleymbrows@gmail.com with a screenshot of your pick to book.',
+    shortDescription: 'Crystal and gold tooth gems — from a single crystal to a full disco tooth.',
+    description: 'Tooth gems are non-permanent decorative jewels applied to the surface of the tooth. Single crystals start at $60, with options for multi-crystal sets ($100 / $125), gold applications ($120 and up), and a full "disco tooth" ($250). Gems are sourced from Tegan’s Tooth Gems, Tooth Kandy and Isisngold — email ashleymbrows@gmail.com with a screenshot of your pick to book.',
     image: '/gallery/tooth-gems.jpg',
     tags: ['Crystals', 'Gold Gems', 'Non-Permanent'],
     process: [
-      { step: 'Pick Your Gem', description: 'Browse vendor catalogues (Tegan&rsquo;s, Tooth Kandy, Isisngold) and email your selection.' },
-      { step: 'Application', description: 'A quick, non-invasive application with dental-grade adhesive &mdash; no drilling, no damage.' },
+      {
+        step: 'Pick Your Gem',
+        description: (
+          <>
+            Browse the vendor catalogues —{' '}
+            <a href="https://www.teganstoothgems.com/" target="_blank" rel="noopener noreferrer"
+               className="text-ink/80 border-b border-accent/40 hover:border-accent hover:text-ink transition-colors">
+              Tegan’s
+            </a>
+            ,{' '}
+            <a href="https://toothkandy.com/pages/collections?view=gold" target="_blank" rel="noopener noreferrer"
+               className="text-ink/80 border-b border-accent/40 hover:border-accent hover:text-ink transition-colors">
+              Tooth Kandy
+            </a>
+            {' '}and{' '}
+            <a href="https://isisngold.com/collections/all-teeth-jewelry" target="_blank" rel="noopener noreferrer"
+               className="text-ink/80 border-b border-accent/40 hover:border-accent hover:text-ink transition-colors">
+              Isisngold
+            </a>
+            {' '}— then email your selection.
+          </>
+        )
+      },
+      { step: 'Application', description: 'A quick, non-invasive application with dental-grade adhesive — no drilling, no damage.' },
       { step: 'Wear & Enjoy', description: 'Gems typically last several months to a year with normal wear; they can be added to or removed any time.' }
     ],
     testimonials: []
@@ -723,7 +745,7 @@ const PoliciesPage = () => (
           <li>Under Body Art Licensure, <strong className="text-ink">no person</strong> under the age of 18 is allowed servicing &mdash; even with parental consent.</li>
           <li><strong className="text-ink">Valid ID</strong> is required at the time of your service.</li>
           <li>Guidelines are provided to achieve optimal results, but there are <strong className="text-ink">no guarantees</strong> due to different skin types reacting differently to procedures. Please check the FAQ section to make sure you are an eligible candidate. If you are unsure, please contact us.</li>
-          <li><strong className="text-ink">Booking is a request, not a payment.</strong> Ashley will personally follow up to confirm your appointment &mdash; no card, no deposit at the time of request.</li>
+          <li><strong className="text-ink">Deposits:</strong> a minimum of <strong className="text-ink">$100 deposit</strong> will be requested in order to book and is <strong className="text-ink">non-refundable</strong> under any circumstance. Your deposit will go towards the overall cost. This ensures you are serious about your appointment.</li>
           <li>A minimum of <strong className="text-ink">48 hours notice</strong> is required to reschedule your appointment.</li>
           <li>If you cancel without notice, please understand it may make it harder to accommodate you in the future. Let us know as soon as possible if you can no longer make your appointment.</li>
           <li>Being more than <strong className="text-ink">15 minutes late</strong> to your appointment may result in your appointment being cancelled.</li>
@@ -1190,7 +1212,7 @@ const HomePage = ({ onNavigate, onSelectService }: { onNavigate: (page: Page) =>
     <section className="py-40 bg-sage-light px-6 text-center overflow-hidden relative">
        <motion.div initial={{ opacity: 0, y: 50 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.9 }}>
          <h2 className="text-5xl md:text-8xl font-serif mb-12">Begin Your <br /> Transformation</h2>
-         <p className="max-w-xl mx-auto text-ink/70 mb-12">Booking is by request. Pick a service, send Ashley a few details about your goals, and she will follow up to confirm your appointment and walk you through pre-care.</p>
+         <p className="max-w-xl mx-auto text-ink/70 mb-12">Booking is by request. Pick a service, send Ashley a few details about your goals, and she will follow up with deposit details, confirmation and pre-care instructions.</p>
          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }} onClick={openBooking} className="px-16 py-6 bg-accent text-paper text-xs uppercase tracking-widest font-bold shadow-2xl">
              Book Now
           </motion.button>
