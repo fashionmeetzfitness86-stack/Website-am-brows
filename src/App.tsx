@@ -1,4 +1,4 @@
-﻿import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { Menu, ArrowRight, Instagram, Facebook, Mail, Calendar, User, Star, X, ChevronRight, ChevronLeft, MapPin, Phone, Plus, Check, Clock, Shield, Sparkles } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { Routes, Route, useNavigate, useLocation, useParams, Navigate } from 'react-router-dom';
@@ -314,7 +314,7 @@ const Hero = ({ onNavigate }: { onNavigate: (page: Page) => void }) => (
       animate={{ opacity: 1, y: 0 }}
       className="text-accent text-[10px] uppercase tracking-[0.6em] mb-8 font-bold"
     >
-      Ashley Miller Ã¢â‚¬Â¢ Founder
+      Ashley Miller • Founder
     </motion.p>
     <motion.h1 
       initial={{ opacity: 0, scale: 0.95 }}
@@ -331,7 +331,7 @@ const Hero = ({ onNavigate }: { onNavigate: (page: Page) => void }) => (
       transition={{ delay: 0.5 }}
       className="max-w-xl text-ink/60 leading-relaxed mb-12 text-sm md:text-base font-sans"
     >
-      Permanent makeup in Brighton, Michigan. Brows, lip blush, lashes, eyeliner and decorative work Ã¢â‚¬â€ meticulous, customized, and made to look like you.
+      Permanent makeup in Brighton, Michigan. Brows, lip blush, lashes, eyeliner and decorative work — meticulous, customized, and made to look like you.
     </motion.p>
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
@@ -570,7 +570,7 @@ const Footer = ({ onNavigate }: { onNavigate: (page: Page) => void }) => (
       </div>
     </div>
     <div className="max-w-7xl mx-auto mt-20 pt-8 border-t border-paper/10 text-[10px] uppercase tracking-widest font-bold opacity-30 text-center flex justify-between items-center">
-       <p>Ã‚Â© 2026 Ashley M. Brows. Cosmetic Tattoo Artist.</p>
+       <p>© 2026 Ashley M. Brows. Cosmetic Tattoo Artist.</p>
        <div className="flex gap-8">
           <span>Brighton, Michigan</span>
            <span>USA</span>
@@ -1258,7 +1258,7 @@ const BookingRedirectPage = () => {
           You're being redirected to Ashley's official booking form.
         </p>
         <p className="text-ink/30 text-sm mb-10">
-          Redirecting in {countdown > 0 ? countdown : '0'}Ã¢â‚¬Â¦
+          Redirecting in {countdown > 0 ? countdown : '0'}…
         </p>
 
         <a
@@ -1271,7 +1271,7 @@ const BookingRedirectPage = () => {
         </a>
 
         <p className="mt-8 text-[9px] text-ink/25 uppercase tracking-widest">
-          Secure form Ã‚Â· Ashley M. Brows Official Booking
+          Secure form · Ashley M. Brows Official Booking
         </p>
       </motion.div>
     </div>
