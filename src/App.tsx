@@ -818,8 +818,10 @@ const ContactPage = () => {
     setIsSubmitting(true);
     setSubmitError(null);
     try {
-      const { data, error } = await supabase.functions.invoke('send-inquiry', {
-        body: {
+      const res = await fetch('/.netlify/functions/send-inquiry', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
           name: formData.name,
           email: formData.email,
           phone: formData.phone || undefined,
@@ -828,9 +830,10 @@ const ContactPage = () => {
           preferredDate: formData.preferredDate || undefined,
           message: formData.message,
           consent: formData.consent,
-        },
+        }),
       });
-      if (error || data?.error) {
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data?.error) {
         setSubmitError('Unable to send your message. Please try again or email ashleymbrows@gmail.com directly.');
         setIsSubmitting(false);
         return;
