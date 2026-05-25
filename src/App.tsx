@@ -11,10 +11,10 @@ type Page = 'home' | 'services' | 'gallery' | 'booking' | 'artist' | 'contact' |
 
 // --- Booking URL ---
 // Update this constant when Ashley's Jotform URL changes.
-const JOTFORM_BOOKING_URL = 'https://form.jotform.com/210908294397061';
-
-// Helper: opens booking form in new tab from any CTA on the public site
-const openBooking = () => window.open(JOTFORM_BOOKING_URL, '_blank', 'noopener,noreferrer');
+// --- Booking ---
+// On-site booking request form lives at /booking. It POSTs to the Netlify
+// function /send-inquiry which sends Ashley a notification email via Resend
+// and an auto-reply to the client.
 
 
 const services = [
@@ -1216,10 +1216,10 @@ const HomePage = ({ onNavigate, onSelectService }: { onNavigate: (page: Page) =>
        <motion.div initial={{ opacity: 0, y: 50 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.9 }}>
          <h2 className="text-5xl md:text-8xl font-serif mb-12">Begin Your <br /> Transformation</h2>
          <p className="max-w-xl mx-auto text-ink/70 mb-12">Booking is by request. Pick a service, send Ashley a few details about your goals, and she will follow up with deposit details, confirmation and pre-care instructions.</p>
-         <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }} onClick={openBooking} className="px-16 py-6 bg-accent text-paper text-xs uppercase tracking-widest font-bold shadow-2xl">
+         <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }} onClick={() => onNavigate('booking')} className="px-16 py-6 bg-accent text-paper text-xs uppercase tracking-widest font-bold shadow-2xl">
              Book Now
           </motion.button>
-          <p className="mt-8 opacity-40 text-[10px] uppercase font-bold tracking-widest">Schedule through Ashley's official booking form</p>
+          <p className="mt-8 opacity-40 text-[10px] uppercase font-bold tracking-widest">Send Ashley a booking request</p>
        </motion.div>
     </section>
   </>
@@ -1233,72 +1233,262 @@ const serviceMenu = [
   { id: 'tooth-gems', title: 'Tooth Gems', price: '$60+', duration: '30 min', description: 'Crystal and gold tooth gems from $60 to full disco tooth.' },
 ];
 
-// --- Booking Redirect Page ---
-// The internal multi-step booking calendar has been removed.
-// All public booking CTAs now direct users to Ashley's official Jotform.
-// This page handles direct navigation to /booking (e.g. old links, bookmarks).
+// --- Booking Page ---
+// On-site booking request form. POSTs to /.netlify/functions/send-inquiry
+// which emails Ashley via Resend and sends an auto-reply to the client.
 
-const BookingRedirectPage = () => {
-  const [countdown, setCountdown] = useState(3);
+const BookingPage = () => {
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState('');
+  const [form, setForm] = useState({
+    name: '', email: '', phone: '',
+    service: '', preferredDate: '', preferredTime: '',
+    previousPmu: '', skinType: '',
+    message: '', consent: false,
+  });
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCountdown(prev => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          window.location.href = JOTFORM_BOOKING_URL;
-          return 0;
-        }
-        return prev - 1;
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+
+    if (!form.name || !form.email || !form.phone || !form.service ||
+        !form.preferredDate || !form.preferredTime) {
+      setError('Please fill in all required fields.');
+      return;
+    }
+    if (!form.consent) {
+      setError('Please confirm the deposit and policies acknowledgement.');
+      return;
+    }
+
+    const composedMessage = [
+      `Preferred time: ${form.preferredTime}`,
+      form.previousPmu ? `Previous permanent makeup: ${form.previousPmu}` : '',
+      form.skinType ? `Skin type: ${form.skinType}` : '',
+      '',
+      form.message || '(No additional notes)',
+    ].filter(Boolean).join('\n');
+
+    setSubmitting(true);
+    try {
+      const res = await fetch('/.netlify/functions/send-inquiry', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: form.name,
+          email: form.email,
+          phone: form.phone,
+          service: form.service,
+          preferredDate: form.preferredDate,
+          message: composedMessage,
+          consent: form.consent,
+        }),
       });
-    }, 1000);
-    return () => clearInterval(interval);
-  }, []);
+      const data = await res.json().catch(() => ({}));
+      setSubmitting(false);
+      if (!res.ok || data?.error) {
+        setError('Unable to send your request. Please try again or email ashleymbrows@gmail.com directly.');
+        return;
+      }
+      setSubmitted(true);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch {
+      setSubmitting(false);
+      setError('Something went wrong. Please email ashleymbrows@gmail.com directly.');
+    }
+  };
+
+  if (submitted) {
+    return (
+      <div className="pt-32 pb-24 min-h-screen bg-paper px-6">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+          className="max-w-2xl mx-auto text-center">
+          <div className="w-20 h-20 rounded-full bg-accent/10 border border-accent/30 flex items-center justify-center mx-auto mb-8">
+            <Check className="w-10 h-10 text-accent" />
+          </div>
+          <p className="text-accent text-[10px] uppercase tracking-[0.5em] font-bold mb-4">Request Received</p>
+          <h1 className="text-4xl md:text-5xl font-serif mb-6">Thank you, {form.name.split(' ')[0]}</h1>
+          <p className="text-ink/60 leading-relaxed mb-8">
+            Your request for <strong>{form.service}</strong> on <strong>{form.preferredDate}</strong> at <strong>{form.preferredTime}</strong> has been sent.
+            Ashley will review and follow up within 1–2 business days with deposit details and confirmation.
+          </p>
+          <p className="text-ink/40 text-sm">
+            A confirmation has been sent to <strong>{form.email}</strong>. If you don't see it, check your spam folder or email <a href="mailto:ashleymbrows@gmail.com" className="underline text-accent">ashleymbrows@gmail.com</a>.
+          </p>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-paper flex items-center justify-center px-6">
-      <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-        className="text-center max-w-lg w-full"
-      >
-        {/* Animated ring */}
-        <div className="relative w-24 h-24 mx-auto mb-10">
-          <motion.div
-            className="absolute inset-0 rounded-full border-2 border-accent/20"
-            animate={{ scale: [1, 1.3, 1], opacity: [0.6, 0, 0.6] }}
-            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-          />
-          <div className="w-24 h-24 rounded-full bg-accent/10 border border-accent/30 flex items-center justify-center">
-            <Calendar className="w-10 h-10 text-accent" />
+    <div className="pt-28 pb-24 min-h-screen bg-paper">
+      <div className="max-w-3xl mx-auto px-6">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
+          <p className="text-accent text-[10px] uppercase tracking-[0.5em] font-bold mb-4 text-center">Booking Request</p>
+          <h1 className="text-4xl md:text-5xl font-serif text-center mb-4">Book Your Appointment</h1>
+          <p className="text-center text-ink/60 max-w-xl mx-auto mb-12 leading-relaxed">
+            Bookings are by request. Submit your details below and Ashley will follow up within 1–2 business days with deposit details and appointment confirmation.
+          </p>
+        </motion.div>
+
+        <form onSubmit={handleSubmit} className="space-y-10">
+          <div>
+            <label className="block text-[10px] uppercase tracking-widest font-bold text-ink/50 mb-4">
+              Select a Service *
+            </label>
+            <div className="grid sm:grid-cols-2 gap-3">
+              {serviceMenu.map(svc => (
+                <button
+                  type="button"
+                  key={svc.id}
+                  onClick={() => setForm({ ...form, service: svc.title })}
+                  className={`text-left p-5 border transition-all rounded ${
+                    form.service === svc.title
+                      ? 'border-accent bg-accent/5'
+                      : 'border-ink/10 hover:border-ink/30 bg-white'
+                  }`}
+                >
+                  <div className="flex items-baseline justify-between mb-1">
+                    <span className="font-serif text-lg">{svc.title}</span>
+                    <span className="text-accent text-sm font-bold">{svc.price}</span>
+                  </div>
+                  <p className="text-xs text-ink/50">{svc.duration} · {svc.description}</p>
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
 
-        <p className="text-accent text-[10px] uppercase tracking-[0.5em] font-bold mb-4">Booking</p>
-        <h1 className="text-4xl md:text-5xl font-serif mb-4 leading-tight">
-          Schedule Your<br />Appointment
-        </h1>
-        <p className="text-ink/60 leading-relaxed mb-2 max-w-sm mx-auto">
-          You're being redirected to Ashley's official booking form.
-        </p>
-        <p className="text-ink/30 text-sm mb-10">
-          Redirecting in {countdown > 0 ? countdown : '0'}…
-        </p>
+          <div className="grid sm:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-[10px] uppercase tracking-widest font-bold text-ink/50 mb-2">Preferred Date *</label>
+              <input
+                type="date"
+                value={form.preferredDate}
+                min={new Date().toISOString().split('T')[0]}
+                onChange={e => setForm({ ...form, preferredDate: e.target.value })}
+                required
+                className="w-full p-3.5 bg-white border border-ink/10 text-sm text-ink outline-none focus:border-accent transition-colors rounded"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] uppercase tracking-widest font-bold text-ink/50 mb-2">Preferred Time *</label>
+              <input
+                type="time"
+                value={form.preferredTime}
+                onChange={e => setForm({ ...form, preferredTime: e.target.value })}
+                required
+                className="w-full p-3.5 bg-white border border-ink/10 text-sm text-ink outline-none focus:border-accent transition-colors rounded"
+              />
+            </div>
+          </div>
 
-        <a
-          href={JOTFORM_BOOKING_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-3 px-12 py-5 bg-accent text-paper text-[10px] uppercase tracking-[0.3em] font-bold hover:bg-ink transition-colors shadow-xl"
-        >
-          Continue to Booking Form <ArrowRight className="w-4 h-4" />
-        </a>
+          <div className="grid sm:grid-cols-2 gap-6">
+            <div className="sm:col-span-2">
+              <label className="block text-[10px] uppercase tracking-widest font-bold text-ink/50 mb-2">Full Name *</label>
+              <input
+                type="text"
+                value={form.name}
+                onChange={e => setForm({ ...form, name: e.target.value })}
+                required
+                placeholder="First and last name"
+                className="w-full p-3.5 bg-white border border-ink/10 text-sm text-ink placeholder:text-ink/25 outline-none focus:border-accent transition-colors rounded"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] uppercase tracking-widest font-bold text-ink/50 mb-2">Email *</label>
+              <input
+                type="email"
+                value={form.email}
+                onChange={e => setForm({ ...form, email: e.target.value })}
+                required
+                placeholder="you@example.com"
+                className="w-full p-3.5 bg-white border border-ink/10 text-sm text-ink placeholder:text-ink/25 outline-none focus:border-accent transition-colors rounded"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] uppercase tracking-widest font-bold text-ink/50 mb-2">Phone *</label>
+              <input
+                type="tel"
+                value={form.phone}
+                onChange={e => setForm({ ...form, phone: e.target.value })}
+                required
+                placeholder="(555) 555-5555"
+                className="w-full p-3.5 bg-white border border-ink/10 text-sm text-ink placeholder:text-ink/25 outline-none focus:border-accent transition-colors rounded"
+              />
+            </div>
+          </div>
 
-        <p className="mt-8 text-[9px] text-ink/25 uppercase tracking-widest">
-          Secure form · Ashley M. Brows Official Booking
-        </p>
-      </motion.div>
+          <div className="grid sm:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-[10px] uppercase tracking-widest font-bold text-ink/50 mb-2">Previous Permanent Makeup?</label>
+              <select
+                value={form.previousPmu}
+                onChange={e => setForm({ ...form, previousPmu: e.target.value })}
+                className="w-full p-3.5 bg-white border border-ink/10 text-sm text-ink outline-none focus:border-accent transition-colors rounded"
+              >
+                <option value="">Select…</option>
+                <option value="No">No</option>
+                <option value="Yes, faded">Yes — faded</option>
+                <option value="Yes, still visible">Yes — still visible</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-[10px] uppercase tracking-widest font-bold text-ink/50 mb-2">Skin Type</label>
+              <select
+                value={form.skinType}
+                onChange={e => setForm({ ...form, skinType: e.target.value })}
+                className="w-full p-3.5 bg-white border border-ink/10 text-sm text-ink outline-none focus:border-accent transition-colors rounded"
+              >
+                <option value="">Select…</option>
+                <option value="Dry">Dry</option>
+                <option value="Normal">Normal</option>
+                <option value="Combination">Combination</option>
+                <option value="Oily">Oily</option>
+                <option value="Mature">Mature</option>
+              </select>
+            </div>
+            <div className="sm:col-span-2">
+              <label className="block text-[10px] uppercase tracking-widest font-bold text-ink/50 mb-2">Notes for Ashley</label>
+              <textarea
+                value={form.message}
+                onChange={e => setForm({ ...form, message: e.target.value })}
+                rows={4}
+                placeholder="Anything she should know — goals, allergies, concerns…"
+                className="w-full p-3.5 bg-white border border-ink/10 text-sm text-ink placeholder:text-ink/25 outline-none focus:border-accent transition-colors rounded resize-none"
+              />
+            </div>
+          </div>
+
+          <label className="flex items-start gap-3 cursor-pointer p-4 border border-ink/10 rounded bg-white">
+            <input
+              type="checkbox"
+              checked={form.consent}
+              onChange={e => setForm({ ...form, consent: e.target.checked })}
+              className="mt-1 w-4 h-4 accent-accent"
+            />
+            <span className="text-sm text-ink/70 leading-relaxed">
+              I understand a non-refundable <strong>$100 deposit</strong> is required to secure my appointment, and I agree to the <a href="/policies" className="text-accent border-b border-accent/40 hover:border-accent">booking and cancellation policies</a>.
+            </span>
+          </label>
+
+          {error && (
+            <div className="p-4 bg-red-50 border border-red-100 rounded text-sm text-red-700">
+              {error}
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={submitting}
+            className="w-full py-5 bg-accent text-paper text-[10px] uppercase tracking-[0.3em] font-bold hover:bg-ink transition-colors disabled:opacity-50 flex items-center justify-center gap-3 shadow-xl"
+          >
+            {submitting
+              ? <><div className="w-4 h-4 border-2 border-paper/30 border-t-paper rounded-full animate-spin" /> Sending Request…</>
+              : <>Send Booking Request <ArrowRight className="w-4 h-4" /></>}
+          </button>
+        </form>
+      </div>
     </div>
   );
 };
@@ -1615,11 +1805,6 @@ export default function App() {
   };
 
   const handleNavigate = (page: Page) => {
-    // Booking always opens Ashley's Jotform in a new tab â€” no internal calendar
-    if (page === 'booking') {
-      openBooking();
-      return;
-    }
     const routes: Record<Page, string> = {
       home: '/', services: '/services', gallery: '/gallery', booking: '/booking',
       artist: '/artist', contact: '/contact', 'service-detail': '/services',
@@ -1713,7 +1898,7 @@ export default function App() {
           >
             <Routes location={location}>
               <Route path="/" element={<HomePage onNavigate={handleNavigate} onSelectService={handleSelectService} />} />
-              <Route path="/booking" element={<BookingRedirectPage />} />
+              <Route path="/booking" element={<BookingPage />} />
               <Route path="/gallery" element={<GalleryPage />} />
               <Route path="/services" element={<Services onSelectService={handleSelectService} onNavigate={handleNavigate} />} />
               <Route path="/artist" element={<ArtistPage />} />

@@ -45,7 +45,7 @@ export const handler: Handler = async (event) => {
 
     const RESEND_API_KEY = process.env.RESEND_API_KEY;
     const FROM_EMAIL = process.env.FROM_EMAIL ?? 'Ashley M. Brows <onboarding@resend.dev>';
-    const ASHLEY_EMAIL = process.env.ASHLEY_EMAIL ?? 'ashleymbrows@gmail.com';
+    const ASHLEY_EMAIL = process.env.ASHLEY_EMAIL ?? 'adminashleybrows@gmail.com';
 
     if (!RESEND_API_KEY) {
       console.error('[send-inquiry] RESEND_API_KEY not set in Netlify env.');
