@@ -1203,7 +1203,7 @@ const HomePage = ({ onNavigate, onSelectService }: { onNavigate: (page: Page) =>
                transition={{ duration: 1.5 }}
                className="aspect-[4/5] bg-ink"
              >
-                <img src="https://images.unsplash.com/photo-1512496015851-a90fb38ba796?auto=format&fit=crop&q=80&w=1200" alt="Detail" className="w-full h-full object-cover opacity-80" />
+                <img src="/ashley-home-feature.jpg" alt="Ashley Brows signature work" className="w-full h-full object-cover" />
              </motion.div>
           </div>
        </div>
@@ -1531,6 +1531,12 @@ const galleryItems = [
     title: 'Feathered Arch',
     category: 'Signature Brows',
     description: '3 Hour Procedure \u00b7 Nano Strokes'
+  },
+  {
+    image: '/gallery/ashley-portfolio-may22.jpg',
+    title: 'Signature Definition',
+    category: 'Signature Brows',
+    description: '2.5 Hour Procedure \u00b7 Custom Shaping'
   }
 ];
 
