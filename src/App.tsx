@@ -24,7 +24,7 @@ const services = [
     price: '$650',
     shortDescription: 'Soft, shaded brows for a polished makeup-style finish.',
     description: 'Our most popular brow service. Done with a single-needle tattoo machine that layers small pixels of pigment into the skin until the desired saturation is achieved. Can be bold and defined to your preference, or softly shaded with no harsh edges for a natural makeup look. Best suited for all skin types &mdash; especially oily and mature skin. Does not include touch-up.',
-    image: '/gallery/brows-before-after.jpg',
+    image: '/ashley-home-feature.jpg',
     tags: ['Powder Finish', 'All Skin Types', 'Most Popular'],
     process: [
       { step: 'Consultation', description: 'We map your face and select pigments that harmonize with your skin undertones.' },
@@ -455,7 +455,7 @@ const About = () => (
   </section>
 );
 
-const Services = ({ onSelectService, onNavigate }: { onSelectService: (service: any) => void, onNavigate: (page: any) => void }) => (
+const Services = ({ onSelectService, onNavigate, excludeIds = [] }: { onSelectService: (service: any) => void, onNavigate: (page: any) => void, excludeIds?: string[] }) => (
   <section className="py-24 bg-paper-dark px-6">
     <div className="max-w-7xl mx-auto">
       <div className="mb-20 text-center">
@@ -463,7 +463,7 @@ const Services = ({ onSelectService, onNavigate }: { onSelectService: (service: 
         <p className="text-ink/50 uppercase tracking-[0.3em] font-bold text-[10px]">Every procedure is a bespoke masterpiece</p>
       </div>
       <div className="grid md:grid-cols-3 gap-8">
-        {services.map((service, idx) => (
+        {services.filter(s => !excludeIds.includes(s.id)).map((service, idx) => (
           <motion.button 
             key={idx}
             initial={{ opacity: 0, y: 40 }}
@@ -1203,13 +1203,13 @@ const HomePage = ({ onNavigate, onSelectService }: { onNavigate: (page: Page) =>
                transition={{ duration: 1.5 }}
                className="aspect-[4/5] bg-ink"
              >
-                <img src="/ashley-home-feature.jpg" alt="Ashley Brows signature work" className="w-full h-full object-cover" />
+                <img src="https://images.unsplash.com/photo-1512496015851-a90fb38ba796?auto=format&fit=crop&q=80&w=1200" alt="Detail" className="w-full h-full object-cover opacity-80" />
              </motion.div>
           </div>
        </div>
     </section>
     <TrustStack />
-    <Services onSelectService={onSelectService} onNavigate={onNavigate} />
+    <Services onSelectService={onSelectService} onNavigate={onNavigate} excludeIds={['tooth-gems']} />
     <Testimonials />
     <FAQSection />
     <section className="py-40 bg-sage-light px-6 text-center overflow-hidden relative">
