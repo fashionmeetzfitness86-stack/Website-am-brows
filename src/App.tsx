@@ -26,7 +26,7 @@ const services = [
     title: 'Signature Brows',
     price: '$650',
     shortDescription: 'Soft, shaded brows for a polished makeup-style finish.',
-    description: 'Our most popular brow service. Done with a single-needle tattoo machine that layers small pixels of pigment into the skin until the desired saturation is achieved. Can be bold and defined to your preference, or softly shaded with no harsh edges for a natural makeup look. Best suited for all skin types &mdash; especially oily and mature skin. Does not include touch-up.',
+    description: 'Our most popular brow service. Done with a single-needle tattoo machine that layers small pixels of pigment into the skin until the desired saturation is achieved. Can be bold and defined to your preference, or softly shaded with no harsh edges for a natural makeup look. Best suited for all skin types, especially oily and mature skin. Does not include touch-up.',
     image: '/ashley-home-feature.jpg',
     tags: ['Powder Finish', 'All Skin Types', 'Most Popular'],
     process: [
@@ -41,10 +41,10 @@ const services = [
   },
   {
     id: 'lips',
-    title: 'Ashley M. Lip Blush',
+    title: 'Lip Blush',
     price: '$650',
-    shortDescription: 'A wash of color restored to your lips &mdash; fuller, defined, youthful.',
-    description: 'Lip Blush (or "watercolor lips") is another form of cosmetic tattooing. Immediate results look bright, bold and lipstick-like but heal down to a tint/stain. A wash of restored color can make lips appear fuller, more defined and more youthful. Great for covering fordyce spots, scars, pale lips, defining borders, correcting asymmetries and neutralizing dark pigmentation &mdash; all while staying within your natural vermillion border. Lasts 2 to 4 years.',
+    shortDescription: 'A wash of color restored to your lips, fuller, defined, youthful.',
+    description: 'Lip Blush (or "watercolor lips") is another form of cosmetic tattooing. Immediate results look bright, bold and lipstick-like but heal down to a tint/stain. A wash of restored color can make lips appear fuller, more defined and more youthful. Great for covering fordyce spots, scars, pale lips, defining borders, correcting asymmetries and neutralizing dark pigmentation, all while staying within your natural vermillion border. Lasts 2 to 4 years.',
     image: '/lip-blush.webp',
     tags: ['Watercolor Lips', 'Defined Border', 'Lasts 2-4 Years'],
     process: [
@@ -62,7 +62,7 @@ const services = [
     title: 'Defining Liner',
     price: '$400+',
     shortDescription: 'From subtle lash enhancement to a softly shaded winged liner.',
-    description: 'Lash Enhancement ($400) is a thin tattooed line just between your lashes, making them appear darker and fuller at the base &mdash; very subtle, perfect for anyone not committed to daily eyeliner. Shaded Lash Enhancement ($450) adds thickness for a simple eyeliner look. Shaded Eyeliner ($550) is a softly shaded winged liner using three blended tones for a seamless finish, customized to your eye shape. Bottom/lower-lid eyeliner is not offered at this time.',
+    description: 'Lash Enhancement ($400) is a thin tattooed line just between your lashes, making them appear darker and fuller at the base, very subtle, perfect for anyone not committed to daily eyeliner. Shaded Lash Enhancement ($450) adds thickness for a simple eyeliner look. Shaded Eyeliner ($550) is a softly shaded winged liner using three blended tones for a seamless finish, customized to your eye shape. Bottom/lower-lid eyeliner is not offered at this time.',
     image: '/gallery/lash-enhancement-before-after.jpg',
     tags: ['Lash Enhancement', 'Soft Wing', '3 Blended Tones'],
     process: [
@@ -76,8 +76,8 @@ const services = [
     id: 'tooth-gems',
     title: 'Tooth Gems',
     price: '$60+',
-    shortDescription: 'Crystal and gold tooth gems — from a single crystal to a full disco tooth.',
-    description: 'Tooth gems are non-permanent decorative jewels applied to the surface of the tooth. Single crystals start at $60, with options for multi-crystal sets ($100 / $125), gold applications ($120 and up), and a full "disco tooth" ($250). Gems are sourced from Tegan’s Tooth Gems, Tooth Kandy and Isisngold — email ashleymbrows@gmail.com with a screenshot of your pick to book.',
+    shortDescription: 'Crystal and gold tooth gems, from a single crystal to a full disco tooth.',
+    description: 'Tooth gems are non-permanent decorative jewels applied to the surface of the tooth. Single crystals start at $60, with options for multi-crystal sets ($100 / $125), gold applications ($120 and up), and a full "disco tooth" ($250). Gems are sourced from Tegan’s Tooth Gems, Tooth Kandy and Isisngold, email ashleymbrows@gmail.com with a screenshot of your pick to book.',
     image: '/gallery/tooth-gems.jpg',
     tags: ['Crystals', 'Gold Gems', 'Non-Permanent'],
     process: [
@@ -85,7 +85,7 @@ const services = [
         step: 'Pick Your Gem',
         description: (
           <>
-            Browse the vendor catalogues —{' '}
+            Browse the vendor catalogues,{' '}
             <a href="https://www.teganstoothgems.com/" target="_blank" rel="noopener noreferrer"
                className="text-ink/80 border-b border-accent/40 hover:border-accent hover:text-ink transition-colors">
               Tegan’s
@@ -100,11 +100,11 @@ const services = [
                className="text-ink/80 border-b border-accent/40 hover:border-accent hover:text-ink transition-colors">
               Isisngold
             </a>
-            {' '}— then email your selection.
+            {' '}, then email your selection.
           </>
         )
       },
-      { step: 'Application', description: 'A quick, non-invasive application with dental-grade adhesive — no drilling, no damage.' },
+      { step: 'Application', description: 'A quick, non-invasive application with dental-grade adhesive, no drilling, no damage.' },
       { step: 'Wear & Enjoy', description: 'Gems typically last several months to a year with normal wear; they can be added to or removed any time.' }
     ],
     testimonials: []
@@ -130,7 +130,7 @@ const testimonials = [
   {
     author: 'Tatjana',
     role: 'Brows & Lip Blush Client',
-    text: 'Ashley is the best around. I have had my brows and lips done by her now and I am obsessed with both! Her attention to detail and VERY meticulous eye and application makes for literal perfection. She made it so comfortable with all her knowledge of everything &mdash; answered every little question I had and put my nerves at ease.',
+    text: 'Ashley is the best around. I have had my brows and lips done by her now and I am obsessed with both! Her attention to detail and VERY meticulous eye and application makes for literal perfection. She made it so comfortable with all her knowledge of everything, answered every little question I had and put my nerves at ease.',
     rating: 5
   },
   {
@@ -152,7 +152,7 @@ const faqs = [
   },
   {
     question: "What is the healing process like?",
-    answer: "Initial redness and inflammation subside quickly. Your tattoo may appear bold or darker than anticipated &mdash; this is completely normal. Most healing occurs in 7 to 10 days, with total healing around 4 weeks. Lips heal faster, in roughly 5 to 7 days, but take a few weeks for the color to bloom back through."
+    answer: "Initial redness and inflammation subside quickly. Your tattoo may appear bold or darker than anticipated, this is completely normal. Most healing occurs in 7 to 10 days, with total healing around 4 weeks. Lips heal faster, in roughly 5 to 7 days, but take a few weeks for the color to bloom back through."
   },
   {
     question: "Do I need a touch-up?",
@@ -356,7 +356,7 @@ const Hero = ({ onNavigate }: { onNavigate: (page: Page) => void }) => (
       transition={{ delay: 0.5 }}
       className="max-w-xl text-ink/60 leading-relaxed mb-12 text-sm md:text-base font-sans"
     >
-      Permanent makeup in Brighton, Michigan. Brows, lip blush, lashes, eyeliner and decorative work — meticulous, customized, and made to look like you.
+      Permanent makeup in Brighton, Michigan. Brows, lip blush, lashes, eyeliner and decorative work, meticulous, customized, and made to look like you.
     </motion.p>
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
@@ -440,7 +440,7 @@ const About = () => (
              Ashley Brows is a private permanent makeup studio in Brighton, Michigan, run by Ashley Miller. The work is meticulous, the consultations honest, and the goal is always the same: results that look like you, only better.
            </p>
            <p>
-             Cosmetic tattoos are always a two-step process. Your follow-up perfection session at 6 to 12 weeks reinforces any imperfections from the healing process &mdash; only after that touch-up is your treatment complete.
+             Cosmetic tattoos are always a two-step process. Your follow-up perfection session at 6 to 12 weeks reinforces any imperfections from the healing process, only after that touch-up is your treatment complete.
            </p>
          </motion.div>
          <div className="mt-12 flex gap-12">
@@ -632,7 +632,7 @@ const PrivacyPage = () => (
           </ul>
           <p className="mt-4">
             We also automatically collect limited technical information when you visit the
-            site &mdash; for example, your IP address, device and browser type, and the pages
+            site, for example, your IP address, device and browser type, and the pages
             you view. This data helps us keep the site secure and understand how visitors
             interact with it.
           </p>
@@ -654,7 +654,7 @@ const PrivacyPage = () => (
           <h2 className="text-2xl font-serif text-ink mb-4">How We Share Your Information</h2>
           <p className="mb-4">
             We do not sell or rent your personal information. We share information only with
-            trusted service providers who help us operate the studio and this site &mdash; for
+            trusted service providers who help us operate the studio and this site, for
             example, our website host, our email and form-processing tools, and our booking
             and appointment software. These providers may only use your information to provide
             their services to us.
@@ -728,7 +728,7 @@ const PrivacyPage = () => (
           <h2 className="text-2xl font-serif text-ink mb-4">Contact Us</h2>
           <p>
             Questions about this Privacy Policy or about how your information is handled?
-            Email us at <a href="mailto:ashleymbrows@gmail.com" className="text-accent hover:underline">ashleymbrows@gmail.com</a> &mdash; Ashley Brows, Brighton, Michigan.
+            Email us at <a href="mailto:ashleymbrows@gmail.com" className="text-accent hover:underline">ashleymbrows@gmail.com</a>, Ashley Brows, Brighton, Michigan.
           </p>
         </section>
       </div>
@@ -745,7 +745,7 @@ const PoliciesPage = () => (
 
       <div className="space-y-6 text-ink/70 leading-relaxed text-sm md:text-base">
         <ul className="space-y-4 list-disc pl-6">
-          <li>Under Body Art Licensure, <strong className="text-ink">no person</strong> under the age of 18 is allowed servicing &mdash; even with parental consent.</li>
+          <li>Under Body Art Licensure, <strong className="text-ink">no person</strong> under the age of 18 is allowed servicing, even with parental consent.</li>
           <li><strong className="text-ink">Valid ID</strong> is required at the time of your service.</li>
           <li>Guidelines are provided to achieve optimal results, but there are <strong className="text-ink">no guarantees</strong> due to different skin types reacting differently to procedures. Please check the FAQ section to make sure you are an eligible candidate. If you are unsure, please contact us.</li>
           <li><strong className="text-ink">Deposits:</strong> a minimum of <strong className="text-ink">$100 deposit</strong> will be requested in order to book and is <strong className="text-ink">non-refundable</strong> under any circumstance. Your deposit will go towards the overall cost. This ensures you are serious about your appointment.</li>
@@ -756,7 +756,7 @@ const PoliciesPage = () => (
           <li>A minimum of <strong className="text-ink">2 sessions</strong> is highly recommended for desired results. Additional sessions may be needed.</li>
           <li><strong className="text-ink">Touch-up appointments are for existing clientele only.</strong></li>
           <li>Annual touch-ups must be completed before <strong className="text-ink">3 years</strong> from the initial session, otherwise full session pricing applies.</li>
-          <li>If you have previous work by another artist you <strong className="text-ink">must</strong> email clear photos of your brows (right, left, and both) in good lighting in order to be approved for booking &mdash; <a href="mailto:ashleymbrows@gmail.com" className="text-accent hover:underline">ashleymbrows@gmail.com</a>.</li>
+          <li>If you have previous work by another artist you <strong className="text-ink">must</strong> email clear photos of your brows (right, left, and both) in good lighting in order to be approved for booking, <a href="mailto:ashleymbrows@gmail.com" className="text-accent hover:underline">ashleymbrows@gmail.com</a>.</li>
           <li>Pricing is subject to change at any time without notice at the artist&rsquo;s discretion.</li>
           <li><strong className="text-ink">All transactions are final and no refunds will be issued.</strong></li>
         </ul>
@@ -907,7 +907,7 @@ const ContactPage = () => {
   return (
     <div className="pt-24 min-h-screen bg-paper pb-20">
       <div className="max-w-7xl mx-auto px-6 py-20 flex flex-col md:flex-row gap-20">
-        {/* Left column — studio info */}
+        {/* Left column, studio info */}
         <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8 }} className="flex-1">
           <p className="text-accent text-[10px] uppercase tracking-[0.6em] mb-4 font-bold">Get In Touch</p>
           <h1 className="text-4xl md:text-6xl font-serif mb-8">Contact the Studio</h1>
@@ -945,7 +945,7 @@ const ContactPage = () => {
           </div>
         </motion.div>
 
-        {/* Right column — inquiry form */}
+        {/* Right column, inquiry form */}
         <motion.div initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8, delay: 0.15 }} className="flex-1 bg-white p-8 md:p-12 shadow-sm">
           <p className="text-accent text-[10px] uppercase tracking-[0.5em] font-bold mb-2">Consultation Inquiry</p>
           <h2 className="text-2xl font-serif mb-8">Tell Ashley About Your Goals</h2>
@@ -963,7 +963,7 @@ const ContactPage = () => {
               >
                 <option value="">Select a service…</option>
                 <option>Signature Brows ($650)</option>
-                <option>Ashley M. Lip Blush ($650)</option>
+                <option>Lip Blush ($650)</option>
                 <option>Defining Liner ($400+)</option>
                 <option>Tooth Gems ($60+)</option>
                 <option>Not sure yet</option>
@@ -1206,7 +1206,7 @@ const HomePage = ({ onNavigate, onSelectService }: { onNavigate: (page: Page) =>
           <motion.div initial={{ opacity: 0, x: -40 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.9 }} className="flex-1">
              <h2 className="text-4xl md:text-7xl font-serif italic mb-8">A Two-Step <br /> Process</h2>
              <p className="text-ink/60 max-w-md leading-relaxed mb-8">
-                Permanent makeup heals in waves &mdash; redness softens, color blooms, the tattoo settles. Your initial session shapes the look; the perfection session at 6 to 12 weeks refines it. Only together do they become the final result.
+                Permanent makeup heals in waves, redness softens, color blooms, the tattoo settles. Your initial session shapes the look; the perfection session at 6 to 12 weeks refines it. Only together do they become the final result.
              </p>
              <button onClick={() => onNavigate('artist')} className="group flex items-center gap-4 text-[10px] uppercase tracking-[0.4em] font-bold">
                 Meet Ashley <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -1244,7 +1244,7 @@ const HomePage = ({ onNavigate, onSelectService }: { onNavigate: (page: Page) =>
 
 const serviceMenu = [
   { id: 'brows', title: 'Signature Brows', price: '$650', duration: '2.5 hrs', description: 'Soft powder-shaded brows. All skin types.' },
-  { id: 'lips',  title: 'Ashley M. Lip Blush', price: '$650', duration: '2 hrs', description: 'Watercolor tint for fuller, defined lips.' },
+  { id: 'lips',  title: 'Lip Blush', price: '$650', duration: '2 hrs', description: 'Watercolor tint for fuller, defined lips.' },
   { id: 'liner', title: 'Defining Liner', price: '$400+', duration: '1.5 hrs', description: 'Lash enhancement to full shaded wing.' },
   { id: 'tooth-gems', title: 'Tooth Gems', price: '$60+', duration: '30 min', description: 'Crystal and gold tooth gems from $60 to full disco tooth.' },
 ];
@@ -1457,8 +1457,8 @@ const BookingPage = () => {
               >
                 <option value="">Select…</option>
                 <option value="No">No</option>
-                <option value="Yes, faded">Yes — faded</option>
-                <option value="Yes, still visible">Yes — still visible</option>
+                <option value="Yes, faded">Yes, faded</option>
+                <option value="Yes, still visible">Yes, still visible</option>
               </select>
             </div>
             <div>
@@ -1482,7 +1482,7 @@ const BookingPage = () => {
                 value={form.message}
                 onChange={e => setForm({ ...form, message: e.target.value })}
                 rows={4}
-                placeholder="Anything she should know — goals, allergies, concerns…"
+                placeholder="Anything she should know, goals, allergies, concerns…"
                 className="w-full p-3.5 bg-white border border-ink/10 text-sm text-ink placeholder:text-ink/25 outline-none focus:border-accent transition-colors rounded resize-none"
               />
             </div>

@@ -233,8 +233,8 @@ export default function AdminDashboard() {
                       <p className="font-semibold text-[#1A1714]">{inquiry.name}</p>
                       <p className="text-[#1A1714]/40 text-xs">{inquiry.email}</p>
                     </td>
-                    <td className="px-5 py-4 text-[#1A1714]/70">{inquiry.service || '—'}</td>
-                    <td className="px-5 py-4 text-[#1A1714]/50">{inquiry.city || '—'}</td>
+                    <td className="px-5 py-4 text-[#1A1714]/70">{inquiry.service || ','}</td>
+                    <td className="px-5 py-4 text-[#1A1714]/50">{inquiry.city || ','}</td>
                     <td className="px-5 py-4">
                       <span className={`inline-block px-2.5 py-1 rounded-full text-[10px] uppercase tracking-widest font-bold ${STATUS_COLORS[inquiry.status] ?? STATUS_COLORS.new}`}>
                         {STATUS_LABELS[inquiry.status] ?? inquiry.status}
