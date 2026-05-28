@@ -876,7 +876,7 @@ const ContactPage = () => {
           </div>
           <h2 className="text-4xl font-serif mb-4">Inquiry Sent</h2>
           <p className="text-ink/60 mb-4 leading-relaxed">Thank you, {formData.name}. Your inquiry has been sent directly to Ashley.</p>
-          <p className="text-ink/50 text-sm mb-12 leading-relaxed">Ashley personally reviews every message and will be in touch within 1â€“2 business days. Check your inbox for a confirmation email.</p>
+          <p className="text-ink/50 text-sm mb-12 leading-relaxed">Ashley personally reviews every message and will be in touch within 1–2 business days. Check your inbox for a confirmation email.</p>
           <button
             onClick={() => { setSubmitted(false); setFormData({ name: '', email: '', phone: '', service: '', city: '', preferredDate: '', message: '', consent: false }); }}
             className="px-12 py-4 bg-ink text-paper text-[10px] uppercase tracking-[0.2em] font-bold hover:bg-accent transition-colors"
@@ -891,12 +891,12 @@ const ContactPage = () => {
   return (
     <div className="pt-24 min-h-screen bg-paper pb-20">
       <div className="max-w-7xl mx-auto px-6 py-20 flex flex-col md:flex-row gap-20">
-        {/* Left column â€” studio info */}
+        {/* Left column — studio info */}
         <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8 }} className="flex-1">
           <p className="text-accent text-[10px] uppercase tracking-[0.6em] mb-4 font-bold">Get In Touch</p>
           <h1 className="text-4xl md:text-6xl font-serif mb-8">Contact the Studio</h1>
           <p className="text-ink/70 leading-relaxed mb-12 max-w-md">
-            Fill out the form and Ashley will respond personally within 1â€“2 business days. For immediate questions, email or DM on Instagram.
+            Fill out the form and Ashley will respond personally within 1–2 business days. For immediate questions, email or DM on Instagram.
           </p>
           <div className="space-y-10">
             <div>
@@ -929,7 +929,7 @@ const ContactPage = () => {
           </div>
         </motion.div>
 
-        {/* Right column â€” inquiry form */}
+        {/* Right column — inquiry form */}
         <motion.div initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8, delay: 0.15 }} className="flex-1 bg-white p-8 md:p-12 shadow-sm">
           <p className="text-accent text-[10px] uppercase tracking-[0.5em] font-bold mb-2">Consultation Inquiry</p>
           <h2 className="text-2xl font-serif mb-8">Tell Ashley About Your Goals</h2>
@@ -945,7 +945,7 @@ const ContactPage = () => {
                 onChange={(e) => setFormData({ ...formData, service: e.target.value })}
                 className="w-full p-4 bg-paper/30 border border-ink/5 focus:border-accent outline-none text-sm transition-colors appearance-none"
               >
-                <option value="">Select a serviceâ€¦</option>
+                <option value="">Select a service…</option>
                 <option>Signature Brows ($650)</option>
                 <option>Ashley M. Lip Blush ($650)</option>
                 <option>Defining Liner ($400+)</option>
@@ -963,7 +963,7 @@ const ContactPage = () => {
                 rows={5}
                 value={formData.message}
                 onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                placeholder="Tell Ashley about your goals, skin concerns, or any questionsâ€¦"
+                placeholder="Tell Ashley about your goals, skin concerns, or any questions…"
                 className={`w-full p-4 bg-paper/30 border ${
                   errors.message ? 'border-red-400' : 'border-ink/5'
                 } focus:border-accent outline-none text-sm transition-colors resize-none`}
@@ -991,7 +991,7 @@ const ContactPage = () => {
               disabled={isSubmitting}
               className="w-full py-5 mt-4 bg-accent text-paper text-xs uppercase tracking-[0.2em] font-bold hover:bg-ink transition-colors shadow-xl disabled:opacity-60 flex items-center justify-center gap-3"
             >
-              {isSubmitting ? 'Sendingâ€¦' : 'Send Inquiry to Ashley'}
+              {isSubmitting ? 'Sending…' : 'Send Inquiry to Ashley'}
             </button>
 
             {submitError && (
