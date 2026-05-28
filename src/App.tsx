@@ -1219,7 +1219,7 @@ const HomePage = ({ onNavigate, onSelectService }: { onNavigate: (page: Page) =>
                transition={{ duration: 1.5 }}
                className="aspect-[4/5] bg-ink"
              >
-                <img src="https://images.unsplash.com/photo-1512496015851-a90fb38ba796?auto=format&fit=crop&q=80&w=1200" alt="Detail" className="w-full h-full object-cover opacity-80" />
+                <img src="/gallery/ashley-portfolio-may22.jpg" alt="Ashley Brows healed result" className="w-full h-full object-cover" />
              </motion.div>
           </div>
        </div>
