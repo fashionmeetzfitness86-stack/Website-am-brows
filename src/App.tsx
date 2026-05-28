@@ -1,20 +1,21 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
 import { motion, AnimatePresence } from 'motion/react';
-import { Menu, ArrowRight, Instagram, Facebook, Mail, Calendar, User, Star, X, ChevronRight, ChevronLeft, MapPin, Phone, Plus, Check, Clock, CreditCard, Shield, Sparkles } from 'lucide-react';
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { Menu, ArrowRight, Instagram, Facebook, Mail, Calendar, User, Star, X, ChevronRight, ChevronLeft, MapPin, Phone, Plus, Check, Clock, Shield, Sparkles } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Routes, Route, useNavigate, useLocation, useParams, Navigate } from 'react-router-dom';
 import { supabase } from './lib/supabase';
 import { useSEO } from './hooks/useSEO';
 
-import AdminDashboard from './AdminDashboard';
-import { BookingSuccess, BookingCancelled } from './BookingResultPages';
-
 // --- Types ---
-type Page = 'home' | 'services' | 'gallery' | 'booking' | 'artist' | 'contact' | 'service-detail' | 'privacy' | 'policies' | 'admin';
+type Page = 'home' | 'services' | 'gallery' | 'booking' | 'artist' | 'contact' | 'service-detail' | 'privacy' | 'policies';
+
+
+// --- Booking URL ---
+// Update this constant when Ashley's Jotform URL changes.
+// --- Booking ---
+// On-site booking request form lives at /booking. It POSTs to the Netlify
+// function /send-inquiry which sends Ashley a notification email via Resend
+// and an auto-reply to the client.
+
 
 const services = [
   {
@@ -23,7 +24,7 @@ const services = [
     price: '$650',
     shortDescription: 'Soft, shaded brows for a polished makeup-style finish.',
     description: 'Our most popular brow service. Done with a single-needle tattoo machine that layers small pixels of pigment into the skin until the desired saturation is achieved. Can be bold and defined to your preference, or softly shaded with no harsh edges for a natural makeup look. Best suited for all skin types &mdash; especially oily and mature skin. Does not include touch-up.',
-    image: '/gallery/brows-before-after.jpg',
+    image: '/ashley-home-feature.jpg',
     tags: ['Powder Finish', 'All Skin Types', 'Most Popular'],
     process: [
       { step: 'Consultation', description: 'We map your face and select pigments that harmonize with your skin undertones.' },
@@ -65,6 +66,43 @@ const services = [
       { step: 'Style Selection', description: 'We pick the depth, thickness and shape that suits your eye and lifestyle.' },
       { step: 'Symmetry Check', description: 'Mirror-perfect alignment confirmed before any pigment is laid down.' },
       { step: 'Pigment Fill', description: 'Worked between or above the lashes for a dense, natural-looking line or wing.' }
+    ],
+    testimonials: []
+  },
+  {
+    id: 'tooth-gems',
+    title: 'Tooth Gems',
+    price: '$60+',
+    shortDescription: 'Crystal and gold tooth gems — from a single crystal to a full disco tooth.',
+    description: 'Tooth gems are non-permanent decorative jewels applied to the surface of the tooth. Single crystals start at $60, with options for multi-crystal sets ($100 / $125), gold applications ($120 and up), and a full "disco tooth" ($250). Gems are sourced from Tegan’s Tooth Gems, Tooth Kandy and Isisngold — email ashleymbrows@gmail.com with a screenshot of your pick to book.',
+    image: '/gallery/tooth-gems.jpg',
+    tags: ['Crystals', 'Gold Gems', 'Non-Permanent'],
+    process: [
+      {
+        step: 'Pick Your Gem',
+        description: (
+          <>
+            Browse the vendor catalogues —{' '}
+            <a href="https://www.teganstoothgems.com/" target="_blank" rel="noopener noreferrer"
+               className="text-ink/80 border-b border-accent/40 hover:border-accent hover:text-ink transition-colors">
+              Tegan’s
+            </a>
+            ,{' '}
+            <a href="https://toothkandy.com/pages/collections?view=gold" target="_blank" rel="noopener noreferrer"
+               className="text-ink/80 border-b border-accent/40 hover:border-accent hover:text-ink transition-colors">
+              Tooth Kandy
+            </a>
+            {' '}and{' '}
+            <a href="https://isisngold.com/collections/all-teeth-jewelry" target="_blank" rel="noopener noreferrer"
+               className="text-ink/80 border-b border-accent/40 hover:border-accent hover:text-ink transition-colors">
+              Isisngold
+            </a>
+            {' '}— then email your selection.
+          </>
+        )
+      },
+      { step: 'Application', description: 'A quick, non-invasive application with dental-grade adhesive — no drilling, no damage.' },
+      { step: 'Wear & Enjoy', description: 'Gems typically last several months to a year with normal wear; they can be added to or removed any time.' }
     ],
     testimonials: []
   }
@@ -210,10 +248,10 @@ const Navbar = ({ onNavigate, currentPage }: { onNavigate: (page: Page) => void,
           </button>
           <button
             onClick={() => navigate('home')}
-            className="text-xl font-display uppercase tracking-[0.2em] cursor-pointer focus-visible:outline-accent"
-            aria-label="Ashley M. Brows Home"
+            className="cursor-pointer focus-visible:outline-accent flex items-center"
+            aria-label="Ashley Brows Home"
           >
-            Ashley M. Brows
+            <img src="/logo.png" alt="Ashley Brows" className="h-28 w-auto" />
           </button>
         </div>
         <div className="hidden md:flex items-center gap-10">
@@ -417,7 +455,7 @@ const About = () => (
   </section>
 );
 
-const Services = ({ onSelectService, onNavigate }: { onSelectService: (service: any) => void, onNavigate: (page: any) => void }) => (
+const Services = ({ onSelectService, onNavigate, excludeIds = [] }: { onSelectService: (service: any) => void, onNavigate: (page: any) => void, excludeIds?: string[] }) => (
   <section className="py-24 bg-paper-dark px-6">
     <div className="max-w-7xl mx-auto">
       <div className="mb-20 text-center">
@@ -425,7 +463,7 @@ const Services = ({ onSelectService, onNavigate }: { onSelectService: (service: 
         <p className="text-ink/50 uppercase tracking-[0.3em] font-bold text-[10px]">Every procedure is a bespoke masterpiece</p>
       </div>
       <div className="grid md:grid-cols-3 gap-8">
-        {services.map((service, idx) => (
+        {services.filter(s => !excludeIds.includes(s.id)).map((service, idx) => (
           <motion.button 
             key={idx}
             initial={{ opacity: 0, y: 40 }}
@@ -533,10 +571,10 @@ const Footer = ({ onNavigate }: { onNavigate: (page: Page) => void }) => (
              </button>
            </li>
            <li className="hover:text-accent transition-colors">
-             <button className="focus-visible:outline-accent uppercase text-[10px] font-bold">Our Standards</button>
+             <button className="focus-visible:outline-accent uppercase text-[10px] font-bold" onClick={() => onNavigate('policies')}>Studio Policies</button>
            </li>
            <li className="hover:text-accent transition-colors">
-             <button className="focus-visible:outline-accent uppercase text-[10px] font-bold">Aftercare</button>
+             <button className="focus-visible:outline-accent uppercase text-[10px] font-bold" onClick={() => onNavigate('contact')}>Contact Studio</button>
            </li>
         </ul>
       </div>
@@ -549,12 +587,12 @@ const Footer = ({ onNavigate }: { onNavigate: (page: Page) => void }) => (
            <li>
              <button onClick={() => onNavigate('privacy')} className="cursor-pointer hover:text-accent transition-colors focus-visible:outline-accent">Privacy</button>
            </li>
-           <li><button onClick={() => onNavigate('privacy')} className="cursor-pointer hover:text-accent transition-colors focus-visible:outline-accent">Terms</button></li>
+            <li><button onClick={() => onNavigate('policies')} className="cursor-pointer hover:text-accent transition-colors focus-visible:outline-accent">Terms</button></li>
         </ul>
       </div>
     </div>
     <div className="max-w-7xl mx-auto mt-20 pt-8 border-t border-paper/10 text-[10px] uppercase tracking-widest font-bold opacity-30 text-center flex justify-between items-center">
-       <p>© 2026 <button onClick={() => onNavigate('admin')} className="hover:text-accent transition-colors focus-visible:outline-none">Ashley M. Brows</button>. Cosmetic Tattoo Artist.</p>
+       <p>© 2026 Ashley M. Brows. Cosmetic Tattoo Artist.</p>
        <div className="flex gap-8">
           <span>Brighton, Michigan</span>
            <span>USA</span>
@@ -707,11 +745,10 @@ const PoliciesPage = () => (
           <li>Under Body Art Licensure, <strong className="text-ink">no person</strong> under the age of 18 is allowed servicing &mdash; even with parental consent.</li>
           <li><strong className="text-ink">Valid ID</strong> is required at the time of your service.</li>
           <li>Guidelines are provided to achieve optimal results, but there are <strong className="text-ink">no guarantees</strong> due to different skin types reacting differently to procedures. Please check the FAQ section to make sure you are an eligible candidate. If you are unsure, please contact us.</li>
-          <li><strong className="text-ink">Deposits:</strong> a minimum of $100 deposit is required to book and is <strong className="text-ink">non-refundable</strong> under any circumstance. Your deposit goes towards the overall cost. This ensures you are serious about your appointment.</li>
-          <li>A minimum of <strong className="text-ink">48 hours</strong> is required to reschedule your appointment without penalty. Less than 48 hours will result in forfeiture of your deposit and a new deposit will be required to reschedule.</li>
-          <li><strong className="text-ink">One reschedule</strong> is allowed within the minimum time frame before a new deposit will be required.</li>
-          <li><strong className="text-ink">Any and all cancellations without notice</strong> will result in a charge of the full cost of the service to the card on file. A new deposit will be required to reschedule.</li>
-          <li>Being more than <strong className="text-ink">15 minutes late</strong> to your appointment can result in forfeiture of your deposit and/or cancellation of your appointment.</li>
+          <li><strong className="text-ink">Deposits:</strong> a minimum of <strong className="text-ink">$100 deposit</strong> will be requested in order to book and is <strong className="text-ink">non-refundable</strong> under any circumstance. Your deposit will go towards the overall cost. This ensures you are serious about your appointment.</li>
+          <li><strong className="text-ink">Rescheduling:</strong> a minimum of <strong className="text-ink">48 hours</strong> is required to reschedule your appointment without penalty. Less than 48 hours results in <strong className="text-ink">forfeiture of your deposit</strong> and a new deposit will be required to reschedule. One reschedule is allowed within the minimum time frame before a new deposit will be required.</li>
+          <li><strong className="text-ink">Cancellations:</strong> any and all cancellations without notice will result in a charge of the <strong className="text-ink">full cost of the service</strong> to the card on file. A new deposit will be required to reschedule.</li>
+          <li><strong className="text-ink">Late arrivals:</strong> being more than <strong className="text-ink">15 minutes late</strong> to your appointment can result in forfeiture of your deposit and/or cancellation.</li>
           <li>We accept all major credit cards, however <strong className="text-ink">cash is preferred</strong>. The remaining balance is due at the time of your appointment.</li>
           <li>A minimum of <strong className="text-ink">2 sessions</strong> is highly recommended for desired results. Additional sessions may be needed.</li>
           <li><strong className="text-ink">Touch-up appointments are for existing clientele only.</strong></li>
@@ -757,19 +794,20 @@ const PoliciesPage = () => (
 
 const ContactPage = () => {
   const [formData, setFormData] = useState({
-    name: '', email: '', subject: '', message: ''
+    name: '', email: '', phone: '', service: '', city: '', preferredDate: '', message: '', consent: false
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const validate = () => {
     const e: Record<string, string> = {};
     if (!formData.name.trim()) e.name = 'Name is required';
     if (!formData.email.trim()) e.email = 'Email is required';
-    else if (!/^\S+@\S+\.\S+$/.test(formData.email)) e.email = 'Invalid email';
-    if (!formData.subject.trim()) e.subject = 'Subject is required';
-    if (!formData.message.trim()) e.message = 'Message is required';
+    else if (!/^\S+@\S+\.\S+$/.test(formData.email)) e.email = 'Invalid email address';
+    if (!formData.message.trim()) e.message = 'Please tell Ashley a bit about your goals';
+    if (!formData.consent) e.consent = 'Please confirm your consent to continue';
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -778,37 +816,72 @@ const ContactPage = () => {
     e.preventDefault();
     if (!validate()) return;
     setIsSubmitting(true);
+    setSubmitError(null);
     try {
-      await supabase.from('contacts').insert({
-        name: formData.name,
-        email: formData.email,
-        interested_services: formData.subject,
-        message: formData.message,
-        status: 'New'
+      const res = await fetch('/.netlify/functions/send-inquiry', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone || undefined,
+          service: formData.service || undefined,
+          city: formData.city || undefined,
+          preferredDate: formData.preferredDate || undefined,
+          message: formData.message,
+          consent: formData.consent,
+        }),
       });
-    } catch (e) { console.error('Contact failed', e); }
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data?.error) {
+        setSubmitError('Unable to send your message. Please try again or email ashleymbrows@gmail.com directly.');
+        setIsSubmitting(false);
+        return;
+      }
+    } catch {
+      setSubmitError('Something went wrong. Please email ashleymbrows@gmail.com directly.');
+      setIsSubmitting(false);
+      return;
+    }
     setIsSubmitting(false);
     setSubmitted(true);
   };
 
+  const field = (key: keyof typeof formData, label: string, type = 'text', placeholder = '', required = false) => (
+    <div className="space-y-2">
+      <label className="text-[10px] uppercase tracking-widest font-bold opacity-40">{label}{required && ' *'}</label>
+      <input
+        type={type}
+        value={formData[key] as string}
+        onChange={(e) => setFormData({ ...formData, [key]: e.target.value })}
+        placeholder={placeholder}
+        className={`w-full p-4 bg-paper/30 border ${
+          errors[key] ? 'border-red-400' : 'border-ink/5'
+        } focus:border-accent outline-none text-sm transition-colors`}
+      />
+      {errors[key] && <p className="text-red-500 text-[9px] uppercase font-bold tracking-widest">{errors[key]}</p>}
+    </div>
+  );
+
   if (submitted) {
     return (
       <div className="pt-24 min-h-screen bg-paper flex items-center justify-center px-6">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           className="text-center max-w-md"
         >
           <div className="w-20 h-20 bg-accent rounded-full flex items-center justify-center mx-auto mb-8">
-            <Mail className="w-10 h-10 text-paper" />
+            <Check className="w-10 h-10 text-paper" />
           </div>
-          <h2 className="text-4xl font-serif mb-4">Message Sent</h2>
-          <p className="text-ink/60 mb-12">Thank you for reaching out. A studio representative will contact you within 24-48 business hours to discuss your inquiry further.</p>
-          <button 
-            onClick={() => setSubmitted(false)}
+          <h2 className="text-4xl font-serif mb-4">Inquiry Sent</h2>
+          <p className="text-ink/60 mb-4 leading-relaxed">Thank you, {formData.name}. Your inquiry has been sent directly to Ashley.</p>
+          <p className="text-ink/50 text-sm mb-12 leading-relaxed">Ashley personally reviews every message and will be in touch within 1â€“2 business days. Check your inbox for a confirmation email.</p>
+          <button
+            onClick={() => { setSubmitted(false); setFormData({ name: '', email: '', phone: '', service: '', city: '', preferredDate: '', message: '', consent: false }); }}
             className="px-12 py-4 bg-ink text-paper text-[10px] uppercase tracking-[0.2em] font-bold hover:bg-accent transition-colors"
           >
-            Send Another Message
+            Send Another Inquiry
           </button>
         </motion.div>
       </div>
@@ -818,13 +891,14 @@ const ContactPage = () => {
   return (
     <div className="pt-24 min-h-screen bg-paper pb-20">
       <div className="max-w-7xl mx-auto px-6 py-20 flex flex-col md:flex-row gap-20">
+        {/* Left column â€” studio info */}
         <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8 }} className="flex-1">
           <p className="text-accent text-[10px] uppercase tracking-[0.6em] mb-4 font-bold">Get In Touch</p>
-          <h2 className="text-4xl md:text-7xl font-serif mb-12">Contact the Studio</h2>
+          <h1 className="text-4xl md:text-6xl font-serif mb-8">Contact the Studio</h1>
           <p className="text-ink/70 leading-relaxed mb-12 max-w-md">
-            Need additional help? Reach out! Fill out the form and we will be in touch.
+            Fill out the form and Ashley will respond personally within 1â€“2 business days. For immediate questions, email or DM on Instagram.
           </p>
-          <div className="space-y-12">
+          <div className="space-y-10">
             <div>
               <h4 className="text-[10px] uppercase tracking-[0.3em] font-bold opacity-30 mb-4">Located Within</h4>
               <div className="flex items-start gap-4">
@@ -839,82 +913,90 @@ const ContactPage = () => {
             </div>
             <div>
               <h4 className="text-[10px] uppercase tracking-[0.3em] font-bold opacity-30 mb-4">Direct Contact</h4>
-              <div className="space-y-4">
-                <div className="flex items-center gap-4">
-                  <Mail className="w-5 h-5 text-accent" />
-                  <a href="mailto:ashleymbrows@gmail.com" className="text-lg text-ink/80 hover:text-accent transition-colors">ashleymbrows@gmail.com</a>
-                </div>
+              <div className="flex items-center gap-4">
+                <Mail className="w-5 h-5 text-accent" />
+                <a href="mailto:ashleymbrows@gmail.com" className="text-lg text-ink/80 hover:text-accent transition-colors">ashleymbrows@gmail.com</a>
               </div>
             </div>
             <div>
-               <h4 className="text-[10px] uppercase tracking-[0.3em] font-bold opacity-30 mb-4">Follow Our Work</h4>
-               <div className="flex gap-6">
-                <a href="https://www.instagram.com/ashleymbrows?igsh=YXQyM290NW1uMG9n" target="_blank" rel="noopener noreferrer" aria-label="Instagram Profile" className="text-ink/40 hover:text-accent transition-colors focus-visible:outline-accent">
-                  <Instagram className="w-6 h-6" />
-                </a>
-                <a href="https://www.facebook.com/ashleymbrows" target="_blank" rel="noopener noreferrer" aria-label="Facebook Page" className="text-ink/40 hover:text-accent transition-colors focus-visible:outline-accent">
-                  <Facebook className="w-6 h-6" />
-                </a>
-                <a href="mailto:ashleymbrows@gmail.com" aria-label="Email studio" className="text-ink/40 hover:text-accent transition-colors focus-visible:outline-accent">
-                  <Mail className="w-6 h-6" />
-                </a>
-               </div>
+              <h4 className="text-[10px] uppercase tracking-[0.3em] font-bold opacity-30 mb-4">Follow Our Work</h4>
+              <div className="flex gap-6">
+                <a href="https://www.instagram.com/ashleymbrows?igsh=YXQyM290NW1uMG9n" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="text-ink/40 hover:text-accent transition-colors"><Instagram className="w-6 h-6" /></a>
+                <a href="https://www.facebook.com/ashleymbrows" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="text-ink/40 hover:text-accent transition-colors"><Facebook className="w-6 h-6" /></a>
+                <a href="mailto:ashleymbrows@gmail.com" aria-label="Email" className="text-ink/40 hover:text-accent transition-colors"><Mail className="w-6 h-6" /></a>
+              </div>
             </div>
           </div>
         </motion.div>
+
+        {/* Right column â€” inquiry form */}
         <motion.div initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8, delay: 0.15 }} className="flex-1 bg-white p-8 md:p-12 shadow-sm">
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <p className="text-accent text-[10px] uppercase tracking-[0.5em] font-bold mb-2">Consultation Inquiry</p>
+          <h2 className="text-2xl font-serif mb-8">Tell Ashley About Your Goals</h2>
+          <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+            {field('name', 'Full Name', 'text', 'Your full name', true)}
+            {field('email', 'Email Address', 'email', 'email@example.com', true)}
+            {field('phone', 'Phone Number', 'tel', '(555) 000-0000')}
+
             <div className="space-y-2">
-              <label className="text-[10px] uppercase tracking-widest font-bold opacity-40">Your Name *</label>
-              <input 
-                type="text"
-                value={formData.name}
-                onChange={(e) => setFormData({...formData, name: e.target.value})}
-                className={`w-full p-4 bg-paper/30 border ${errors.name ? 'border-red-400' : 'border-ink/5'} focus:border-accent outline-none text-sm transition-colors`}
-                placeholder="Enter your name"
-              />
-              {errors.name && <p className="text-red-500 text-[9px] uppercase font-bold tracking-widest">{errors.name}</p>}
+              <label className="text-[10px] uppercase tracking-widest font-bold opacity-40">Service of Interest</label>
+              <select
+                value={formData.service}
+                onChange={(e) => setFormData({ ...formData, service: e.target.value })}
+                className="w-full p-4 bg-paper/30 border border-ink/5 focus:border-accent outline-none text-sm transition-colors appearance-none"
+              >
+                <option value="">Select a serviceâ€¦</option>
+                <option>Signature Brows ($650)</option>
+                <option>Ashley M. Lip Blush ($650)</option>
+                <option>Defining Liner ($400+)</option>
+                <option>Tooth Gems ($60+)</option>
+                <option>Not sure yet</option>
+              </select>
             </div>
+
+            {field('city', 'Preferred City / Location', 'text', 'Brighton, Miami, or other')}
+            {field('preferredDate', 'Preferred Date or Timeframe', 'text', 'e.g. June, weekdays, flexible')}
+
             <div className="space-y-2">
-              <label className="text-[10px] uppercase tracking-widest font-bold opacity-40">Email Address *</label>
-              <input 
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({...formData, email: e.target.value})}
-                className={`w-full p-4 bg-paper/30 border ${errors.email ? 'border-red-400' : 'border-ink/5'} focus:border-accent outline-none text-sm transition-colors`}
-                placeholder="email@example.com"
-              />
-              {errors.email && <p className="text-red-500 text-[9px] uppercase font-bold tracking-widest">{errors.email}</p>}
-            </div>
-            <div className="space-y-2">
-              <label className="text-[10px] uppercase tracking-widest font-bold opacity-40">Subject *</label>
-              <input 
-                type="text"
-                value={formData.subject}
-                onChange={(e) => setFormData({...formData, subject: e.target.value})}
-                className={`w-full p-4 bg-paper/30 border ${errors.subject ? 'border-red-400' : 'border-ink/5'} focus:border-accent outline-none text-sm transition-colors`}
-                placeholder="Service inquiry, media, etc."
-              />
-              {errors.subject && <p className="text-red-500 text-[9px] uppercase font-bold tracking-widest">{errors.subject}</p>}
-            </div>
-            <div className="space-y-2">
-              <label className="text-[10px] uppercase tracking-widest font-bold opacity-40">Message *</label>
-              <textarea 
-                rows={6}
+              <label className="text-[10px] uppercase tracking-widest font-bold opacity-40">Message / Notes *</label>
+              <textarea
+                rows={5}
                 value={formData.message}
-                onChange={(e) => setFormData({...formData, message: e.target.value})}
-                className={`w-full p-4 bg-paper/30 border ${errors.message ? 'border-red-400' : 'border-ink/5'} focus:border-accent outline-none text-sm transition-colors resize-none`}
-                placeholder="How can we assist you today?"
+                onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                placeholder="Tell Ashley about your goals, skin concerns, or any questionsâ€¦"
+                className={`w-full p-4 bg-paper/30 border ${
+                  errors.message ? 'border-red-400' : 'border-ink/5'
+                } focus:border-accent outline-none text-sm transition-colors resize-none`}
               />
               {errors.message && <p className="text-red-500 text-[9px] uppercase font-bold tracking-widest">{errors.message}</p>}
             </div>
-            <button 
+
+            <div className="space-y-2">
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.consent}
+                  onChange={(e) => setFormData({ ...formData, consent: e.target.checked })}
+                  className="mt-1 accent-accent w-4 h-4 flex-shrink-0"
+                />
+                <span className="text-xs text-ink/60 leading-relaxed">
+                  I consent to Ashley M. Brows collecting and using the information above to respond to my inquiry. I understand this does not create a confirmed appointment.
+                </span>
+              </label>
+              {errors.consent && <p className="text-red-500 text-[9px] uppercase font-bold tracking-widest">{errors.consent}</p>}
+            </div>
+
+            <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full py-6 mt-8 bg-accent text-paper text-xs uppercase tracking-[0.2em] font-bold hover:bg-ink transition-colors shadow-xl disabled:opacity-60 flex items-center justify-center gap-3"
+              className="w-full py-5 mt-4 bg-accent text-paper text-xs uppercase tracking-[0.2em] font-bold hover:bg-ink transition-colors shadow-xl disabled:opacity-60 flex items-center justify-center gap-3"
             >
-              {isSubmitting ? 'Sending…' : 'Send Message'}
+              {isSubmitting ? 'Sendingâ€¦' : 'Send Inquiry to Ashley'}
             </button>
+
+            {submitError && (
+              <p className="text-center text-red-500 text-xs font-bold mt-2">{submitError}</p>
+            )}
           </form>
         </motion.div>
       </div>
@@ -924,8 +1006,30 @@ const ContactPage = () => {
 
 // --- Page Content ---
 
-const ServiceDetailPage = ({ service, onNavigate }: { service: any, onNavigate: (page: Page) => void }) => {
-  if (!service) return null;
+// Look up a service by its URL slug (id)
+const getServiceBySlug = (slug: string) => services.find(s => s.id === slug) ?? null;
+
+const ServiceDetailPage = ({ onNavigate }: { onNavigate: (page: Page) => void }) => {
+  const { slug } = useParams<{ slug: string }>();
+  const service = slug ? getServiceBySlug(slug) : null;
+
+  if (!service) {
+    return (
+      <div className="pt-24 min-h-screen bg-paper flex flex-col items-center justify-center px-6">
+        <div className="text-center max-w-md">
+          <p className="text-accent text-[10px] uppercase tracking-[0.5em] font-bold mb-4">Not Found</p>
+          <h1 className="text-4xl font-serif mb-6">Service Not Found</h1>
+          <p className="text-ink/60 mb-10 leading-relaxed">The service youÃ¢â‚¬â„¢re looking for doesnÃ¢â‚¬â„¢t exist or the link may be incorrect.</p>
+          <button
+            onClick={() => onNavigate('services')}
+            className="px-10 py-4 bg-accent text-paper text-[10px] uppercase tracking-widest font-bold hover:bg-ink transition-colors"
+          >
+            View All Services
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="pt-24 min-h-screen bg-paper pb-20">
@@ -1014,6 +1118,9 @@ const ServiceDetailPage = ({ service, onNavigate }: { service: any, onNavigate: 
             className="bg-white p-12 shadow-sm border border-ink/5"
            >
               <h3 className="text-3xl font-serif mb-12">Testimonials</h3>
+              {service.testimonials.length === 0 ? (
+                <p className="text-ink/40 italic text-sm">Client testimonials for this service coming soon.</p>
+              ) : (
               <div className="space-y-12">
                  {service.testimonials.map((t: any, i: number) => (
                    <motion.div 
@@ -1032,6 +1139,7 @@ const ServiceDetailPage = ({ service, onNavigate }: { service: any, onNavigate: 
                    </motion.div>
                  ))}
               </div>
+              )}
            </motion.div>
         </div>
       </div>
@@ -1101,17 +1209,17 @@ const HomePage = ({ onNavigate, onSelectService }: { onNavigate: (page: Page) =>
        </div>
     </section>
     <TrustStack />
-    <Services onSelectService={onSelectService} onNavigate={onNavigate} />
+    <Services onSelectService={onSelectService} onNavigate={onNavigate} excludeIds={['tooth-gems']} />
     <Testimonials />
     <FAQSection />
     <section className="py-40 bg-sage-light px-6 text-center overflow-hidden relative">
        <motion.div initial={{ opacity: 0, y: 50 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.9 }}>
          <h2 className="text-5xl md:text-8xl font-serif mb-12">Begin Your <br /> Transformation</h2>
-         <p className="max-w-xl mx-auto text-ink/70 mb-12">Booking is by request. Pick a service, send Ashley a few details about your goals, and she will follow up to confirm your appointment and walk you through pre-care.</p>
+         <p className="max-w-xl mx-auto text-ink/70 mb-12">Booking is by request. Pick a service, send Ashley a few details about your goals, and she will follow up with deposit details, confirmation and pre-care instructions.</p>
          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }} onClick={() => onNavigate('booking')} className="px-16 py-6 bg-accent text-paper text-xs uppercase tracking-widest font-bold shadow-2xl">
-            Secure A Consultation
-         </motion.button>
-         <p className="mt-8 opacity-40 text-[10px] uppercase font-bold tracking-widest">Current Waitlist: 6 Weeks</p>
+             Book Now
+          </motion.button>
+          <p className="mt-8 opacity-40 text-[10px] uppercase font-bold tracking-widest">Send Ashley a booking request</p>
        </motion.div>
     </section>
   </>
@@ -1119,435 +1227,271 @@ const HomePage = ({ onNavigate, onSelectService }: { onNavigate: (page: Page) =>
 
 
 const serviceMenu = [
-  { id: 'brows', title: 'Signature Brows', price: '$650', deposit: '$100 deposit', duration: '2.5 hrs', description: 'Soft powder-shaded brows. All skin types.' },
-  { id: 'lips',  title: 'Ashley M. Lip Blush', price: '$650', deposit: '$100 deposit', duration: '2 hrs', description: 'Watercolor tint for fuller, defined lips.' },
-  { id: 'liner', title: 'Defining Liner', price: '$400+', deposit: '$75 deposit', duration: '1.5 hrs', description: 'Lash enhancement to full shaded wing.' },
+  { id: 'brows', title: 'Signature Brows', price: '$650', duration: '2.5 hrs', description: 'Soft powder-shaded brows. All skin types.' },
+  { id: 'lips',  title: 'Ashley M. Lip Blush', price: '$650', duration: '2 hrs', description: 'Watercolor tint for fuller, defined lips.' },
+  { id: 'liner', title: 'Defining Liner', price: '$400+', duration: '1.5 hrs', description: 'Lash enhancement to full shaded wing.' },
+  { id: 'tooth-gems', title: 'Tooth Gems', price: '$60+', duration: '30 min', description: 'Crystal and gold tooth gems from $60 to full disco tooth.' },
 ];
 
-const BookingPage = ({ onNavigate }: { onNavigate: (page: Page) => void }) => {
-  const [step, setStep] = useState(1);
-  const [selectedService, setSelectedService] = useState<any>(null);
-  const [calMonth, setCalMonth] = useState(() => { const d = new Date(); d.setDate(1); return d; });
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [selectedTime, setSelectedTime] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState<Record<string, any>>({
-    fullName: '', birthDate: '', email: '', phone: '', referralSource: '',
-    policyAcknowledged: false, healthConditions: [] as string[],
-    previousPMU: '', skinType: '', notes: '',
-    currentAreaPhoto: null as File | null, referencePhoto: null as File | null,
+// --- Booking Page ---
+// On-site booking request form. POSTs to /.netlify/functions/send-inquiry
+// which emails Ashley via Resend and sends an auto-reply to the client.
+
+const BookingPage = () => {
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState('');
+  const [form, setForm] = useState({
+    name: '', email: '', phone: '',
+    service: '', preferredDate: '', preferredTime: '',
+    previousPmu: '', skinType: '',
+    message: '', consent: false,
   });
-  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const today = new Date(); today.setHours(0,0,0,0);
-  const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-  const daysInMonth = new Date(calMonth.getFullYear(), calMonth.getMonth()+1, 0).getDate();
-  const firstDay = new Date(calMonth.getFullYear(), calMonth.getMonth(), 1).getDay();
-  const isAvailable = (d: number) => { const dt = new Date(calMonth.getFullYear(), calMonth.getMonth(), d); return dt >= today && [2,3,4,5].includes(dt.getDay()); };
-  const isPast = (d: number) => new Date(calMonth.getFullYear(), calMonth.getMonth(), d) < today;
-  const prevMonth = () => { const n = new Date(calMonth.getFullYear(), calMonth.getMonth()-1, 1); if (n >= new Date(today.getFullYear(), today.getMonth(), 1)) setCalMonth(n); };
-  const nextMonth = () => setCalMonth(new Date(calMonth.getFullYear(), calMonth.getMonth()+1, 1));
-  const fmtDate = (d: Date) => d.toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric', year:'numeric' });
-  const fmtShort = (d: Date) => d.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
 
-  const validate = () => {
-    const e: Record<string,string> = {};
-    if (!formData.fullName.trim()) e.fullName = 'Name is required';
-    if (!formData.email.trim()) e.email = 'Email is required';
-    else if (!/^\S+@\S+\.\S+$/.test(formData.email)) e.email = 'Invalid email';
-    if (!formData.phone.trim()) e.phone = 'Phone is required';
-    if (!formData.policyAcknowledged) e.policy = 'Please acknowledge our policies';
-    if ((formData.healthConditions as string[]).length === 0) e.health = 'Please select your health considerations';
-    setErrors(e);
-    return Object.keys(e).length === 0;
-  };
+    if (!form.name || !form.email || !form.phone || !form.service ||
+        !form.preferredDate || !form.preferredTime) {
+      setError('Please fill in all required fields.');
+      return;
+    }
+    if (!form.consent) {
+      setError('Please confirm the deposit and policies acknowledgement.');
+      return;
+    }
 
-  const [bookingId, setBookingId] = useState<string | null>(null);
-  const [checkoutError, setCheckoutError] = useState<string | null>(null);
+    const composedMessage = [
+      `Preferred time: ${form.preferredTime}`,
+      form.previousPmu ? `Previous permanent makeup: ${form.previousPmu}` : '',
+      form.skinType ? `Skin type: ${form.skinType}` : '',
+      '',
+      form.message || '(No additional notes)',
+    ].filter(Boolean).join('\n');
 
-  // Step 4 → 5: validate + save booking row to Supabase
-  const handleSubmit = async () => {
-    if (!validate()) return;
-    setIsSubmitting(true);
-    setCheckoutError(null);
+    setSubmitting(true);
     try {
-      const depositMap: Record<string, number> = {
-        'Signature Brows': 10000, 'Ashley M. Lip Blush': 10000, 'Defining Liner': 7500,
-      };
-      const { data, error } = await supabase.from('bookings').insert({
-        client_name: formData.fullName, client_email: formData.email,
-        client_phone: formData.phone, service_name: selectedService?.title || '',
-        service_price: selectedService?.price || '',
-        deposit_amount_cents: depositMap[selectedService?.title] ?? 10000,
-        booking_date: selectedDate ? fmtDate(selectedDate) : '',
-        booking_time: selectedTime || '', referral_source: formData.referralSource,
-        health_conditions: (formData.healthConditions as string[]).join(', '),
-        previous_pmu: formData.previousPMU, skin_type: formData.skinType,
-        notes: formData.notes, status: 'Pending Deposit', deposit_status: 'Unpaid',
-      }).select('id').single();
-      if (error || !data) {
-        setCheckoutError('Failed to save your booking. Please try again.');
-        setIsSubmitting(false); return;
-      }
-      setBookingId(data.id);
-      setStep(5);
-    } catch { setCheckoutError('Something went wrong. Please try again.'); }
-    setIsSubmitting(false);
-  };
-
-  // Step 5: call Edge Function → redirect to Stripe Checkout
-  const handleCheckout = async () => {
-    if (!bookingId) return;
-    setIsSubmitting(true); setCheckoutError(null);
-    try {
-      const { data, error } = await supabase.functions.invoke('create-checkout-session', {
-        body: { booking_id: bookingId },
+      const res = await fetch('/.netlify/functions/send-inquiry', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: form.name,
+          email: form.email,
+          phone: form.phone,
+          service: form.service,
+          preferredDate: form.preferredDate,
+          message: composedMessage,
+          consent: form.consent,
+        }),
       });
-      if (error || !data?.url) {
-        setCheckoutError('Unable to connect to payment. Please try again or contact us directly.');
-        setIsSubmitting(false); return;
+      const data = await res.json().catch(() => ({}));
+      setSubmitting(false);
+      if (!res.ok || data?.error) {
+        setError('Unable to send your request. Please try again or email ashleymbrows@gmail.com directly.');
+        return;
       }
-      window.location.href = data.url;
-    } catch { setCheckoutError('Payment service unavailable. Please try again.'); setIsSubmitting(false); }
+      setSubmitted(true);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch {
+      setSubmitting(false);
+      setError('Something went wrong. Please email ashleymbrows@gmail.com directly.');
+    }
   };
 
-  const field = (key: string, label: string, type = 'text', ph = '') => (
-    <div className="space-y-2">
-      <label className="text-[10px] uppercase tracking-widest font-bold opacity-40">{label}</label>
-      <input type={type} value={formData[key]} onChange={e => setFormData({...formData,[key]:e.target.value})}
-        placeholder={ph} className={`w-full p-4 bg-paper border ${errors[key]?'border-red-400':'border-ink/10'} focus:border-accent outline-none text-sm transition-colors`} />
-      {errors[key] && <p className="text-red-500 text-[9px] uppercase font-bold tracking-widest">{errors[key]}</p>}
-    </div>
-  );
-
-  const Summary = () => (
-    <div className="bg-paper-dark p-6 space-y-4">
-      <p className="text-[10px] uppercase tracking-[0.4em] font-bold text-accent">Your Selection</p>
-      <div className="space-y-3 text-sm">
-        {selectedService && <><div className="flex justify-between"><span className="text-ink/50">Service</span><span className="font-medium">{selectedService.title}</span></div>
-        <div className="flex justify-between"><span className="text-ink/50">Price</span><span className="font-medium text-accent">{selectedService.price}</span></div></>}
-        {selectedDate && <div className="flex justify-between"><span className="text-ink/50">Date</span><span className="font-medium">{fmtShort(selectedDate)}</span></div>}
-        {selectedTime && <div className="flex justify-between"><span className="text-ink/50">Time</span><span className="font-medium">{selectedTime}</span></div>}
-        {selectedService && <div className="pt-3 border-t border-ink/10"><p className="text-[9px] uppercase tracking-widest opacity-30 mb-1">Deposit to confirm</p><p className="font-bold text-lg">{selectedService.deposit}</p></div>}
+  if (submitted) {
+    return (
+      <div className="pt-32 pb-24 min-h-screen bg-paper px-6">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+          className="max-w-2xl mx-auto text-center">
+          <div className="w-20 h-20 rounded-full bg-accent/10 border border-accent/30 flex items-center justify-center mx-auto mb-8">
+            <Check className="w-10 h-10 text-accent" />
+          </div>
+          <p className="text-accent text-[10px] uppercase tracking-[0.5em] font-bold mb-4">Request Received</p>
+          <h1 className="text-4xl md:text-5xl font-serif mb-6">Thank you, {form.name.split(' ')[0]}</h1>
+          <p className="text-ink/60 leading-relaxed mb-8">
+            Your request for <strong>{form.service}</strong> on <strong>{form.preferredDate}</strong> at <strong>{form.preferredTime}</strong> has been sent.
+            Ashley will review and follow up within 1–2 business days with deposit details and confirmation.
+          </p>
+          <p className="text-ink/40 text-sm">
+            A confirmation has been sent to <strong>{form.email}</strong>. If you don't see it, check your spam folder or email <a href="mailto:ashleymbrows@gmail.com" className="underline text-accent">ashleymbrows@gmail.com</a>.
+          </p>
+        </motion.div>
       </div>
-      <div className="pt-4 border-t border-ink/10 space-y-2">
-        {[['Shield','Secure booking'],['Check','24hr confirmation'],['Clock','Free cancellation 48h']].map(([,t])=>(
-          <div key={t} className="flex items-center gap-2 text-[9px] uppercase tracking-widest font-bold opacity-40"><Check className="w-3 h-3"/>{t}</div>
-        ))}
-      </div>
-    </div>
-  );
-
-  const STEPS = ['Service','Date','Time','Your Info','Deposit','Confirmed'];
+    );
+  }
 
   return (
-    <div className="pt-24 min-h-screen bg-paper pb-24">
-      <div className="max-w-6xl mx-auto px-6">
-        <div className="text-center py-12 mb-4">
-          <p className="text-accent text-[10px] uppercase tracking-[0.5em] font-bold mb-3">Reservation</p>
-          <h1 className="text-4xl md:text-5xl font-serif mb-3">Book Your Appointment</h1>
-          <p className="text-ink/50 text-sm max-w-md mx-auto">A luxury, personalized experience crafted around your aesthetic vision.</p>
-        </div>
+    <div className="pt-28 pb-24 min-h-screen bg-paper">
+      <div className="max-w-3xl mx-auto px-6">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
+          <p className="text-accent text-[10px] uppercase tracking-[0.5em] font-bold mb-4 text-center">Booking Request</p>
+          <h1 className="text-4xl md:text-5xl font-serif text-center mb-4">Book Your Appointment</h1>
+          <p className="text-center text-ink/60 max-w-xl mx-auto mb-12 leading-relaxed">
+            Bookings are by request. Submit your details below and Ashley will follow up within 1–2 business days with deposit details and appointment confirmation.
+          </p>
+        </motion.div>
 
-        {/* Progress bar */}
-        {step < 6 && (
-          <div className="flex items-center justify-center gap-0 mb-14">
-            {STEPS.slice(0,5).map((label,i) => {
-              const s = i+1; const done = step>s; const active = step===s;
-              return (
-                <div key={s} className="flex items-center">
-                  <div className="flex flex-col items-center gap-2">
-                    <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 ${done?'bg-accent text-paper':active?'bg-ink text-paper shadow-md scale-110':'bg-warm-gray text-ink/30'}`}>
-                      {done ? <Check className="w-4 h-4"/> : s}
-                    </div>
-                    <span className={`text-[9px] uppercase tracking-widest font-bold hidden md:block ${active?'text-ink':'text-ink/25'}`}>{label}</span>
+        <form onSubmit={handleSubmit} className="space-y-10">
+          <div>
+            <label className="block text-[10px] uppercase tracking-widest font-bold text-ink/50 mb-4">
+              Select a Service *
+            </label>
+            <div className="grid sm:grid-cols-2 gap-3">
+              {serviceMenu.map(svc => (
+                <button
+                  type="button"
+                  key={svc.id}
+                  onClick={() => setForm({ ...form, service: svc.title })}
+                  className={`text-left p-5 border transition-all rounded ${
+                    form.service === svc.title
+                      ? 'border-accent bg-accent/5'
+                      : 'border-ink/10 hover:border-ink/30 bg-white'
+                  }`}
+                >
+                  <div className="flex items-baseline justify-between mb-1">
+                    <span className="font-serif text-lg">{svc.title}</span>
+                    <span className="text-accent text-sm font-bold">{svc.price}</span>
                   </div>
-                  {s<4 && <div className={`w-16 md:w-20 h-px mx-2 mb-5 transition-colors duration-500 ${step>s?'bg-accent':'bg-warm-gray'}`}/>}
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-        <div className="grid lg:grid-cols-3 gap-12">
-          <div className="lg:col-span-2">
-            <AnimatePresence mode="wait">
-
-              {/* STEP 1 — SERVICE */}
-              {step===1 && (
-                <motion.div key="s1" initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-20}}>
-                  <h2 className="text-3xl font-serif mb-8">Select a Service</h2>
-                  <div className="space-y-4">
-                    {serviceMenu.map(svc => (
-                      <button key={svc.id} onClick={()=>{setSelectedService(svc);setStep(2);}}
-                        className={`w-full text-left p-6 border transition-all duration-200 group focus-visible:outline-accent ${selectedService?.id===svc.id?'border-accent bg-accent/5':'border-ink/10 hover:border-accent/50 bg-paper'}`}>
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <h3 className="text-xl font-serif mb-1">{svc.title}</h3>
-                            <p className="text-sm text-ink/50 mb-3">{svc.description}</p>
-                            <div className="flex gap-4 text-[9px] uppercase tracking-widest font-bold">
-                              <span className="flex items-center gap-1 opacity-40"><Clock className="w-3 h-3"/>{svc.duration}</span>
-                              <span className="text-accent/70">{svc.deposit}</span>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-2xl font-serif text-accent">{svc.price}</p>
-                            <ArrowRight className="w-4 h-4 ml-auto mt-2 opacity-30 group-hover:opacity-100 group-hover:translate-x-1 transition-all"/>
-                          </div>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </motion.div>
-              )}
-
-              {/* STEP 2 — DATE */}
-              {step===2 && (
-                <motion.div key="s2" initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-20}}>
-                  <button onClick={()=>setStep(1)} className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold opacity-40 hover:opacity-100 mb-8 transition-opacity">
-                    <ChevronLeft className="w-4 h-4"/> Back
-                  </button>
-                  <h2 className="text-3xl font-serif mb-8">Select a Date</h2>
-                  <div className="bg-paper border border-ink/10 p-8">
-                    <div className="flex justify-between items-center mb-6">
-                      <h3 className="text-xl font-serif">{MONTH_NAMES[calMonth.getMonth()]} {calMonth.getFullYear()}</h3>
-                      <div className="flex gap-2">
-                        <button onClick={prevMonth} aria-label="Previous month" className="w-9 h-9 flex items-center justify-center border border-ink/10 hover:border-accent transition-colors focus-visible:outline-accent">
-                          <ChevronLeft className="w-4 h-4"/>
-                        </button>
-                        <button onClick={nextMonth} aria-label="Next month" className="w-9 h-9 flex items-center justify-center border border-ink/10 hover:border-accent transition-colors focus-visible:outline-accent">
-                          <ChevronRight className="w-4 h-4"/>
-                        </button>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-7 gap-1 text-center mb-2">
-                      {['Su','Mo','Tu','We','Th','Fr','Sa'].map(d=><div key={d} className="text-[9px] font-bold opacity-30 py-2">{d}</div>)}
-                    </div>
-                    <div className="grid grid-cols-7 gap-1">
-                      {[...Array(firstDay)].map((_,i)=><div key={`e${i}`}/>)}
-                      {[...Array(daysInMonth)].map((_,i)=>{
-                        const d=i+1;
-                        const avail=isAvailable(d); const past=isPast(d);
-                        const selDay = selectedDate && selectedDate.getFullYear()===calMonth.getFullYear() && selectedDate.getMonth()===calMonth.getMonth() && selectedDate.getDate()===d;
-                        return (
-                          <button key={d} onClick={()=>{if(avail){setSelectedDate(new Date(calMonth.getFullYear(),calMonth.getMonth(),d));setSelectedTime(null);}}}
-                            disabled={!avail} aria-label={`${avail?'Available':'Unavailable'} ${MONTH_NAMES[calMonth.getMonth()]} ${d}`}
-                            className={`h-11 text-sm font-medium rounded transition-all focus-visible:outline-accent ${selDay?'bg-accent text-paper shadow-md':avail?'hover:bg-accent/10 text-accent border border-accent/20 cursor-pointer':past?'opacity-15 cursor-default':'opacity-20 cursor-default'}`}>
-                            {d}
-                          </button>
-                        );
-                      })}
-                    </div>
-                    <div className="flex flex-wrap gap-6 mt-6 pt-6 border-t border-ink/5 text-[9px] uppercase tracking-widest font-bold">
-                      <span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-accent inline-block"/>Available (Tue–Fri)</span>
-                      <span className="flex items-center gap-2 opacity-30"><span className="w-2 h-2 rounded-full bg-ink/20 inline-block"/>Unavailable</span>
-                    </div>
-                  </div>
-                  {selectedDate && (
-                    <motion.div initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} className="mt-6">
-                      <button onClick={()=>setStep(3)}
-                        className="w-full py-5 bg-accent text-paper text-xs uppercase tracking-[0.3em] font-bold hover:bg-ink transition-colors flex items-center justify-center gap-3">
-                        Continue with {fmtShort(selectedDate)} <ArrowRight className="w-4 h-4"/>
-                      </button>
-                    </motion.div>
-                  )}
-                </motion.div>
-              )}
-
-              {/* STEP 3 — TIME */}
-              {step===3 && (
-                <motion.div key="s3" initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-20}}>
-                  <button onClick={()=>setStep(2)} className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold opacity-40 hover:opacity-100 mb-8 transition-opacity">
-                    <ChevronLeft className="w-4 h-4"/> Back
-                  </button>
-                  <h2 className="text-3xl font-serif mb-2">Select a Time</h2>
-                  {selectedDate && <p className="text-ink/50 text-sm mb-8">{fmtDate(selectedDate)}</p>}
-                  <div className="grid grid-cols-2 gap-4">
-                    {['9:00 AM','11:00 AM','1:00 PM','3:00 PM'].map(t=>(
-                      <button key={t} onClick={()=>{setSelectedTime(t);setStep(4);}}
-                        className={`py-6 border text-sm font-bold transition-all focus-visible:outline-accent flex flex-col items-center gap-2 ${selectedTime===t?'border-accent bg-accent text-paper':'border-ink/10 hover:border-accent hover:bg-accent/5 bg-paper'}`}>
-                        <Clock className="w-4 h-4 opacity-60"/>
-                        {t}
-                        <span className="text-[9px] uppercase tracking-widest font-bold opacity-50">{selectedService?.duration}</span>
-                      </button>
-                    ))}
-                  </div>
-                </motion.div>
-              )}
-
-              {/* STEP 4 — CLIENT INFO */}
-              {step===4 && (
-                <motion.div key="s4" initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-20}}>
-                  <button onClick={()=>setStep(3)} className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold opacity-40 hover:opacity-100 mb-8 transition-opacity">
-                    <ChevronLeft className="w-4 h-4"/> Back
-                  </button>
-                  <h2 className="text-3xl font-serif mb-8">Client Consultation</h2>
-                  <div className="space-y-8">
-                    {/* Identity */}
-                    <div>
-                      <p className="text-[10px] uppercase tracking-widest font-bold opacity-40 mb-5 border-b border-ink/5 pb-3">Identity &amp; Contact</p>
-                      <div className="grid md:grid-cols-2 gap-5">
-                        {field('fullName','Full Name *','text','First & Last Name')}
-                        {field('birthDate','Birth Date *','date')}
-                        {field('phone','Phone *','tel','(555) 000-0000')}
-                        {field('email','Email *','email','email@example.com')}
-                      </div>
-                      <div className="mt-5">{field('referralSource','How did you find Ashley M. Brows?','text','Instagram, Referral, Google…')}</div>
-                    </div>
-                    {/* Health */}
-                    <div>
-                      <p className="text-[10px] uppercase tracking-widest font-bold opacity-40 mb-5 border-b border-ink/5 pb-3">Health &amp; Skin Considerations *</p>
-                      {errors.health && <p className="text-red-500 text-[9px] uppercase font-bold tracking-widest mb-3">{errors.health}</p>}
-                      <div className="grid md:grid-cols-2 gap-3">
-                        {['Pregnant or Breastfeeding','Diabetes','Blood thinners','Keloid scarring','Active acne / eczema / psoriasis','Recent Botox / filler / laser','Accutane within last year','Current antibiotics','Recent sun exposure','Cold sore history','Lash serum use','None of the above'].map(c=>(
-                          <label key={c} className="flex items-center gap-3 cursor-pointer group">
-                            <input type="checkbox" checked={(formData.healthConditions as string[]).includes(c)}
-                              onChange={e=>{const cur=formData.healthConditions as string[];setFormData({...formData,healthConditions:e.target.checked?[...cur,c]:cur.filter((x:string)=>x!==c)});}}
-                              className="w-4 h-4 accent-[var(--color-accent)] shrink-0"/>
-                            <span className="text-sm text-ink/70 group-hover:text-ink transition-colors">{c}</span>
-                          </label>
-                        ))}
-                      </div>
-                    </div>
-                    {/* Vision */}
-                    <div>
-                      <p className="text-[10px] uppercase tracking-widest font-bold opacity-40 mb-5 border-b border-ink/5 pb-3">Aesthetic Vision</p>
-                      <div className="grid md:grid-cols-2 gap-5 mb-5">
-                        <div className="space-y-2">
-                          <label className="text-[10px] uppercase tracking-widest font-bold opacity-40">Previous PMU?</label>
-                          <select value={formData.previousPMU} onChange={e=>setFormData({...formData,previousPMU:e.target.value})}
-                            className="w-full p-4 bg-paper border border-ink/10 focus:border-accent outline-none text-sm appearance-none">
-                            <option value="">Please select</option>
-                            <option>No</option><option>Yes — by Ashley</option><option>Yes — by another artist</option>
-                          </select>
-                        </div>
-                        <div className="space-y-2">
-                          <label className="text-[10px] uppercase tracking-widest font-bold opacity-40">Skin Type?</label>
-                          <select value={formData.skinType} onChange={e=>setFormData({...formData,skinType:e.target.value})}
-                            className="w-full p-4 bg-paper border border-ink/10 focus:border-accent outline-none text-sm appearance-none">
-                            <option value="">Please select</option>
-                            <option>Dry</option><option>Normal</option><option>Combination</option><option>Oily</option><option>Sensitive</option><option>Mature</option>
-                          </select>
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-[10px] uppercase tracking-widest font-bold opacity-40">Goals &amp; Concerns</label>
-                        <textarea rows={4} value={formData.notes} onChange={e=>setFormData({...formData,notes:e.target.value})}
-                          placeholder="Share your aesthetic goals, past experiences, or any concerns…"
-                          className="w-full p-4 bg-paper border border-ink/10 focus:border-accent outline-none text-sm resize-none"/>
-                      </div>
-                    </div>
-                                  <div>
-                      <p className="text-[10px] uppercase tracking-widest font-bold opacity-40 mb-5 border-b border-ink/5 pb-3">Clinical Photos (Optional)</p>
-                      <div className="grid md:grid-cols-2 gap-5">
-                        {[['currentAreaPhoto','Current Area Photo','Makeup-free, natural light'],['referencePhoto','Reference / Inspiration','Optional — inspired look']].map(([key,label,sub])=>(
-                          <PhotoUpload key={key as string} fieldKey={key as string} label={label as string} sub={sub as string} formData={formData} setFormData={setFormData} />
-                        ))}
-                      </div>
-                    </div>
-                    {/* Policy */}
-                    <div className={`p-5 border ${errors.policy?'border-red-300 bg-red-50/30':'border-ink/10 bg-paper-dark'}`}>
-                      <label className="flex items-start gap-4 cursor-pointer">
-                        <input type="checkbox" checked={formData.policyAcknowledged}
-                          onChange={e=>setFormData({...formData,policyAcknowledged:e.target.checked})}
-                          className="mt-1 w-4 h-4 accent-[var(--color-accent)] shrink-0"/>
-                        <span className="text-sm leading-relaxed">
-                          <span className="font-bold text-ink">Policy &amp; Deposit Acknowledgment *</span><br/>
-                          <span className="text-ink/50 text-xs">I understand a non-refundable deposit is required to confirm my appointment. I have reviewed all pre/post-care instructions and cancellation policies.</span>
-                        </span>
-                      </label>
-                      {errors.policy && <p className="text-red-500 text-[9px] uppercase font-bold tracking-widest mt-2">{errors.policy}</p>}
-                    </div>
-                    {checkoutError && (
-                      <div className="p-4 bg-red-50 border border-red-200 text-red-700 text-xs font-medium rounded">{checkoutError}</div>
-                    )}
-                    <button onClick={handleSubmit} disabled={isSubmitting}
-                      className="w-full py-6 bg-accent text-paper text-xs uppercase tracking-[0.3em] font-bold hover:bg-ink transition-colors shadow-xl flex items-center justify-center gap-3 disabled:opacity-60">
-                      {isSubmitting ? 'Saving…' : <>Continue to Payment <ArrowRight className="w-4 h-4"/></>}
-                    </button>
-                    <p className="text-center text-[9px] uppercase tracking-widest opacity-30">Ashley will personally review and confirm within 1–2 business days.</p>
-                  </div>
-                </motion.div>
-              )}
-
-              {/* STEP 5 — DEPOSIT (Stripe Checkout) */}
-              {step===5 && (
-                <motion.div key="s5" initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-20}}>
-                  <h2 className="text-3xl font-serif mb-2">Secure Your Appointment</h2>
-                  <p className="text-ink/50 text-sm mb-8">Complete your deposit to lock in your appointment date.</p>
-                  <div className="bg-paper-dark border border-ink/10 p-6 mb-6">
-                    <p className="text-[10px] uppercase tracking-widest font-bold opacity-40 mb-5">Appointment Summary</p>
-                    <div className="space-y-3 text-sm">
-                      <div className="flex justify-between"><span className="text-ink/50">Service</span><span className="font-medium">{selectedService?.title}</span></div>
-                      <div className="flex justify-between"><span className="text-ink/50">Date</span><span className="font-medium">{selectedDate ? fmtShort(selectedDate) : '—'}</span></div>
-                      <div className="flex justify-between"><span className="text-ink/50">Time</span><span className="font-medium">{selectedTime}</span></div>
-                      <div className="flex justify-between pt-3 border-t border-ink/10">
-                        <span className="text-ink/50">Deposit Due Now</span>
-                        <span className="font-bold text-accent text-lg">{selectedService?.deposit}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex flex-wrap gap-4 mb-6 text-[9px] uppercase tracking-widest font-bold text-ink/40">
-                    {['256-bit SSL','Stripe secured','Instant confirmation'].map(t => (
-                      <span key={t} className="flex items-center gap-1.5"><Shield className="w-3 h-3"/> {t}</span>
-                    ))}
-                  </div>
-                  {checkoutError && (
-                    <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 text-xs font-medium rounded">{checkoutError}</div>
-                  )}
-                  <button onClick={handleCheckout} disabled={isSubmitting}
-                    className="w-full py-6 bg-accent text-paper text-xs uppercase tracking-[0.3em] font-bold hover:bg-ink transition-colors shadow-xl flex items-center justify-center gap-3 disabled:opacity-60 disabled:cursor-not-allowed">
-                    {isSubmitting
-                      ? <><span className="animate-pulse">Connecting to Stripe</span><span>…</span></>
-                      : <><Shield className="w-4 h-4" /> Pay Deposit &amp; Confirm Booking</>}
-                  </button>
-                  <button onClick={()=>setStep(4)} className="w-full mt-4 text-[10px] uppercase tracking-widest opacity-40 hover:opacity-100 transition-opacity py-2">← Go Back</button>
-                  <p className="text-center text-[9px] uppercase tracking-widest opacity-25 mt-4">You will be redirected to Stripe's secure checkout page.</p>
-                </motion.div>
-              )}
-
-              {/* STEP 6 — CONFIRMED (fallback if Stripe redirect fails) */}
-              {step===6 && (
-                <motion.div key="s6" initial={{opacity:0,scale:0.95}} animate={{opacity:1,scale:1}} className="text-center py-16">
-                  <motion.div initial={{scale:0}} animate={{scale:1}} transition={{delay:0.2,type:'spring',stiffness:200}}
-                    className="w-24 h-24 bg-accent rounded-full flex items-center justify-center mx-auto mb-8">
-                    <Check className="w-12 h-12 text-paper"/>
-                  </motion.div>
-                  <h2 className="text-4xl font-serif mb-4">Request Received</h2>
-                  <p className="text-ink/60 mb-4 max-w-md mx-auto leading-relaxed">
-                    Thank you, <strong>{formData.fullName}</strong>. Your consultation request for <strong>{selectedService?.title}</strong> on <strong>{selectedDate ? fmtShort(selectedDate) : ''}</strong> at <strong>{selectedTime}</strong> has been received.
-                  </p>
-                  <p className="text-ink/50 mb-12 text-sm max-w-md mx-auto">Ashley will personally reach out to <strong>{formData.email}</strong> within 1–2 business days to confirm your appointment and share pre-care instructions.</p>
-                  <div className="bg-paper-dark p-6 max-w-sm mx-auto mb-10 text-left space-y-3 text-sm">
-                    <p className="text-[10px] uppercase tracking-widest font-bold opacity-40 mb-4">Booking Summary</p>
-                    <div className="flex justify-between"><span className="text-ink/50">Service</span><span>{selectedService?.title}</span></div>
-                    <div className="flex justify-between"><span className="text-ink/50">Date</span><span>{selectedDate ? fmtShort(selectedDate) : '—'}</span></div>
-                    <div className="flex justify-between"><span className="text-ink/50">Time</span><span>{selectedTime}</span></div>
-                    <div className="flex justify-between"><span className="text-ink/50">Price</span><span className="text-accent font-bold">{selectedService?.price}</span></div>
-                    <div className="flex justify-between border-t border-ink/10 pt-3"><span className="text-ink/50">Deposit Due</span><span className="font-bold">{selectedService?.deposit}</span></div>
-                  </div>
-                  <button onClick={()=>onNavigate('home')}
-                    className="px-12 py-4 bg-ink text-paper text-[10px] uppercase tracking-[0.3em] font-bold hover:bg-accent transition-colors">
-                    Return to Studio
-                  </button>
-                </motion.div>
-              )}
-
-            </AnimatePresence>
+                  <p className="text-xs text-ink/50">{svc.duration} · {svc.description}</p>
+                </button>
+              ))}
+            </div>
           </div>
 
-          {/* Sidebar */}
-          {step < 6 && (
-            <div className="hidden lg:block">
-              <Summary />
+          <div className="grid sm:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-[10px] uppercase tracking-widest font-bold text-ink/50 mb-2">Preferred Date *</label>
+              <input
+                type="date"
+                value={form.preferredDate}
+                min={new Date().toISOString().split('T')[0]}
+                onChange={e => setForm({ ...form, preferredDate: e.target.value })}
+                required
+                className="w-full p-3.5 bg-white border border-ink/10 text-sm text-ink outline-none focus:border-accent transition-colors rounded"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] uppercase tracking-widest font-bold text-ink/50 mb-2">Preferred Time *</label>
+              <input
+                type="time"
+                value={form.preferredTime}
+                onChange={e => setForm({ ...form, preferredTime: e.target.value })}
+                required
+                className="w-full p-3.5 bg-white border border-ink/10 text-sm text-ink outline-none focus:border-accent transition-colors rounded"
+              />
+            </div>
+          </div>
+
+          <div className="grid sm:grid-cols-2 gap-6">
+            <div className="sm:col-span-2">
+              <label className="block text-[10px] uppercase tracking-widest font-bold text-ink/50 mb-2">Full Name *</label>
+              <input
+                type="text"
+                value={form.name}
+                onChange={e => setForm({ ...form, name: e.target.value })}
+                required
+                placeholder="First and last name"
+                className="w-full p-3.5 bg-white border border-ink/10 text-sm text-ink placeholder:text-ink/25 outline-none focus:border-accent transition-colors rounded"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] uppercase tracking-widest font-bold text-ink/50 mb-2">Email *</label>
+              <input
+                type="email"
+                value={form.email}
+                onChange={e => setForm({ ...form, email: e.target.value })}
+                required
+                placeholder="you@example.com"
+                className="w-full p-3.5 bg-white border border-ink/10 text-sm text-ink placeholder:text-ink/25 outline-none focus:border-accent transition-colors rounded"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] uppercase tracking-widest font-bold text-ink/50 mb-2">Phone *</label>
+              <input
+                type="tel"
+                value={form.phone}
+                onChange={e => setForm({ ...form, phone: e.target.value })}
+                required
+                placeholder="(555) 555-5555"
+                className="w-full p-3.5 bg-white border border-ink/10 text-sm text-ink placeholder:text-ink/25 outline-none focus:border-accent transition-colors rounded"
+              />
+            </div>
+          </div>
+
+          <div className="grid sm:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-[10px] uppercase tracking-widest font-bold text-ink/50 mb-2">Previous Permanent Makeup?</label>
+              <select
+                value={form.previousPmu}
+                onChange={e => setForm({ ...form, previousPmu: e.target.value })}
+                className="w-full p-3.5 bg-white border border-ink/10 text-sm text-ink outline-none focus:border-accent transition-colors rounded"
+              >
+                <option value="">Select…</option>
+                <option value="No">No</option>
+                <option value="Yes, faded">Yes — faded</option>
+                <option value="Yes, still visible">Yes — still visible</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-[10px] uppercase tracking-widest font-bold text-ink/50 mb-2">Skin Type</label>
+              <select
+                value={form.skinType}
+                onChange={e => setForm({ ...form, skinType: e.target.value })}
+                className="w-full p-3.5 bg-white border border-ink/10 text-sm text-ink outline-none focus:border-accent transition-colors rounded"
+              >
+                <option value="">Select…</option>
+                <option value="Dry">Dry</option>
+                <option value="Normal">Normal</option>
+                <option value="Combination">Combination</option>
+                <option value="Oily">Oily</option>
+                <option value="Mature">Mature</option>
+              </select>
+            </div>
+            <div className="sm:col-span-2">
+              <label className="block text-[10px] uppercase tracking-widest font-bold text-ink/50 mb-2">Notes for Ashley</label>
+              <textarea
+                value={form.message}
+                onChange={e => setForm({ ...form, message: e.target.value })}
+                rows={4}
+                placeholder="Anything she should know — goals, allergies, concerns…"
+                className="w-full p-3.5 bg-white border border-ink/10 text-sm text-ink placeholder:text-ink/25 outline-none focus:border-accent transition-colors rounded resize-none"
+              />
+            </div>
+          </div>
+
+          <label className="flex items-start gap-3 cursor-pointer p-4 border border-ink/10 rounded bg-white">
+            <input
+              type="checkbox"
+              checked={form.consent}
+              onChange={e => setForm({ ...form, consent: e.target.checked })}
+              className="mt-1 w-4 h-4 accent-accent"
+            />
+            <span className="text-sm text-ink/70 leading-relaxed">
+              I understand a non-refundable <strong>$100 deposit</strong> is required to secure my appointment, and I agree to the <a href="/policies" className="text-accent border-b border-accent/40 hover:border-accent">booking and cancellation policies</a>.
+            </span>
+          </label>
+
+          {error && (
+            <div className="p-4 bg-red-50 border border-red-100 rounded text-sm text-red-700">
+              {error}
             </div>
           )}
-        </div>
+
+          <button
+            type="submit"
+            disabled={submitting}
+            className="w-full py-5 bg-accent text-paper text-[10px] uppercase tracking-[0.3em] font-bold hover:bg-ink transition-colors disabled:opacity-50 flex items-center justify-center gap-3 shadow-xl"
+          >
+            {submitting
+              ? <><div className="w-4 h-4 border-2 border-paper/30 border-t-paper rounded-full animate-spin" /> Sending Request…</>
+              : <>Send Booking Request <ArrowRight className="w-4 h-4" /></>}
+          </button>
+        </form>
       </div>
     </div>
   );
 };
-
 
 const galleryCategories = ['All', 'Signature Brows', 'Lip Blush', 'Defining Liner'];
 
@@ -1556,37 +1500,43 @@ const galleryItems = [
     image: '/gallery/brows-nano-portrait.jpg',
     title: 'Signature Stroke Restoration',
     category: 'Signature Brows',
-    description: '2.5 Hour Procedure • Signature Stroke'
+    description: '2.5 Hour Procedure \u00b7 Signature Stroke'
   },
   {
     image: '/gallery/lip-blush-before-healed.jpg',
     title: 'Nude Velvet Blush',
     category: 'Lip Blush',
-    description: '2 Hour Procedure • Sheer Application'
+    description: '2 Hour Procedure \u00b7 Sheer Application'
   },
   {
     image: '/gallery/brows-before-after.jpg',
     title: 'Architectural Lamination',
     category: 'Signature Brows',
-    description: '1.5 Hour Procedure • Hybrid Technique'
+    description: '1.5 Hour Procedure \u00b7 Hybrid Technique'
   },
   {
     image: '/gallery/lash-enhancement-before-after.jpg',
     title: 'Ethereal Wing',
     category: 'Defining Liner',
-    description: '2 Hour Procedure • Soft Shading'
+    description: '2 Hour Procedure \u00b7 Soft Shading'
   },
   {
     image: '/gallery/lip-blush-glossy.jpg',
     title: 'Full Satin Lips',
     category: 'Lip Blush',
-    description: '2.5 Hour Procedure • Saturated Tint'
+    description: '2.5 Hour Procedure \u00b7 Saturated Tint'
   },
   {
     image: '/gallery/powder-brows-portrait.jpg',
     title: 'Feathered Arch',
     category: 'Signature Brows',
-    description: '3 Hour Procedure • Nano Strokes'
+    description: '3 Hour Procedure \u00b7 Nano Strokes'
+  },
+  {
+    image: '/gallery/ashley-portfolio-may22.jpg',
+    title: 'Signature Definition',
+    category: 'Signature Brows',
+    description: '2.5 Hour Procedure \u00b7 Custom Shaping'
   }
 ];
 
@@ -1847,19 +1797,24 @@ const PhotoUpload = ({ fieldKey, label, sub, formData, setFormData }: {
 export default function App() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [selectedService, setSelectedService] = useState<any>(null);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => setShowScrollTop(window.scrollY > 400);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const handleSelectService = (service: any) => {
-    setSelectedService(service);
-    navigate('/service-detail');
+    navigate(`/services/${service.id}`);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleNavigate = (page: Page) => {
     const routes: Record<Page, string> = {
       home: '/', services: '/services', gallery: '/gallery', booking: '/booking',
-      artist: '/artist', contact: '/contact', 'service-detail': '/service-detail',
-      privacy: '/privacy', policies: '/policies', admin: '/admin'
+      artist: '/artist', contact: '/contact', 'service-detail': '/services',
+      privacy: '/privacy', policies: '/policies',
     };
     navigate(routes[page] || '/');
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1869,19 +1824,18 @@ export default function App() {
     const path = location.pathname;
     if (path === '/') return 'home';
     if (path === '/services') return 'services';
+    if (path.startsWith('/services/')) return 'services';
     if (path === '/gallery') return 'gallery';
     if (path === '/booking') return 'booking';
     if (path === '/contact') return 'contact';
     if (path === '/artist') return 'artist';
     if (path === '/privacy') return 'privacy';
     if (path === '/policies') return 'policies';
-    if (path === '/admin') return 'admin';
-    if (path === '/service-detail') return 'service-detail';
     return 'home';
   };
   const currentPage = getCurrentPage();
 
-  // Dynamic SEO — updates title + meta per route
+  // Dynamic SEO Ã¢â‚¬â€ updates title + meta per route
   useSEO();
 
   // LocalBusiness structured data (injected once)
@@ -1910,7 +1864,7 @@ export default function App() {
       },
       geo: { '@type': 'GeoCoordinates', latitude: 42.5262, longitude: -83.7799 },
       openingHours: ['Tu-Fr 09:00-17:00'],
-      priceRange: '$400–$650',
+      priceRange: '$400Ã¢â‚¬â€œ$650',
       sameAs: [
         'https://www.instagram.com/ashleymbrows',
         'https://www.facebook.com/ashleymbrows',
@@ -1928,14 +1882,17 @@ export default function App() {
     document.head.appendChild(script);
   }, []);
 
-  if (location.pathname === '/admin') {
-    return <AdminDashboard />;
+  if (location.pathname === '/login' ||
+      location.pathname === '/admin' ||
+      location.pathname.startsWith('/admin/') ||
+      location.pathname === '/staff-join') {
+    return <Navigate to="/" replace />;
   }
 
   return (
     <div className="selection:bg-accent/20 min-h-screen bg-paper text-ink font-sans">
       <Navbar onNavigate={handleNavigate} currentPage={currentPage} />
-      
+
       <main>
         <AnimatePresence mode="wait">
           <motion.div
@@ -1947,17 +1904,16 @@ export default function App() {
           >
             <Routes location={location}>
               <Route path="/" element={<HomePage onNavigate={handleNavigate} onSelectService={handleSelectService} />} />
-              <Route path="/booking" element={<BookingPage onNavigate={handleNavigate} />} />
-              <Route path="/booking/success" element={<BookingSuccess />} />
-              <Route path="/booking/cancelled" element={<BookingCancelled />} />
+              <Route path="/booking" element={<BookingPage />} />
               <Route path="/gallery" element={<GalleryPage />} />
               <Route path="/services" element={<Services onSelectService={handleSelectService} onNavigate={handleNavigate} />} />
               <Route path="/artist" element={<ArtistPage />} />
               <Route path="/contact" element={<ContactPage />} />
               <Route path="/privacy" element={<PrivacyPage />} />
               <Route path="/policies" element={<PoliciesPage />} />
-              <Route path="/service-detail" element={<ServiceDetailPage service={selectedService} onNavigate={handleNavigate} />} />
-              <Route path="*" element={<HomePage onNavigate={handleNavigate} onSelectService={handleSelectService} />} />
+              <Route path="/services/:slug" element={<ServiceDetailPage onNavigate={handleNavigate} />} />
+              {/* Catch-all â€” redirect any unmatched URL to home */}
+              <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </motion.div>
         </AnimatePresence>
@@ -1965,8 +1921,8 @@ export default function App() {
 
       <Footer onNavigate={handleNavigate} />
       
-      {/* Sticky mobile Book Now — hidden on result pages */}
-      {!['/booking/success', '/booking/cancelled', '/booking'].includes(location.pathname) && (
+      {/* Sticky mobile Book Now Ã¢â‚¬â€ hidden on result pages */}
+      {location.pathname !== '/booking' && (
         <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-paper border-t border-ink/10 p-4 shadow-2xl">
           <button
             onClick={() => handleNavigate('booking')}
@@ -1977,14 +1933,18 @@ export default function App() {
         </div>
       )}
 
-      {/* Scroll to Top helper */}
-      <div 
-        className="fixed bottom-10 right-10 z-40 w-12 h-12 bg-white shadow-2xl flex items-center justify-center cursor-pointer border border-ink/5 hover:bg-paper transition-colors"
-        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-      >
-        <ChevronRight className="w-5 h-5 -rotate-90 opacity-40" />
-      </div>
+      {/* Scroll to Top Ã¢â‚¬â€ only visible after scrolling down */}
+      {showScrollTop && (
+        <button
+          aria-label="Scroll to top"
+          className="fixed bottom-10 right-10 z-40 w-12 h-12 bg-white shadow-2xl flex items-center justify-center cursor-pointer border border-ink/5 hover:bg-paper hover:border-accent transition-colors focus-visible:outline-accent"
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+        >
+          <ChevronRight className="w-5 h-5 -rotate-90 opacity-40" />
+        </button>
+      )}
     </div>
   );
 }
+
 
