@@ -1,9 +1,12 @@
 import { motion, AnimatePresence } from 'motion/react';
 import { Menu, ArrowRight, Instagram, Facebook, Mail, Calendar, User, Star, X, ChevronRight, ChevronLeft, MapPin, Phone, Plus, Check, Clock, Shield, Sparkles } from 'lucide-react';
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Routes, Route, useNavigate, useLocation, useParams, Navigate } from 'react-router-dom';
 import { supabase } from './lib/supabase';
 import { useSEO } from './hooks/useSEO';
+import LoginPage from './pages/LoginPage';
+import AdminRoute from './components/AdminRoute';
+import AdminDashboard from './AdminDashboard';
 
 // --- Types ---
 type Page = 'home' | 'services' | 'gallery' | 'booking' | 'artist' | 'contact' | 'service-detail' | 'privacy' | 'policies';
@@ -818,6 +821,19 @@ const ContactPage = () => {
     setIsSubmitting(true);
     setSubmitError(null);
     try {
+      // 1. Save to database so it appears in admin dashboard
+      await supabase.from('contacts').insert({
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone || null,
+        interested_services: formData.service || null,
+        city: formData.city || null,
+        preferred_date: formData.preferredDate || null,
+        message: formData.message,
+        status: 'new',
+      });
+
+      // 2. Send notification email to Ashley + auto-reply to client
       const res = await fetch('/.netlify/functions/send-inquiry', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1248,7 +1264,7 @@ const BookingPage = () => {
     message: '', consent: false,
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: { preventDefault: () => void }) => {
     e.preventDefault();
     setError('');
 
@@ -1272,6 +1288,18 @@ const BookingPage = () => {
 
     setSubmitting(true);
     try {
+      // 1. Save to database so it appears in admin dashboard
+      await supabase.from('contacts').insert({
+        name: form.name,
+        email: form.email,
+        phone: form.phone || null,
+        interested_services: form.service || null,
+        preferred_date: form.preferredDate || null,
+        message: composedMessage,
+        status: 'new',
+      });
+
+      // 2. Send email notification
       const res = await fetch('/.netlify/functions/send-inquiry', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1882,11 +1910,14 @@ export default function App() {
     document.head.appendChild(script);
   }, []);
 
-  if (location.pathname === '/login' ||
-      location.pathname === '/admin' ||
-      location.pathname.startsWith('/admin/') ||
-      location.pathname === '/staff-join') {
-    return <Navigate to="/" replace />;
+  // Admin routes render outside the public layout (no Navbar/Footer)
+  if (location.pathname === '/login') return <LoginPage />;
+  if (location.pathname === '/admin' || location.pathname.startsWith('/admin/')) {
+    return (
+      <AdminRoute>
+        <AdminDashboard />
+      </AdminRoute>
+    );
   }
 
   return (
@@ -1912,7 +1943,8 @@ export default function App() {
               <Route path="/privacy" element={<PrivacyPage />} />
               <Route path="/policies" element={<PoliciesPage />} />
               <Route path="/services/:slug" element={<ServiceDetailPage onNavigate={handleNavigate} />} />
-              {/* Catch-all â€” redirect any unmatched URL to home */}
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/admin/*" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </motion.div>
