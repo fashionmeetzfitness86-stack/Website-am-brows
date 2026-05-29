@@ -1326,45 +1326,45 @@ const galleryCategories = ['All', 'Signature Brows', 'Lip Blush', 'Defining Line
 const galleryItems = [
   {
     image: '/gallery/brows-nano-portrait.jpg',
-    title: 'Signature Stroke Restoration',
+    title: 'Nano Fusion',
     category: 'Signature Brows',
-    description: '2.5 Hour Procedure \u00b7 Signature Stroke'
+    description: '3 Hour Procedure \u00b7 Hair Strokes + Powder Shading'
   },
   {
     image: '/gallery/lip-blush-before-healed.jpg',
-    title: 'Nude Velvet Blush',
+    title: 'Lip Blush',
     category: 'Lip Blush',
-    description: '2 Hour Procedure \u00b7 Sheer Application'
+    description: '2 Hour Procedure \u00b7 Soft Watercolor Tint'
   },
   {
     image: '/gallery/brows-before-after.jpg',
-    title: 'Architectural Lamination',
+    title: 'Powder Brows',
     category: 'Signature Brows',
-    description: '1.5 Hour Procedure \u00b7 Hybrid Technique'
+    description: '2.5 Hour Procedure \u00b7 Soft Shaded Finish'
   },
   {
     image: '/gallery/lash-enhancement-before-after.jpg',
-    title: 'Ethereal Wing',
+    title: 'Shaded Eyeliner',
     category: 'Defining Liner',
-    description: '2 Hour Procedure \u00b7 Soft Shading'
+    description: '2 Hour Procedure \u00b7 Softly Shaded Wing'
   },
   {
     image: '/gallery/lip-blush-glossy.jpg',
-    title: 'Full Satin Lips',
+    title: 'Ombre Lip Blush',
     category: 'Lip Blush',
-    description: '2.5 Hour Procedure \u00b7 Saturated Tint'
+    description: '2.5 Hour Procedure \u00b7 Gradient Tint'
   },
   {
     image: '/gallery/powder-brows-portrait.jpg',
-    title: 'Feathered Arch',
+    title: 'Powder Brows',
     category: 'Signature Brows',
-    description: '3 Hour Procedure \u00b7 Nano Strokes'
+    description: '2.5 Hour Procedure \u00b7 All Skin Types'
   },
   {
     image: '/gallery/ashley-portfolio-may22.jpg',
-    title: 'Signature Definition',
+    title: 'Nano Fusion',
     category: 'Signature Brows',
-    description: '2.5 Hour Procedure \u00b7 Custom Shaping'
+    description: '3 Hour Procedure \u00b7 Realistic Hair Strokes'
   }
 ];
 
