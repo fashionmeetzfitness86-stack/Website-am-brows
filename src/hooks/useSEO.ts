@@ -1,4 +1,4 @@
-// useSEO.ts — Dynamic document titles + meta descriptions per route
+// useSEO.ts, Dynamic document titles + meta descriptions per route
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 
@@ -9,24 +9,24 @@ const BASE_URL = 'https://ashleymbrows.netlify.app';
 
 const META: Record<string, SEOMeta> = {
   '/': {
-    title: `${SITE_NAME} | Luxury Cosmetic Tattoo Artist — Brighton, Michigan`,
+    title: `${SITE_NAME} | Luxury Cosmetic Tattoo Artist, Brighton, Michigan`,
     description: 'Premium permanent makeup in Brighton, MI. Signature Brows, Lip Blush & Defining Liner by master artist Ashley Miller. Book your consultation today.',
   },
   '/services': {
     title: `Services & Pricing | ${SITE_NAME}`,
-    description: 'Explore our luxury cosmetic tattoo services: Signature Powder Brows ($650), Ashley M. Lip Blush ($650), and Defining Liner ($400+). All skin types welcomed.',
+    description: 'Explore our luxury cosmetic tattoo services: Signature Powder Brows ($650), Lip Blush ($650), and Defining Liner ($400+). All skin types welcomed.',
   },
   '/gallery': {
     title: `Portfolio Gallery | ${SITE_NAME}`,
-    description: 'Browse before & after results from Ashley M. Brows — Signature Brows, Lip Blush, and Eyeliner. Real clients, real results in Brighton, Michigan.',
+    description: 'Browse before & after results from Ashley M. Brows, Signature Brows, Lip Blush, and Eyeliner. Real clients, real results in Brighton, Michigan.',
   },
   '/booking': {
     title: `Request a Consultation | ${SITE_NAME}`,
-    description: 'Submit a consultation request with Ashley Miller. Select your service, preferred date and time. No deposit required — Ashley will personally confirm your appointment.',
+    description: 'Submit a consultation request with Ashley Miller. Select your service, preferred date and time. No deposit required, Ashley will personally confirm your appointment.',
   },
   '/artist': {
     title: `Meet Ashley Miller | ${SITE_NAME}`,
-    description: 'Master cosmetic tattoo artist Ashley Miller — 8 years of experience, globally certified, and based in Brighton, Michigan. The hands behind the art.',
+    description: 'Master cosmetic tattoo artist Ashley Miller, 8 years of experience, globally certified, and based in Brighton, Michigan. The hands behind the art.',
   },
   '/contact': {
     title: `Contact the Studio | ${SITE_NAME}`,

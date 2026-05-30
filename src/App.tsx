@@ -12,23 +12,36 @@ import AdminDashboard from './AdminDashboard';
 type Page = 'home' | 'services' | 'gallery' | 'booking' | 'artist' | 'contact' | 'service-detail' | 'privacy' | 'policies';
 
 
-// --- Booking URL ---
-// Update this constant when Ashley's Jotform URL changes.
 // --- Booking ---
-// On-site booking request form lives at /booking. It POSTs to the Netlify
-// function /send-inquiry which sends Ashley a notification email via Resend
-// and an auto-reply to the client.
+// Booking requests go through Ashley's Jotform. Update this constant if she
+// changes it. All "Book Now" CTAs open it in a new tab; /booking redirects.
+const JOTFORM_BOOKING_URL = 'https://form.jotform.com/210908294397061';
+const openBooking = () => window.open(JOTFORM_BOOKING_URL, '_blank', 'noopener,noreferrer');
 
 
 const services = [
   {
     id: 'brows',
-    title: 'Signature Brows',
-    price: '$650',
-    shortDescription: 'Soft, shaded brows for a polished makeup-style finish.',
-    description: 'Our most popular brow service. Done with a single-needle tattoo machine that layers small pixels of pigment into the skin until the desired saturation is achieved. Can be bold and defined to your preference, or softly shaded with no harsh edges for a natural makeup look. Best suited for all skin types &mdash; especially oily and mature skin. Does not include touch-up.',
+    title: 'Brows',
+    price: '$650+',
+    shortDescription: 'Powder brows and Nano/Nano Fusion brows. Soft, natural, customized.',
+    description: 'Ashley offers two brow techniques. Each is fully customized to your face shape, undertone and lifestyle. Pick the variant that suits your skin and the look you want, and book directly below.',
     image: '/ashley-home-feature.jpg',
-    tags: ['Powder Finish', 'All Skin Types', 'Most Popular'],
+    tags: ['Powder Finish', 'Nano Strokes', 'All Skin Types'],
+    variants: [
+      {
+        title: 'Powder Brows',
+        price: '$650',
+        image: '/ashley-home-feature.jpg',
+        description: 'Most popular. Done with a single-needle tattoo machine that layers small pixels of pigment into the skin until the desired amount of saturation is achieved. Can be bold and defined to your preference, or softly shaded with no harsh edges for a natural makeup look. Best suited for all skin types, especially oily and mature types. (Does not include touch-up.)'
+      },
+      {
+        title: 'Nano / Nano Fusion Brows',
+        price: '$700',
+        image: '/gallery/nano-brows-1.jpg',
+        description: 'Not to be confused with microblading. Done using a machine, making it gentler on the skin and more sustainable long-term. NANO: a blend of ultra-fine, hair-like strokes for a soft natural enhancement that mimics real brow hair. FUSION: a seamless blend of Nano hair strokes and powder shading. Nano Fusion brows offer the best of both worlds — natural texture with added depth and fullness, perfect for those who want realistic detail in the front and a softly defined, fuller brow overall.'
+      }
+    ],
     process: [
       { step: 'Consultation', description: 'We map your face and select pigments that harmonize with your skin undertones.' },
       { step: 'Procedure', description: 'A 2 to 2.5 hour session including drawing, numbing, treatment and aftercare instructions.' },
@@ -41,10 +54,10 @@ const services = [
   },
   {
     id: 'lips',
-    title: 'Ashley M. Lip Blush',
+    title: 'Lip Blush',
     price: '$650',
-    shortDescription: 'A wash of color restored to your lips &mdash; fuller, defined, youthful.',
-    description: 'Lip Blush (or "watercolor lips") is another form of cosmetic tattooing. Immediate results look bright, bold and lipstick-like but heal down to a tint/stain. A wash of restored color can make lips appear fuller, more defined and more youthful. Great for covering fordyce spots, scars, pale lips, defining borders, correcting asymmetries and neutralizing dark pigmentation &mdash; all while staying within your natural vermillion border. Lasts 2 to 4 years.',
+    shortDescription: 'A wash of color restored to your lips, fuller, defined, youthful.',
+    description: 'Lip Blush (or "watercolor lips") is another form of cosmetic tattooing. Immediate results look bright, bold and lipstick-like but heal down to a tint/stain. A wash of restored color can make lips appear fuller, more defined and more youthful. Great for covering fordyce spots, scars, pale lips, defining borders, correcting asymmetries and neutralizing dark pigmentation, all while staying within your natural vermillion border. Lasts 2 to 4 years.',
     image: '/lip-blush.webp',
     tags: ['Watercolor Lips', 'Defined Border', 'Lasts 2-4 Years'],
     process: [
@@ -62,7 +75,7 @@ const services = [
     title: 'Defining Liner',
     price: '$400+',
     shortDescription: 'From subtle lash enhancement to a softly shaded winged liner.',
-    description: 'Lash Enhancement ($400) is a thin tattooed line just between your lashes, making them appear darker and fuller at the base &mdash; very subtle, perfect for anyone not committed to daily eyeliner. Shaded Lash Enhancement ($450) adds thickness for a simple eyeliner look. Shaded Eyeliner ($550) is a softly shaded winged liner using three blended tones for a seamless finish, customized to your eye shape. Bottom/lower-lid eyeliner is not offered at this time.',
+    description: 'Lash Enhancement ($400) is a thin tattooed line just between your lashes, making them appear darker and fuller at the base, very subtle, perfect for anyone not committed to daily eyeliner. Shaded Lash Enhancement ($450) adds thickness for a simple eyeliner look. Shaded Eyeliner ($550) is a softly shaded winged liner using three blended tones for a seamless finish, customized to your eye shape. Bottom/lower-lid eyeliner is not offered at this time.',
     image: '/gallery/lash-enhancement-before-after.jpg',
     tags: ['Lash Enhancement', 'Soft Wing', '3 Blended Tones'],
     process: [
@@ -76,8 +89,8 @@ const services = [
     id: 'tooth-gems',
     title: 'Tooth Gems',
     price: '$60+',
-    shortDescription: 'Crystal and gold tooth gems — from a single crystal to a full disco tooth.',
-    description: 'Tooth gems are non-permanent decorative jewels applied to the surface of the tooth. Single crystals start at $60, with options for multi-crystal sets ($100 / $125), gold applications ($120 and up), and a full "disco tooth" ($250). Gems are sourced from Tegan’s Tooth Gems, Tooth Kandy and Isisngold — email ashleymbrows@gmail.com with a screenshot of your pick to book.',
+    shortDescription: 'Crystal and gold tooth gems, from a single crystal to a full disco tooth.',
+    description: 'Tooth gems are non-permanent decorative jewels applied to the surface of the tooth. Single crystals start at $60, with options for multi-crystal sets ($100 / $125), gold applications ($120 and up), and a full "disco tooth" ($250). Gems are sourced from Tegan’s Tooth Gems, Tooth Kandy and Isisngold, email ashleymbrows@gmail.com with a screenshot of your pick to book.',
     image: '/gallery/tooth-gems.jpg',
     tags: ['Crystals', 'Gold Gems', 'Non-Permanent'],
     process: [
@@ -85,7 +98,7 @@ const services = [
         step: 'Pick Your Gem',
         description: (
           <>
-            Browse the vendor catalogues —{' '}
+            Browse the vendor catalogues,{' '}
             <a href="https://www.teganstoothgems.com/" target="_blank" rel="noopener noreferrer"
                className="text-ink/80 border-b border-accent/40 hover:border-accent hover:text-ink transition-colors">
               Tegan’s
@@ -100,11 +113,11 @@ const services = [
                className="text-ink/80 border-b border-accent/40 hover:border-accent hover:text-ink transition-colors">
               Isisngold
             </a>
-            {' '}— then email your selection.
+            {' '}, then email your selection.
           </>
         )
       },
-      { step: 'Application', description: 'A quick, non-invasive application with dental-grade adhesive — no drilling, no damage.' },
+      { step: 'Application', description: 'A quick, non-invasive application with dental-grade adhesive, no drilling, no damage.' },
       { step: 'Wear & Enjoy', description: 'Gems typically last several months to a year with normal wear; they can be added to or removed any time.' }
     ],
     testimonials: []
@@ -130,7 +143,7 @@ const testimonials = [
   {
     author: 'Tatjana',
     role: 'Brows & Lip Blush Client',
-    text: 'Ashley is the best around. I have had my brows and lips done by her now and I am obsessed with both! Her attention to detail and VERY meticulous eye and application makes for literal perfection. She made it so comfortable with all her knowledge of everything &mdash; answered every little question I had and put my nerves at ease.',
+    text: 'Ashley is the best around. I have had my brows and lips done by her now and I am obsessed with both! Her attention to detail and VERY meticulous eye and application makes for literal perfection. She made it so comfortable with all her knowledge of everything, answered every little question I had and put my nerves at ease.',
     rating: 5
   },
   {
@@ -152,7 +165,7 @@ const faqs = [
   },
   {
     question: "What is the healing process like?",
-    answer: "Initial redness and inflammation subside quickly. Your tattoo may appear bold or darker than anticipated &mdash; this is completely normal. Most healing occurs in 7 to 10 days, with total healing around 4 weeks. Lips heal faster, in roughly 5 to 7 days, but take a few weeks for the color to bloom back through."
+    answer: "Initial redness and inflammation subside quickly. Your tattoo may appear bold or darker than anticipated, this is completely normal. Most healing occurs in 7 to 10 days, with total healing around 4 weeks. Lips heal faster, in roughly 5 to 7 days, but take a few weeks for the color to bloom back through."
   },
   {
     question: "Do I need a touch-up?",
@@ -371,7 +384,7 @@ const Hero = ({ onNavigate }: { onNavigate: (page: Page) => void }) => (
         View Portfolio
       </button>
       <button 
-        onClick={() => onNavigate('booking')}
+        onClick={openBooking}
         className="px-10 py-4 border border-ink/10 text-[10px] uppercase tracking-widest font-bold hover:bg-paper-dark transition-colors"
       >
         Book Consultation
@@ -440,7 +453,7 @@ const About = () => (
              Ashley Brows is a private permanent makeup studio in Brighton, Michigan, run by Ashley Miller. The work is meticulous, the consultations honest, and the goal is always the same: results that look like you, only better.
            </p>
            <p>
-             Cosmetic tattoos are always a two-step process. Your follow-up perfection session at 6 to 12 weeks reinforces any imperfections from the healing process &mdash; only after that touch-up is your treatment complete.
+             Cosmetic tattoos are always a two-step process. Your follow-up perfection session at 6 to 12 weeks reinforces any imperfections from the healing process, only after that touch-up is your treatment complete.
            </p>
          </motion.div>
          <div className="mt-12 flex gap-12">
@@ -500,7 +513,7 @@ const Services = ({ onSelectService, onNavigate, excludeIds = [] }: { onSelectSe
               ))}
             </div>
             <button
-              onClick={(e) => { e.stopPropagation(); onNavigate('booking'); }}
+              onClick={(e) => { e.stopPropagation(); openBooking(); }}
               className="w-full py-4 border border-ink/15 text-[10px] uppercase tracking-[0.3em] font-bold hover:bg-accent hover:text-paper hover:border-accent transition-all duration-300"
             >
               Book Now
@@ -632,7 +645,7 @@ const PrivacyPage = () => (
           </ul>
           <p className="mt-4">
             We also automatically collect limited technical information when you visit the
-            site &mdash; for example, your IP address, device and browser type, and the pages
+            site, for example, your IP address, device and browser type, and the pages
             you view. This data helps us keep the site secure and understand how visitors
             interact with it.
           </p>
@@ -654,7 +667,7 @@ const PrivacyPage = () => (
           <h2 className="text-2xl font-serif text-ink mb-4">How We Share Your Information</h2>
           <p className="mb-4">
             We do not sell or rent your personal information. We share information only with
-            trusted service providers who help us operate the studio and this site &mdash; for
+            trusted service providers who help us operate the studio and this site, for
             example, our website host, our email and form-processing tools, and our booking
             and appointment software. These providers may only use your information to provide
             their services to us.
@@ -728,7 +741,7 @@ const PrivacyPage = () => (
           <h2 className="text-2xl font-serif text-ink mb-4">Contact Us</h2>
           <p>
             Questions about this Privacy Policy or about how your information is handled?
-            Email us at <a href="mailto:ashleymbrows@gmail.com" className="text-accent hover:underline">ashleymbrows@gmail.com</a> &mdash; Ashley Brows, Brighton, Michigan.
+            Email us at <a href="mailto:ashleymbrows@gmail.com" className="text-accent hover:underline">ashleymbrows@gmail.com</a>, Ashley Brows, Brighton, Michigan.
           </p>
         </section>
       </div>
@@ -745,7 +758,7 @@ const PoliciesPage = () => (
 
       <div className="space-y-6 text-ink/70 leading-relaxed text-sm md:text-base">
         <ul className="space-y-4 list-disc pl-6">
-          <li>Under Body Art Licensure, <strong className="text-ink">no person</strong> under the age of 18 is allowed servicing &mdash; even with parental consent.</li>
+          <li>Under Body Art Licensure, <strong className="text-ink">no person</strong> under the age of 18 is allowed servicing, even with parental consent.</li>
           <li><strong className="text-ink">Valid ID</strong> is required at the time of your service.</li>
           <li>Guidelines are provided to achieve optimal results, but there are <strong className="text-ink">no guarantees</strong> due to different skin types reacting differently to procedures. Please check the FAQ section to make sure you are an eligible candidate. If you are unsure, please contact us.</li>
           <li><strong className="text-ink">Deposits:</strong> a minimum of <strong className="text-ink">$100 deposit</strong> will be requested in order to book and is <strong className="text-ink">non-refundable</strong> under any circumstance. Your deposit will go towards the overall cost. This ensures you are serious about your appointment.</li>
@@ -756,7 +769,7 @@ const PoliciesPage = () => (
           <li>A minimum of <strong className="text-ink">2 sessions</strong> is highly recommended for desired results. Additional sessions may be needed.</li>
           <li><strong className="text-ink">Touch-up appointments are for existing clientele only.</strong></li>
           <li>Annual touch-ups must be completed before <strong className="text-ink">3 years</strong> from the initial session, otherwise full session pricing applies.</li>
-          <li>If you have previous work by another artist you <strong className="text-ink">must</strong> email clear photos of your brows (right, left, and both) in good lighting in order to be approved for booking &mdash; <a href="mailto:ashleymbrows@gmail.com" className="text-accent hover:underline">ashleymbrows@gmail.com</a>.</li>
+          <li>If you have previous work by another artist you <strong className="text-ink">must</strong> email clear photos of your brows (right, left, and both) in good lighting in order to be approved for booking, <a href="mailto:ashleymbrows@gmail.com" className="text-accent hover:underline">ashleymbrows@gmail.com</a>.</li>
           <li>Pricing is subject to change at any time without notice at the artist&rsquo;s discretion.</li>
           <li><strong className="text-ink">All transactions are final and no refunds will be issued.</strong></li>
         </ul>
@@ -907,7 +920,7 @@ const ContactPage = () => {
   return (
     <div className="pt-24 min-h-screen bg-paper pb-20">
       <div className="max-w-7xl mx-auto px-6 py-20 flex flex-col md:flex-row gap-20">
-        {/* Left column — studio info */}
+        {/* Left column, studio info */}
         <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8 }} className="flex-1">
           <p className="text-accent text-[10px] uppercase tracking-[0.6em] mb-4 font-bold">Get In Touch</p>
           <h1 className="text-4xl md:text-6xl font-serif mb-8">Contact the Studio</h1>
@@ -945,7 +958,7 @@ const ContactPage = () => {
           </div>
         </motion.div>
 
-        {/* Right column — inquiry form */}
+        {/* Right column, inquiry form */}
         <motion.div initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8, delay: 0.15 }} className="flex-1 bg-white p-8 md:p-12 shadow-sm">
           <p className="text-accent text-[10px] uppercase tracking-[0.5em] font-bold mb-2">Consultation Inquiry</p>
           <h2 className="text-2xl font-serif mb-8">Tell Ashley About Your Goals</h2>
@@ -963,7 +976,7 @@ const ContactPage = () => {
               >
                 <option value="">Select a service…</option>
                 <option>Signature Brows ($650)</option>
-                <option>Ashley M. Lip Blush ($650)</option>
+                <option>Lip Blush ($650)</option>
                 <option>Defining Liner ($400+)</option>
                 <option>Tooth Gems ($60+)</option>
                 <option>Not sure yet</option>
@@ -1089,14 +1102,52 @@ const ServiceDetailPage = ({ onNavigate }: { onNavigate: (page: Page) => void })
                   <span key={tag} className="px-6 py-2 bg-white border border-ink/5 text-[10px] uppercase tracking-widest font-bold">{tag}</span>
                 ))}
              </div>
-             <button 
-                onClick={() => onNavigate('booking')}
+             <button
+                onClick={openBooking}
                 className="w-full py-6 bg-accent text-paper text-xs uppercase tracking-[0.2em] font-bold hover:bg-ink transition-all shadow-2xl flex items-center justify-center gap-4"
              >
                 Book This Service <ArrowRight className="w-4 h-4" />
              </button>
           </motion.div>
         </div>
+
+        {Array.isArray((service as any).variants) && (service as any).variants.length > 0 && (
+          <div className="mb-32">
+            <div className="text-center mb-16">
+              <p className="text-accent text-[10px] uppercase tracking-[0.5em] font-bold mb-4">Choose Your Style</p>
+              <h3 className="text-4xl md:text-5xl font-serif">Available Variants</h3>
+            </div>
+            <div className="grid md:grid-cols-2 gap-12">
+              {(service as any).variants.map((v: any, vi: number) => (
+                <motion.div
+                  key={vi}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: vi * 0.1, duration: 0.6 }}
+                  className="bg-white border border-ink/5 shadow-sm overflow-hidden flex flex-col"
+                >
+                  <div className="aspect-[4/3] bg-warm-gray overflow-hidden">
+                    <img src={v.image} alt={v.title} className="w-full h-full object-cover" />
+                  </div>
+                  <div className="p-8 flex flex-col flex-1">
+                    <div className="flex items-baseline justify-between mb-4">
+                      <h4 className="text-2xl font-serif">{v.title}</h4>
+                      <span className="text-accent text-xl font-serif">{v.price}</span>
+                    </div>
+                    <p className="text-sm text-ink/60 leading-relaxed mb-8 flex-1">{v.description}</p>
+                    <button
+                      onClick={openBooking}
+                      className="w-full py-4 bg-ink text-paper text-[10px] uppercase tracking-[0.3em] font-bold hover:bg-accent transition-colors flex items-center justify-center gap-3"
+                    >
+                      Book {v.title} <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="grid md:grid-cols-2 gap-20 items-start">
            <motion.div 
@@ -1206,7 +1257,7 @@ const HomePage = ({ onNavigate, onSelectService }: { onNavigate: (page: Page) =>
           <motion.div initial={{ opacity: 0, x: -40 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.9 }} className="flex-1">
              <h2 className="text-4xl md:text-7xl font-serif italic mb-8">A Two-Step <br /> Process</h2>
              <p className="text-ink/60 max-w-md leading-relaxed mb-8">
-                Permanent makeup heals in waves &mdash; redness softens, color blooms, the tattoo settles. Your initial session shapes the look; the perfection session at 6 to 12 weeks refines it. Only together do they become the final result.
+                Permanent makeup heals in waves, redness softens, color blooms, the tattoo settles. Your initial session shapes the look; the perfection session at 6 to 12 weeks refines it. Only together do they become the final result.
              </p>
              <button onClick={() => onNavigate('artist')} className="group flex items-center gap-4 text-[10px] uppercase tracking-[0.4em] font-bold">
                 Meet Ashley <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -1219,7 +1270,7 @@ const HomePage = ({ onNavigate, onSelectService }: { onNavigate: (page: Page) =>
                transition={{ duration: 1.5 }}
                className="aspect-[4/5] bg-ink"
              >
-                <img src="https://images.unsplash.com/photo-1512496015851-a90fb38ba796?auto=format&fit=crop&q=80&w=1200" alt="Detail" className="w-full h-full object-cover opacity-80" />
+                <img src="/gallery/ashley-portfolio-may22.jpg" alt="Ashley Brows healed result" className="w-full h-full object-cover" />
              </motion.div>
           </div>
        </div>
@@ -1232,7 +1283,7 @@ const HomePage = ({ onNavigate, onSelectService }: { onNavigate: (page: Page) =>
        <motion.div initial={{ opacity: 0, y: 50 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.9 }}>
          <h2 className="text-5xl md:text-8xl font-serif mb-12">Begin Your <br /> Transformation</h2>
          <p className="max-w-xl mx-auto text-ink/70 mb-12">Booking is by request. Pick a service, send Ashley a few details about your goals, and she will follow up with deposit details, confirmation and pre-care instructions.</p>
-         <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }} onClick={() => onNavigate('booking')} className="px-16 py-6 bg-accent text-paper text-xs uppercase tracking-widest font-bold shadow-2xl">
+         <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }} onClick={openBooking} className="px-16 py-6 bg-accent text-paper text-xs uppercase tracking-widest font-bold shadow-2xl">
              Book Now
           </motion.button>
           <p className="mt-8 opacity-40 text-[10px] uppercase font-bold tracking-widest">Send Ashley a booking request</p>
@@ -1244,278 +1295,27 @@ const HomePage = ({ onNavigate, onSelectService }: { onNavigate: (page: Page) =>
 
 const serviceMenu = [
   { id: 'brows', title: 'Signature Brows', price: '$650', duration: '2.5 hrs', description: 'Soft powder-shaded brows. All skin types.' },
-  { id: 'lips',  title: 'Ashley M. Lip Blush', price: '$650', duration: '2 hrs', description: 'Watercolor tint for fuller, defined lips.' },
+  { id: 'lips',  title: 'Lip Blush', price: '$650', duration: '2 hrs', description: 'Watercolor tint for fuller, defined lips.' },
   { id: 'liner', title: 'Defining Liner', price: '$400+', duration: '1.5 hrs', description: 'Lash enhancement to full shaded wing.' },
   { id: 'tooth-gems', title: 'Tooth Gems', price: '$60+', duration: '30 min', description: 'Crystal and gold tooth gems from $60 to full disco tooth.' },
 ];
 
 // --- Booking Page ---
-// On-site booking request form. POSTs to /.netlify/functions/send-inquiry
-// which emails Ashley via Resend and sends an auto-reply to the client.
+// /booking redirects to Ashley's Jotform booking form.
 
 const BookingPage = () => {
-  const [submitting, setSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
-  const [error, setError] = useState('');
-  const [form, setForm] = useState({
-    name: '', email: '', phone: '',
-    service: '', preferredDate: '', preferredTime: '',
-    previousPmu: '', skinType: '',
-    message: '', consent: false,
-  });
-
-  const handleSubmit = async (e: { preventDefault: () => void }) => {
-    e.preventDefault();
-    setError('');
-
-    if (!form.name || !form.email || !form.phone || !form.service ||
-        !form.preferredDate || !form.preferredTime) {
-      setError('Please fill in all required fields.');
-      return;
-    }
-    if (!form.consent) {
-      setError('Please confirm the deposit and policies acknowledgement.');
-      return;
-    }
-
-    const composedMessage = [
-      `Preferred time: ${form.preferredTime}`,
-      form.previousPmu ? `Previous permanent makeup: ${form.previousPmu}` : '',
-      form.skinType ? `Skin type: ${form.skinType}` : '',
-      '',
-      form.message || '(No additional notes)',
-    ].filter(Boolean).join('\n');
-
-    setSubmitting(true);
-    try {
-      // 1. Save to database so it appears in admin dashboard
-      await supabase.from('contacts').insert({
-        name: form.name,
-        email: form.email,
-        phone: form.phone || null,
-        interested_services: form.service || null,
-        preferred_date: form.preferredDate || null,
-        message: composedMessage,
-        status: 'new',
-      });
-
-      // 2. Send email notification
-      const res = await fetch('/.netlify/functions/send-inquiry', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: form.name,
-          email: form.email,
-          phone: form.phone,
-          service: form.service,
-          preferredDate: form.preferredDate,
-          message: composedMessage,
-          consent: form.consent,
-        }),
-      });
-      const data = await res.json().catch(() => ({}));
-      setSubmitting(false);
-      if (!res.ok || data?.error) {
-        setError('Unable to send your request. Please try again or email ashleymbrows@gmail.com directly.');
-        return;
-      }
-      setSubmitted(true);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    } catch {
-      setSubmitting(false);
-      setError('Something went wrong. Please email ashleymbrows@gmail.com directly.');
-    }
-  };
-
-  if (submitted) {
-    return (
-      <div className="pt-32 pb-24 min-h-screen bg-paper px-6">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-          className="max-w-2xl mx-auto text-center">
-          <div className="w-20 h-20 rounded-full bg-accent/10 border border-accent/30 flex items-center justify-center mx-auto mb-8">
-            <Check className="w-10 h-10 text-accent" />
-          </div>
-          <p className="text-accent text-[10px] uppercase tracking-[0.5em] font-bold mb-4">Request Received</p>
-          <h1 className="text-4xl md:text-5xl font-serif mb-6">Thank you, {form.name.split(' ')[0]}</h1>
-          <p className="text-ink/60 leading-relaxed mb-8">
-            Your request for <strong>{form.service}</strong> on <strong>{form.preferredDate}</strong> at <strong>{form.preferredTime}</strong> has been sent.
-            Ashley will review and follow up within 1–2 business days with deposit details and confirmation.
-          </p>
-          <p className="text-ink/40 text-sm">
-            A confirmation has been sent to <strong>{form.email}</strong>. If you don't see it, check your spam folder or email <a href="mailto:ashleymbrows@gmail.com" className="underline text-accent">ashleymbrows@gmail.com</a>.
-          </p>
-        </motion.div>
-      </div>
-    );
-  }
-
+  useEffect(() => {
+    window.location.href = JOTFORM_BOOKING_URL;
+  }, []);
   return (
-    <div className="pt-28 pb-24 min-h-screen bg-paper">
-      <div className="max-w-3xl mx-auto px-6">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-          <p className="text-accent text-[10px] uppercase tracking-[0.5em] font-bold mb-4 text-center">Booking Request</p>
-          <h1 className="text-4xl md:text-5xl font-serif text-center mb-4">Book Your Appointment</h1>
-          <p className="text-center text-ink/60 max-w-xl mx-auto mb-12 leading-relaxed">
-            Bookings are by request. Submit your details below and Ashley will follow up within 1–2 business days with deposit details and appointment confirmation.
-          </p>
-        </motion.div>
-
-        <form onSubmit={handleSubmit} className="space-y-10">
-          <div>
-            <label className="block text-[10px] uppercase tracking-widest font-bold text-ink/50 mb-4">
-              Select a Service *
-            </label>
-            <div className="grid sm:grid-cols-2 gap-3">
-              {serviceMenu.map(svc => (
-                <button
-                  type="button"
-                  key={svc.id}
-                  onClick={() => setForm({ ...form, service: svc.title })}
-                  className={`text-left p-5 border transition-all rounded ${
-                    form.service === svc.title
-                      ? 'border-accent bg-accent/5'
-                      : 'border-ink/10 hover:border-ink/30 bg-white'
-                  }`}
-                >
-                  <div className="flex items-baseline justify-between mb-1">
-                    <span className="font-serif text-lg">{svc.title}</span>
-                    <span className="text-accent text-sm font-bold">{svc.price}</span>
-                  </div>
-                  <p className="text-xs text-ink/50">{svc.duration} · {svc.description}</p>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="grid sm:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-[10px] uppercase tracking-widest font-bold text-ink/50 mb-2">Preferred Date *</label>
-              <input
-                type="date"
-                value={form.preferredDate}
-                min={new Date().toISOString().split('T')[0]}
-                onChange={e => setForm({ ...form, preferredDate: e.target.value })}
-                required
-                className="w-full p-3.5 bg-white border border-ink/10 text-sm text-ink outline-none focus:border-accent transition-colors rounded"
-              />
-            </div>
-            <div>
-              <label className="block text-[10px] uppercase tracking-widest font-bold text-ink/50 mb-2">Preferred Time *</label>
-              <input
-                type="time"
-                value={form.preferredTime}
-                onChange={e => setForm({ ...form, preferredTime: e.target.value })}
-                required
-                className="w-full p-3.5 bg-white border border-ink/10 text-sm text-ink outline-none focus:border-accent transition-colors rounded"
-              />
-            </div>
-          </div>
-
-          <div className="grid sm:grid-cols-2 gap-6">
-            <div className="sm:col-span-2">
-              <label className="block text-[10px] uppercase tracking-widest font-bold text-ink/50 mb-2">Full Name *</label>
-              <input
-                type="text"
-                value={form.name}
-                onChange={e => setForm({ ...form, name: e.target.value })}
-                required
-                placeholder="First and last name"
-                className="w-full p-3.5 bg-white border border-ink/10 text-sm text-ink placeholder:text-ink/25 outline-none focus:border-accent transition-colors rounded"
-              />
-            </div>
-            <div>
-              <label className="block text-[10px] uppercase tracking-widest font-bold text-ink/50 mb-2">Email *</label>
-              <input
-                type="email"
-                value={form.email}
-                onChange={e => setForm({ ...form, email: e.target.value })}
-                required
-                placeholder="you@example.com"
-                className="w-full p-3.5 bg-white border border-ink/10 text-sm text-ink placeholder:text-ink/25 outline-none focus:border-accent transition-colors rounded"
-              />
-            </div>
-            <div>
-              <label className="block text-[10px] uppercase tracking-widest font-bold text-ink/50 mb-2">Phone *</label>
-              <input
-                type="tel"
-                value={form.phone}
-                onChange={e => setForm({ ...form, phone: e.target.value })}
-                required
-                placeholder="(555) 555-5555"
-                className="w-full p-3.5 bg-white border border-ink/10 text-sm text-ink placeholder:text-ink/25 outline-none focus:border-accent transition-colors rounded"
-              />
-            </div>
-          </div>
-
-          <div className="grid sm:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-[10px] uppercase tracking-widest font-bold text-ink/50 mb-2">Previous Permanent Makeup?</label>
-              <select
-                value={form.previousPmu}
-                onChange={e => setForm({ ...form, previousPmu: e.target.value })}
-                className="w-full p-3.5 bg-white border border-ink/10 text-sm text-ink outline-none focus:border-accent transition-colors rounded"
-              >
-                <option value="">Select…</option>
-                <option value="No">No</option>
-                <option value="Yes, faded">Yes — faded</option>
-                <option value="Yes, still visible">Yes — still visible</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-[10px] uppercase tracking-widest font-bold text-ink/50 mb-2">Skin Type</label>
-              <select
-                value={form.skinType}
-                onChange={e => setForm({ ...form, skinType: e.target.value })}
-                className="w-full p-3.5 bg-white border border-ink/10 text-sm text-ink outline-none focus:border-accent transition-colors rounded"
-              >
-                <option value="">Select…</option>
-                <option value="Dry">Dry</option>
-                <option value="Normal">Normal</option>
-                <option value="Combination">Combination</option>
-                <option value="Oily">Oily</option>
-                <option value="Mature">Mature</option>
-              </select>
-            </div>
-            <div className="sm:col-span-2">
-              <label className="block text-[10px] uppercase tracking-widest font-bold text-ink/50 mb-2">Notes for Ashley</label>
-              <textarea
-                value={form.message}
-                onChange={e => setForm({ ...form, message: e.target.value })}
-                rows={4}
-                placeholder="Anything she should know — goals, allergies, concerns…"
-                className="w-full p-3.5 bg-white border border-ink/10 text-sm text-ink placeholder:text-ink/25 outline-none focus:border-accent transition-colors rounded resize-none"
-              />
-            </div>
-          </div>
-
-          <label className="flex items-start gap-3 cursor-pointer p-4 border border-ink/10 rounded bg-white">
-            <input
-              type="checkbox"
-              checked={form.consent}
-              onChange={e => setForm({ ...form, consent: e.target.checked })}
-              className="mt-1 w-4 h-4 accent-accent"
-            />
-            <span className="text-sm text-ink/70 leading-relaxed">
-              I understand a non-refundable <strong>$100 deposit</strong> is required to secure my appointment, and I agree to the <a href="/policies" className="text-accent border-b border-accent/40 hover:border-accent">booking and cancellation policies</a>.
-            </span>
-          </label>
-
-          {error && (
-            <div className="p-4 bg-red-50 border border-red-100 rounded text-sm text-red-700">
-              {error}
-            </div>
-          )}
-
-          <button
-            type="submit"
-            disabled={submitting}
-            className="w-full py-5 bg-accent text-paper text-[10px] uppercase tracking-[0.3em] font-bold hover:bg-ink transition-colors disabled:opacity-50 flex items-center justify-center gap-3 shadow-xl"
-          >
-            {submitting
-              ? <><div className="w-4 h-4 border-2 border-paper/30 border-t-paper rounded-full animate-spin" /> Sending Request…</>
-              : <>Send Booking Request <ArrowRight className="w-4 h-4" /></>}
-          </button>
-        </form>
+    <div className="min-h-screen bg-paper flex items-center justify-center px-6">
+      <div className="text-center max-w-md">
+        <div className="w-10 h-10 rounded-full border-2 border-accent border-t-transparent animate-spin mx-auto mb-6" />
+        <p className="text-accent text-[10px] uppercase tracking-[0.5em] font-bold mb-4">Booking</p>
+        <h1 className="text-3xl font-serif mb-4">Opening Booking Form</h1>
+        <p className="text-ink/60 text-sm mb-6">
+          If you are not redirected automatically, <a href={JOTFORM_BOOKING_URL} className="underline text-accent">click here</a>.
+        </p>
       </div>
     </div>
   );
@@ -1526,45 +1326,45 @@ const galleryCategories = ['All', 'Signature Brows', 'Lip Blush', 'Defining Line
 const galleryItems = [
   {
     image: '/gallery/brows-nano-portrait.jpg',
-    title: 'Signature Stroke Restoration',
+    title: 'Nano Fusion',
     category: 'Signature Brows',
-    description: '2.5 Hour Procedure \u00b7 Signature Stroke'
+    description: '3 Hour Procedure \u00b7 Hair Strokes + Powder Shading'
   },
   {
     image: '/gallery/lip-blush-before-healed.jpg',
-    title: 'Nude Velvet Blush',
+    title: 'Lip Blush',
     category: 'Lip Blush',
-    description: '2 Hour Procedure \u00b7 Sheer Application'
+    description: '2 Hour Procedure \u00b7 Soft Watercolor Tint'
   },
   {
     image: '/gallery/brows-before-after.jpg',
-    title: 'Architectural Lamination',
+    title: 'Powder Brows',
     category: 'Signature Brows',
-    description: '1.5 Hour Procedure \u00b7 Hybrid Technique'
+    description: '2.5 Hour Procedure \u00b7 Soft Shaded Finish'
   },
   {
     image: '/gallery/lash-enhancement-before-after.jpg',
-    title: 'Ethereal Wing',
+    title: 'Shaded Eyeliner',
     category: 'Defining Liner',
-    description: '2 Hour Procedure \u00b7 Soft Shading'
+    description: '2 Hour Procedure \u00b7 Softly Shaded Wing'
   },
   {
     image: '/gallery/lip-blush-glossy.jpg',
-    title: 'Full Satin Lips',
+    title: 'Ombre Lip Blush',
     category: 'Lip Blush',
-    description: '2.5 Hour Procedure \u00b7 Saturated Tint'
+    description: '2.5 Hour Procedure \u00b7 Gradient Tint'
   },
   {
     image: '/gallery/powder-brows-portrait.jpg',
-    title: 'Feathered Arch',
+    title: 'Powder Brows',
     category: 'Signature Brows',
-    description: '3 Hour Procedure \u00b7 Nano Strokes'
+    description: '2.5 Hour Procedure \u00b7 All Skin Types'
   },
   {
     image: '/gallery/ashley-portfolio-may22.jpg',
-    title: 'Signature Definition',
+    title: 'Nano Fusion',
     category: 'Signature Brows',
-    description: '2.5 Hour Procedure \u00b7 Custom Shaping'
+    description: '3 Hour Procedure \u00b7 Realistic Hair Strokes'
   }
 ];
 
@@ -1957,7 +1757,7 @@ export default function App() {
       {location.pathname !== '/booking' && (
         <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-paper border-t border-ink/10 p-4 shadow-2xl">
           <button
-            onClick={() => handleNavigate('booking')}
+            onClick={openBooking}
             className="w-full py-4 bg-accent text-paper text-[10px] uppercase tracking-[0.3em] font-bold hover:bg-ink transition-colors flex items-center justify-center gap-3"
           >
             <Calendar className="w-4 h-4" /> Book Now
