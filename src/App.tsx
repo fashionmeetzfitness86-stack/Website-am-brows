@@ -243,7 +243,7 @@ const Navbar = ({ onNavigate, currentPage }: { onNavigate: (page: Page) => void,
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const navLinks: Page[] = ['home', 'services', 'gallery', 'artist', 'contact'];
+  const navLinks: Page[] = ['home', 'services', 'gallery', 'artist', 'contact', 'policies'];
 
   return (
     <>
@@ -369,7 +369,7 @@ const Hero = ({ onNavigate }: { onNavigate: (page: Page) => void }) => (
       transition={{ delay: 0.5 }}
       className="max-w-xl text-ink/60 leading-relaxed mb-12 text-sm md:text-base font-sans"
     >
-      Permanent makeup in Brighton, Michigan. Brows, lip blush, lashes, eyeliner and decorative work, meticulous, customized, and made to look like you.
+      Permanent makeup in Brighton, Michigan. Brows, lip blush, eyeliner and decorative work — meticulous, customized, and made to look like you.
     </motion.p>
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
