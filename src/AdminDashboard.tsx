@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from './lib/supabase';
+import { uploadImage } from './lib/uploadImage';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -378,7 +379,7 @@ function ServiceEditModal({ row, saving, onClose, onSave }: {
         <div className="px-6 py-6 space-y-5">
           <Field label="Title" value={draft.title} onChange={v => set({ title: v })} />
           <Field label="Price (display)" value={draft.price} onChange={v => set({ price: v })} placeholder="$650 or $650+" />
-          <Field label="Image URL" value={draft.image_url} onChange={v => set({ image_url: v })} placeholder="/ashley-home-feature.jpg" />
+          <ImageUploader label="Main photo" value={draft.image_url} onChange={v => set({ image_url: v })} folder="services" />
           <Field label="Short description" value={draft.short_description} onChange={v => set({ short_description: v })} multiline />
           <Field label="Full description" value={draft.description} onChange={v => set({ description: v })} multiline rows={5} />
           <Field
@@ -400,7 +401,7 @@ function ServiceEditModal({ row, saving, onClose, onSave }: {
                     >Remove</button>
                     <Field label="Variant title" value={v.title} onChange={x => set({ variants: draft.variants.map((vv, j) => j === i ? { ...vv, title: x } : vv) })} />
                     <Field label="Variant price" value={v.price} onChange={x => set({ variants: draft.variants.map((vv, j) => j === i ? { ...vv, price: x } : vv) })} />
-                    <Field label="Variant image URL" value={v.image} onChange={x => set({ variants: draft.variants.map((vv, j) => j === i ? { ...vv, image: x } : vv) })} />
+                    <ImageUploader label="Variant photo" value={v.image} onChange={x => set({ variants: draft.variants.map((vv, j) => j === i ? { ...vv, image: x } : vv) })} folder="services" />
                     <Field label="Variant description" value={v.description} onChange={x => set({ variants: draft.variants.map((vv, j) => j === i ? { ...vv, description: x } : vv) })} multiline rows={3} />
                   </div>
                 ))}
@@ -550,12 +551,7 @@ function GalleryEditModal({ row, isNew, onClose, onSave }: {
           <button onClick={onClose} className="text-[#1A1714]/30 hover:text-[#1A1714] text-xl">&times;</button>
         </div>
         <div className="px-6 py-6 space-y-5">
-          <Field label="Image URL" value={draft.image_url} onChange={v => set({ image_url: v })} placeholder="/gallery/some-photo.jpg" />
-          {draft.image_url && (
-            <div className="aspect-[4/3] bg-[#F0EDE9] rounded overflow-hidden">
-              <img src={draft.image_url} alt="" className="w-full h-full object-cover" />
-            </div>
-          )}
+          <ImageUploader label="Photo" value={draft.image_url} onChange={v => set({ image_url: v })} folder="gallery" />
           <Field label="Title" value={draft.title} onChange={v => set({ title: v })} />
           <div>
             <label className="block text-[10px] uppercase tracking-widest font-bold text-[#1A1714]/50 mb-2">Category</label>
@@ -581,6 +577,73 @@ function GalleryEditModal({ row, isNew, onClose, onSave }: {
           >{isNew ? 'Add to gallery' : 'Save changes'}</button>
         </div>
       </div>
+    </div>
+  );
+}
+
+// ─── Image uploader ──────────────────────────────────────────────────────────
+
+function ImageUploader({ label, value, onChange, folder }: {
+  label: string;
+  value: string;
+  onChange: (url: string) => void;
+  folder: 'services' | 'gallery';
+}) {
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  const handleFile = async (file?: File | null) => {
+    if (!file) return;
+    if (file.size > 8 * 1024 * 1024) { setErr('Image too large (max 8 MB).'); return; }
+    setUploading(true); setErr(null);
+    try {
+      const url = await uploadImage(file, folder);
+      onChange(url);
+    } catch (e: any) {
+      setErr(e?.message || 'Upload failed.');
+    } finally {
+      setUploading(false);
+      if (inputRef.current) inputRef.current.value = '';
+    }
+  };
+
+  return (
+    <div>
+      <label className="block text-[10px] uppercase tracking-widest font-bold text-[#1A1714]/50 mb-2">{label}</label>
+
+      <div className="flex gap-3">
+        <input
+          type="text"
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          placeholder="/path/photo.jpg or paste URL"
+          className="flex-1 p-3 bg-white border border-[#F0EDE9] rounded text-sm focus:border-[#C4A882] outline-none"
+        />
+        <button
+          type="button"
+          onClick={() => inputRef.current?.click()}
+          disabled={uploading}
+          className="px-4 py-2 bg-[#1A1714] text-white text-[10px] uppercase tracking-widest font-bold rounded hover:bg-[#C4A882] disabled:opacity-50 whitespace-nowrap"
+        >
+          {uploading ? 'Uploading…' : 'Upload Photo'}
+        </button>
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={e => handleFile(e.target.files?.[0])}
+        />
+      </div>
+
+      {err && <p className="text-red-500 text-xs mt-2">{err}</p>}
+
+      {value && (
+        <div className="mt-3 aspect-[4/3] bg-[#F0EDE9] rounded overflow-hidden max-w-xs">
+          <img src={value} alt="" className="w-full h-full object-cover" />
+        </div>
+      )}
     </div>
   );
 }
