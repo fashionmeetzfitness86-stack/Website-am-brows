@@ -471,17 +471,41 @@ const About = () => (
   </section>
 );
 
-const Services = ({ onSelectService, onNavigate, excludeIds = [] }: { onSelectService: (service: any) => void, onNavigate: (page: any) => void, excludeIds?: string[] }) => (
+const Services = ({ onSelectService, onNavigate, excludeIds = [] }: { onSelectService: (service: any) => void, onNavigate: (page: any) => void, excludeIds?: string[] }) => {
+  const [cmsServices, setCmsServices] = useState<any[]>([]);
+  const [loadingSvc, setLoadingSvc] = useState(true);
+
+  useEffect(() => {
+    supabase.from('services_cms').select('*').eq('is_active', true).order('sort_order', { ascending: true })
+      .then(({ data }) => {
+        setCmsServices(data ?? []);
+        setLoadingSvc(false);
+      });
+  }, []);
+
+  // Fall back to hardcoded services if Supabase has none yet
+  const displayServices = cmsServices.length > 0
+    ? cmsServices.filter((s: any) => !excludeIds.includes(s.id))
+    : services.filter(s => !excludeIds.includes(s.id));
+
+  const getImage = (s: any) => s.image_url || s.image || '';
+  const getShortDesc = (s: any) => s.short_description || s.shortDescription || '';
+  const getTags = (s: any) => s.tags || [];
+
+  return (
   <section className="py-24 bg-paper-dark px-6">
     <div className="max-w-7xl mx-auto">
       <div className="mb-20 text-center">
         <h2 className="text-4xl md:text-6xl font-serif mb-4">Curated Aesthetics</h2>
         <p className="text-ink/50 uppercase tracking-[0.3em] font-bold text-[10px]">Every procedure is a bespoke masterpiece</p>
       </div>
+      {loadingSvc ? (
+        <div className="text-center py-12 text-ink/30 text-sm">Loading services…</div>
+      ) : (
       <div className="grid md:grid-cols-3 gap-8">
-        {services.filter(s => !excludeIds.includes(s.id)).map((service, idx) => (
-          <motion.button 
-            key={idx}
+        {displayServices.map((service: any, idx: number) => (
+          <motion.button
+            key={service.id ?? idx}
             initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -492,7 +516,7 @@ const Services = ({ onSelectService, onNavigate, excludeIds = [] }: { onSelectSe
             aria-label={`View details for ${service.title}`}
           >
             <div className="aspect-square bg-paper overflow-hidden mb-8 relative">
-               <img src={service.image} alt="" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+               <img src={getImage(service)} alt="" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                <div className="absolute bottom-6 left-6 right-6">
                   <div className="bg-white/90 backdrop-blur px-6 py-4 flex justify-between items-center group-hover:bg-accent group-hover:text-paper transition-colors">
                      <span className="text-[10px] uppercase tracking-widest font-bold">View Details</span>
@@ -505,10 +529,10 @@ const Services = ({ onSelectService, onNavigate, excludeIds = [] }: { onSelectSe
               <span className="text-sm font-medium text-accent">{service.price}</span>
             </div>
             <p className="text-sm text-ink/60 leading-relaxed mb-6 line-clamp-2">
-              {service.shortDescription}
+              {getShortDesc(service)}
             </p>
             <div className="flex flex-wrap gap-2 mb-6">
-              {service.tags.map(tag => (
+              {getTags(service).map((tag: string) => (
                 <span key={tag} className="text-[9px] uppercase tracking-widest px-3 py-1 bg-paper font-bold text-ink/40">{tag}</span>
               ))}
             </div>
@@ -521,9 +545,11 @@ const Services = ({ onSelectService, onNavigate, excludeIds = [] }: { onSelectSe
           </motion.button>
         ))}
       </div>
+      )}
     </div>
   </section>
-);
+  );
+};
 
 const Testimonials = () => (
   <section className="py-24 px-6 max-w-5xl mx-auto">
@@ -1323,6 +1349,15 @@ const BookingPage = () => {
 
 const galleryCategories = ['All', 'Signature Brows', 'Lip Blush', 'Defining Liner'];
 
+interface GalleryItemDB {
+  id: string;
+  url: string;
+  type: 'photo' | 'video';
+  caption: string;
+  category: string;
+  sort_order: number;
+}
+
 const galleryItems = [
   {
     image: '/gallery/brows-nano-portrait.jpg',
@@ -1419,18 +1454,38 @@ const InstagramFeed = () => {
 
 const GalleryPage = () => {
   const [activeFilter, setActiveFilter] = useState('All');
-  const [selectedItem, setSelectedItem] = useState<any>(null);
+  const [selectedItem, setSelectedItem] = useState<GalleryItemDB | null>(null);
+  const [dbItems, setDbItems] = useState<GalleryItemDB[]>([]);
+  const [loadingGallery, setLoadingGallery] = useState(true);
 
-  // Close modal on Escape key
+  useEffect(() => {
+    supabase.from('gallery_items').select('*').order('sort_order', { ascending: true })
+      .then(({ data }) => {
+        setDbItems((data as GalleryItemDB[]) ?? []);
+        setLoadingGallery(false);
+      });
+  }, []);
+
+  const allItems: GalleryItemDB[] = dbItems.length > 0 ? dbItems : galleryItems.map((g, i) => ({
+    id: String(i),
+    url: g.image,
+    type: 'photo',
+    caption: g.title,
+    category: g.category,
+    sort_order: i,
+  }));
+
+  const allCategories = ['All', ...Array.from(new Set(allItems.map(i => i.category)))];
+
+  const filteredItems = activeFilter === 'All'
+    ? allItems
+    : allItems.filter(item => item.category === activeFilter);
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setSelectedItem(null); };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, []);
-
-  const filteredItems = activeFilter === 'All' 
-    ? galleryItems 
-    : galleryItems.filter(item => item.category === activeFilter);
 
   return (
     <div className="pt-24 min-h-screen bg-white">
@@ -1441,7 +1496,7 @@ const GalleryPage = () => {
                 <h2 className="text-4xl md:text-6xl font-serif">Signature Results</h2>
              </div>
              <div className="flex flex-wrap gap-4 md:gap-8 border-b border-ink/5 pb-2" role="tablist" aria-label="Gallery categories">
-                {galleryCategories.map(cat => (
+                {allCategories.map(cat => (
                   <button
                     key={cat}
                     role="tab"
@@ -1457,14 +1512,14 @@ const GalleryPage = () => {
                 ))}
              </div>
           </div>
-          <motion.div 
-            layout
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12"
-          >
+          {loadingGallery ? (
+            <div className="text-center py-20 text-ink/30 text-sm">Loading gallery…</div>
+          ) : (
+          <motion.div layout className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
              <AnimatePresence mode="popLayout">
-               {filteredItems.map((item, i) => (
-                 <motion.div 
-                   key={item.image}
+               {filteredItems.map((item) => (
+                 <motion.div
+                   key={item.id}
                    layout
                    initial={{ opacity: 0, scale: 0.9 }}
                    animate={{ opacity: 1, scale: 1 }}
@@ -1474,13 +1529,17 @@ const GalleryPage = () => {
                    onClick={() => setSelectedItem(item)}
                  >
                     <div className="aspect-[3/4] bg-warm-gray overflow-hidden mb-6 relative">
-                       <img 
-                        src={`${item.image}?auto=format&fit=crop&q=80&w=800`} 
-                        alt={item.title} 
+                       {item.type === 'video' ? (
+                         <video src={item.url} className="w-full h-full object-cover" muted playsInline />
+                       ) : (
+                       <img
+                        src={item.url}
+                        alt={item.caption}
                         loading="lazy"
                         decoding="async"
-                        className="w-full h-full object-cover transition-transform duration-1000 ease-out group-hover:scale-110" 
+                        className="w-full h-full object-cover transition-transform duration-1000 ease-out group-hover:scale-110"
                        />
+                       )}
                        <div className="absolute inset-0 bg-ink/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                           <div className="w-12 h-12 rounded-full bg-paper/90 backdrop-blur flex items-center justify-center scale-0 group-hover:scale-100 transition-transform">
                              <ArrowRight className="w-5 h-5 -rotate-45" />
@@ -1488,12 +1547,12 @@ const GalleryPage = () => {
                        </div>
                     </div>
                     <p className="text-accent text-[9px] uppercase tracking-widest font-bold mb-1">{item.category}</p>
-                    <h3 className="text-xl font-serif">{item.title}</h3>
-                    <p className="text-[10px] uppercase tracking-widest font-bold opacity-30 mt-1">{item.description}</p>
+                    <h3 className="text-xl font-serif">{item.caption}</h3>
                  </motion.div>
                ))}
              </AnimatePresence>
           </motion.div>
+          )}
        </div>
 
        <InstagramFeed />
@@ -1527,20 +1586,19 @@ const GalleryPage = () => {
                      <X className="w-5 h-5" />
                   </button>
                   <div className="flex-[3] bg-warm-gray overflow-hidden">
-                    <img 
-                      src={`${selectedItem.image}?auto=format&fit=crop&q=100&w=1200`} 
-                      alt={selectedItem.title} 
+                    {selectedItem && selectedItem.type === 'video' ? (
+                      <video src={selectedItem.url} className="w-full h-full object-cover" controls autoPlay muted />
+                    ) : (
+                    <img
+                      src={selectedItem?.url ?? ''}
+                      alt={selectedItem?.caption ?? ''}
                       className="w-full h-full object-cover"
                     />
+                    )}
                   </div>
                   <div className="flex-[2] p-12 flex flex-col justify-center bg-paper">
-                    <p className="text-accent text-[10px] uppercase tracking-[0.5em] font-bold mb-4">{selectedItem.category}</p>
-                    <h3 className="text-4xl font-serif mb-6">{selectedItem.title}</h3>
-                    <p className="text-ink/60 leading-relaxed mb-8">{selectedItem.description}</p>
-                    <div className="pt-8 border-t border-ink/5">
-                       <p className="text-[10px] uppercase tracking-widest font-bold opacity-30 mb-2">Technical Insight</p>
-                       <p className="text-sm italic">Achieved through layered nano-strokes to maintain structural depth and anatomical harmony.</p>
-                    </div>
+                    <p className="text-accent text-[10px] uppercase tracking-[0.5em] font-bold mb-4">{selectedItem?.category}</p>
+                    <h3 className="text-4xl font-serif mb-6">{selectedItem?.caption}</h3>
                   </div>
                 </div>
               </motion.div>
