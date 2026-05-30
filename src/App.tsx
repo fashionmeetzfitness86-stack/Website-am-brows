@@ -355,8 +355,23 @@ const Navbar = ({ onNavigate, currentPage }: { onNavigate: (page: Page) => void,
 
 
 const Hero = ({ onNavigate }: { onNavigate: (page: Page) => void }) => (
-  <section className="relative flex flex-col items-center justify-center text-center px-6 overflow-hidden pt-40 pb-6">
-    <motion.p 
+  <section className="relative flex flex-col items-center justify-center text-center px-6 overflow-hidden pt-40 pb-6 min-h-[80vh]">
+    {/* Background video */}
+    <video
+      autoPlay
+      loop
+      muted
+      playsInline
+      preload="metadata"
+      className="absolute inset-0 w-full h-full object-cover -z-20 pointer-events-none"
+      aria-hidden="true"
+    >
+      <source src="/hero-bg.mp4" type="video/mp4" />
+    </video>
+    {/* Soft paper-tinted overlay so the text stays readable */}
+    <div className="absolute inset-0 bg-paper/70 -z-10 pointer-events-none" aria-hidden="true" />
+
+    <motion.p
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       className="text-accent text-[10px] uppercase tracking-[0.6em] mb-8 font-bold"
