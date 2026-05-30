@@ -284,6 +284,7 @@ function ServicesPane() {
   const [rows, setRows] = useState<ServiceRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<ServiceRow | null>(null);
+  const [creating, setCreating] = useState(false);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [savedId, setSavedId] = useState<string | null>(null);
 
@@ -317,13 +318,57 @@ function ServicesPane() {
     setTimeout(() => setSavedId(null), 2000);
   };
 
+  const create = async (row: ServiceRow) => {
+    if (!row.title.trim()) { alert('Title is required.'); return; }
+    // Auto-generate an id from the title if user didn't change the placeholder
+    const slugId = row.id?.trim() || row.title.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+    if (!slugId) { alert('Title must contain at least one letter or number.'); return; }
+    if (rows.some(r => r.id === slugId)) { alert(`A service with id "${slugId}" already exists. Pick a different title.`); return; }
+
+    const nextSort = rows.length ? Math.max(...rows.map(r => r.sort_order)) + 10 : 10;
+
+    setSavingId(slugId);
+    const { error } = await supabase.from('site_services').insert({
+      id: slugId,
+      sort_order: nextSort,
+      title: row.title,
+      price: row.price || '',
+      short_description: row.short_description || '',
+      description: row.description || '',
+      image_url: row.image_url || '',
+      tags: row.tags ?? [],
+      variants: row.variants ?? [],
+      process: row.process ?? [],
+      testimonials: [],
+    });
+    setSavingId(null);
+    if (error) { alert('Add failed: ' + error.message); return; }
+    setCreating(false);
+    load();
+    setSavedId(slugId);
+    setTimeout(() => setSavedId(null), 2000);
+  };
+
+  const remove = async (id: string, title: string) => {
+    if (!window.confirm(`Delete the "${title}" service? This cannot be undone.`)) return;
+    const { error } = await supabase.from('site_services').delete().eq('id', id);
+    if (error) { alert('Delete failed: ' + error.message); return; }
+    setRows(prev => prev.filter(r => r.id !== id));
+  };
+
   if (loading) return <div className="flex items-center justify-center py-32"><div className="w-6 h-6 border-2 border-[#C4A882] border-t-transparent rounded-full animate-spin" /></div>;
 
   return (
     <>
-      <div className="mb-8">
-        <h1 className="text-2xl font-semibold text-[#1A1714]">Services & Prices</h1>
-        <p className="text-sm text-[#1A1714]/50 mt-1">Edits appear on the live site within seconds.</p>
+      <div className="mb-8 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold text-[#1A1714]">Services & Prices</h1>
+          <p className="text-sm text-[#1A1714]/50 mt-1">Edits appear on the live site within seconds.</p>
+        </div>
+        <button
+          onClick={() => setCreating(true)}
+          className="px-5 py-2.5 bg-[#C4A882] text-white text-[10px] uppercase tracking-widest font-bold rounded hover:bg-[#b8976e]"
+        >+ Add service</button>
       </div>
 
       <div className="grid gap-4">
@@ -337,12 +382,16 @@ function ServicesPane() {
                   <span className="text-[#C4A882] font-semibold">{row.price}</span>
                 </div>
                 <p className="text-sm text-[#1A1714]/60 mt-1 truncate">{row.short_description}</p>
-                <p className="text-xs text-[#1A1714]/30 mt-1">{row.tags.join(' · ')}</p>
+                <p className="text-xs text-[#1A1714]/30 mt-1">{(row.tags ?? []).join(' · ')}</p>
               </div>
               <button
                 onClick={() => setEditing(row)}
                 className="px-4 py-2 bg-[#1A1714] text-white text-[10px] uppercase tracking-widest font-bold rounded hover:bg-[#C4A882]"
               >Edit</button>
+              <button
+                onClick={() => remove(row.id, row.title)}
+                className="px-3 py-2 text-[10px] uppercase tracking-widest font-bold text-red-400 hover:text-red-600"
+              >Delete</button>
               {savedId === row.id && <span className="text-emerald-600 text-xs font-semibold">Saved ✓</span>}
             </div>
           </div>
@@ -357,12 +406,25 @@ function ServicesPane() {
           onSave={save}
         />
       )}
+
+      {creating && (
+        <ServiceEditModal
+          row={{
+            id: '', sort_order: 0, title: '', price: '', short_description: '', description: '',
+            image_url: '', tags: [], variants: [], process: [], testimonials: [],
+          }}
+          saving={savingId !== null}
+          isNew
+          onClose={() => setCreating(false)}
+          onSave={create}
+        />
+      )}
     </>
   );
 }
 
-function ServiceEditModal({ row, saving, onClose, onSave }: {
-  row: ServiceRow; saving: boolean; onClose: () => void; onSave: (r: ServiceRow) => void;
+function ServiceEditModal({ row, saving, onClose, onSave, isNew }: {
+  row: ServiceRow; saving: boolean; onClose: () => void; onSave: (r: ServiceRow) => void; isNew?: boolean;
 }) {
   const [draft, setDraft] = useState<ServiceRow>(row);
   const set = (patch: Partial<ServiceRow>) => setDraft(d => ({ ...d, ...patch }));
@@ -372,7 +434,7 @@ function ServiceEditModal({ row, saving, onClose, onSave }: {
       <div className="absolute inset-0 bg-black/30" onClick={onClose} />
       <div className="relative w-full max-w-2xl bg-white rounded-lg shadow-2xl">
         <div className="sticky top-0 bg-white border-b border-[#F0EDE9] px-6 py-4 flex items-center justify-between rounded-t-lg">
-          <h2 className="font-semibold text-[#1A1714]">Edit Service: {row.title}</h2>
+          <h2 className="font-semibold text-[#1A1714]">{isNew ? 'Add New Service' : `Edit Service: ${row.title}`}</h2>
           <button onClick={onClose} className="text-[#1A1714]/30 hover:text-[#1A1714] text-xl">&times;</button>
         </div>
 
@@ -424,7 +486,7 @@ function ServiceEditModal({ row, saving, onClose, onSave }: {
             onClick={() => onSave(draft)}
             disabled={saving}
             className="flex-1 py-3 bg-[#C4A882] text-white text-[10px] uppercase tracking-widest font-bold rounded hover:bg-[#b8976e] disabled:opacity-50"
-          >{saving ? 'Saving…' : 'Save changes'}</button>
+          >{saving ? 'Saving…' : (isNew ? 'Add service' : 'Save changes')}</button>
         </div>
       </div>
     </div>
