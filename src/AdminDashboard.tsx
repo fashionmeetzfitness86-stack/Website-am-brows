@@ -388,31 +388,34 @@ function ServiceEditModal({ row, saving, onClose, onSave }: {
             onChange={v => set({ tags: v.split(',').map(t => t.trim()).filter(Boolean) })}
           />
 
-          {Array.isArray(draft.variants) && draft.variants.length > 0 && (
-            <div>
-              <p className="text-[10px] uppercase tracking-widest font-bold text-[#1A1714]/50 mb-3">Variants ({draft.variants.length})</p>
-              <div className="space-y-3">
-                {draft.variants.map((v, i) => (
-                  <div key={i} className="bg-[#FAF9F7] rounded p-4 space-y-3 relative">
-                    <button
-                      type="button"
-                      onClick={() => set({ variants: draft.variants.filter((_, j) => j !== i) })}
-                      className="absolute top-2 right-2 text-[10px] uppercase tracking-widest font-bold text-red-400 hover:text-red-600"
-                    >Remove</button>
-                    <Field label="Variant title" value={v.title} onChange={x => set({ variants: draft.variants.map((vv, j) => j === i ? { ...vv, title: x } : vv) })} />
-                    <Field label="Variant price" value={v.price} onChange={x => set({ variants: draft.variants.map((vv, j) => j === i ? { ...vv, price: x } : vv) })} />
-                    <ImageUploader label="Variant photo" value={v.image} onChange={x => set({ variants: draft.variants.map((vv, j) => j === i ? { ...vv, image: x } : vv) })} folder="services" />
-                    <Field label="Variant description" value={v.description} onChange={x => set({ variants: draft.variants.map((vv, j) => j === i ? { ...vv, description: x } : vv) })} multiline rows={3} />
-                  </div>
-                ))}
-              </div>
-              <button
-                type="button"
-                onClick={() => set({ variants: [...draft.variants, { title: '', price: '', image: '', description: '' }] })}
-                className="mt-3 text-[10px] uppercase tracking-widest font-bold text-[#C4A882] hover:text-[#1A1714]"
-              >+ Add variant</button>
+          <div>
+            <p className="text-[10px] uppercase tracking-widest font-bold text-[#1A1714]/50 mb-3">
+              Variants ({(draft.variants ?? []).length})
+            </p>
+            <p className="text-xs text-[#1A1714]/40 mb-3">
+              Use variants when one service has multiple price tiers (e.g. Powder Brows vs Nano Fusion, or Lip Blush vs Ombre Lip Blush). Each variant shows its own card with photo + price + description + Book button on the service detail page.
+            </p>
+            <div className="space-y-3">
+              {(draft.variants ?? []).map((v, i) => (
+                <div key={i} className="bg-[#FAF9F7] rounded p-4 space-y-3 relative">
+                  <button
+                    type="button"
+                    onClick={() => set({ variants: (draft.variants ?? []).filter((_, j) => j !== i) })}
+                    className="absolute top-2 right-2 text-[10px] uppercase tracking-widest font-bold text-red-400 hover:text-red-600"
+                  >Remove</button>
+                  <Field label="Variant title" value={v.title} onChange={x => set({ variants: (draft.variants ?? []).map((vv, j) => j === i ? { ...vv, title: x } : vv) })} />
+                  <Field label="Variant price" value={v.price} onChange={x => set({ variants: (draft.variants ?? []).map((vv, j) => j === i ? { ...vv, price: x } : vv) })} />
+                  <ImageUploader label="Variant photo" value={v.image} onChange={x => set({ variants: (draft.variants ?? []).map((vv, j) => j === i ? { ...vv, image: x } : vv) })} folder="services" />
+                  <Field label="Variant description" value={v.description} onChange={x => set({ variants: (draft.variants ?? []).map((vv, j) => j === i ? { ...vv, description: x } : vv) })} multiline rows={3} />
+                </div>
+              ))}
             </div>
-          )}
+            <button
+              type="button"
+              onClick={() => set({ variants: [...(draft.variants ?? []), { title: '', price: '', image: '', description: '' }] })}
+              className="mt-3 text-[10px] uppercase tracking-widest font-bold text-[#C4A882] hover:text-[#1A1714]"
+            >+ Add variant</button>
+          </div>
         </div>
 
         <div className="sticky bottom-0 bg-white border-t border-[#F0EDE9] px-6 py-4 flex gap-3 rounded-b-lg">
