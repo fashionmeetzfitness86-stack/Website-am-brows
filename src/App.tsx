@@ -1047,8 +1047,13 @@ const ContactPage = () => {
 
 // --- Page Content ---
 
+// Slugify a variant title for URLs: "Ombre Lip Blush" -> "ombre-lip-blush"
+const slugifyVariant = (title: string) =>
+  title.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+
 const ServiceDetailPage = ({ onNavigate }: { onNavigate: (page: Page) => void }) => {
   const { slug } = useParams<{ slug: string }>();
+  const navigate = useNavigate();
   const { services } = useSite();
   const service = slug ? services.find(s => s.id === slug) ?? null : null;
 
@@ -1125,36 +1130,45 @@ const ServiceDetailPage = ({ onNavigate }: { onNavigate: (page: Page) => void })
           <div className="mb-32">
             <div className="text-center mb-16">
               <p className="text-accent text-[10px] uppercase tracking-[0.5em] font-bold mb-4">Choose Your Style</p>
-              <h3 className="text-4xl md:text-5xl font-serif">Available Variants</h3>
+              <h3 className="text-4xl md:text-5xl font-serif">Available Options</h3>
+              <p className="text-ink/50 text-sm mt-4 max-w-xl mx-auto">
+                Tap any option to see full details, photos and book it.
+              </p>
             </div>
-            <div className="grid md:grid-cols-2 gap-12">
-              {(service as any).variants.map((v: any, vi: number) => (
-                <motion.div
-                  key={vi}
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: vi * 0.1, duration: 0.6 }}
-                  className="bg-white border border-ink/5 shadow-sm overflow-hidden flex flex-col"
-                >
-                  <div className="aspect-[4/3] bg-warm-gray overflow-hidden">
-                    <img src={v.image} alt={v.title} className="w-full h-full object-cover" />
-                  </div>
-                  <div className="p-8 flex flex-col flex-1">
-                    <div className="flex items-baseline justify-between mb-4">
-                      <h4 className="text-2xl font-serif">{v.title}</h4>
-                      <span className="text-accent text-xl font-serif">{v.price}</span>
+            <div className={`grid gap-8 ${
+              (service as any).variants.length === 2 ? 'md:grid-cols-2'
+              : (service as any).variants.length === 3 ? 'md:grid-cols-3'
+              : 'md:grid-cols-2 lg:grid-cols-3'
+            }`}>
+              {(service as any).variants.map((v: any, vi: number) => {
+                const variantSlug = slugifyVariant(v.title);
+                return (
+                  <motion.button
+                    key={vi}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    whileHover={{ y: -6 }}
+                    transition={{ delay: vi * 0.08, duration: 0.45 }}
+                    onClick={() => { navigate(`/services/${service.id}/${variantSlug}`); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                    className="group text-left bg-white border border-ink/5 shadow-sm overflow-hidden flex flex-col focus-visible:outline-accent"
+                    aria-label={`See details for ${v.title}`}
+                  >
+                    <div className="aspect-square bg-warm-gray overflow-hidden">
+                      <img src={v.image} alt={v.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
                     </div>
-                    <p className="text-sm text-ink/60 leading-relaxed mb-8 flex-1">{v.description}</p>
-                    <button
-                      onClick={openBooking}
-                      className="w-full py-4 bg-ink text-paper text-[10px] uppercase tracking-[0.3em] font-bold hover:bg-accent transition-colors flex items-center justify-center gap-3"
-                    >
-                      Book {v.title} <ArrowRight className="w-4 h-4" />
-                    </button>
-                  </div>
-                </motion.div>
-              ))}
+                    <div className="p-6">
+                      <div className="flex items-baseline justify-between mb-2">
+                        <h4 className="text-xl font-serif">{v.title}</h4>
+                        <span className="text-accent font-serif">{v.price}</span>
+                      </div>
+                      <p className="text-xs text-ink/40 uppercase tracking-widest font-bold mt-3 flex items-center gap-2 group-hover:text-accent transition-colors">
+                        View details <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                      </p>
+                    </div>
+                  </motion.button>
+                );
+              })}
             </div>
           </div>
         )}
@@ -1218,6 +1232,87 @@ const ServiceDetailPage = ({ onNavigate }: { onNavigate: (page: Page) => void })
               </div>
               )}
            </motion.div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Dedicated page for a single service variant (e.g. /services/lips/ombre-lip-blush).
+// Shows the full description, large photo, price, book button, and a link back
+// to the parent service.
+const VariantDetailPage = () => {
+  const { slug, variantSlug } = useParams<{ slug: string; variantSlug: string }>();
+  const navigate = useNavigate();
+  const { services } = useSite();
+  const service = slug ? services.find(s => s.id === slug) ?? null : null;
+  const variant = service && Array.isArray((service as any).variants)
+    ? (service as any).variants.find((v: any) => slugifyVariant(v.title) === variantSlug)
+    : null;
+
+  if (!service || !variant) {
+    return (
+      <div className="pt-24 min-h-screen bg-paper flex flex-col items-center justify-center px-6">
+        <div className="text-center max-w-md">
+          <p className="text-accent text-[10px] uppercase tracking-[0.5em] font-bold mb-4">Not Found</p>
+          <h1 className="text-4xl font-serif mb-6">Option Not Found</h1>
+          <p className="text-ink/60 mb-10 leading-relaxed">This option doesn't exist or the link may be incorrect.</p>
+          <button
+            onClick={() => navigate('/services')}
+            className="px-10 py-4 bg-accent text-paper text-[10px] uppercase tracking-widest font-bold hover:bg-ink transition-colors"
+          >
+            View All Services
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="pt-24 min-h-screen bg-paper pb-20">
+      <div className="max-w-7xl mx-auto px-6 py-20">
+        <button
+          onClick={() => navigate(`/services/${service.id}`)}
+          className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold opacity-40 hover:opacity-100 mb-12"
+        >
+          <ChevronLeft className="w-4 h-4" /> Back to {service.title}
+        </button>
+
+        <div className="grid lg:grid-cols-2 gap-20 items-start">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8, ease: 'easeOut' }}
+          >
+            <div className="aspect-[4/5] bg-warm-gray overflow-hidden shadow-2xl relative">
+              <img src={variant.image} alt={variant.title} className="w-full h-full object-cover" />
+              <div className="absolute top-8 right-8 bg-paper/90 backdrop-blur px-6 py-4 shadow-xl">
+                <p className="text-[10px] uppercase tracking-widest font-bold opacity-40 mb-1">Price</p>
+                <p className="text-2xl font-serif text-accent">{variant.price}</p>
+              </div>
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2, ease: 'easeOut' }}
+          >
+            <p className="text-accent text-[10px] uppercase tracking-[0.5em] font-bold mb-6">{service.title}</p>
+            <h1 className="text-5xl md:text-7xl font-serif mb-8 leading-tight">{variant.title}</h1>
+            <div className="prose prose-ink max-w-none mb-12 text-ink/70 leading-relaxed text-lg whitespace-pre-line">
+              {variant.description}
+            </div>
+            <button
+              onClick={openBooking}
+              className="w-full py-6 bg-accent text-paper text-xs uppercase tracking-[0.2em] font-bold hover:bg-ink transition-all shadow-2xl flex items-center justify-center gap-4"
+            >
+              Book {variant.title} <ArrowRight className="w-4 h-4" />
+            </button>
+            <p className="text-center text-[10px] text-ink/30 uppercase tracking-widest mt-4">
+              Opens Ashley's booking form in a new tab
+            </p>
+          </motion.div>
         </div>
       </div>
     </div>
@@ -1754,6 +1849,7 @@ function AppShell() {
               <Route path="/privacy" element={<PrivacyPage />} />
               <Route path="/policies" element={<PoliciesPage />} />
               <Route path="/services/:slug" element={<ServiceDetailPage onNavigate={handleNavigate} />} />
+              <Route path="/services/:slug/:variantSlug" element={<VariantDetailPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/admin/*" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
               <Route path="*" element={<Navigate to="/" replace />} />
