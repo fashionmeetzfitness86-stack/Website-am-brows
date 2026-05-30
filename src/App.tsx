@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from 'motion/react';
 import { Menu, ArrowRight, Instagram, Facebook, Mail, Calendar, User, Star, X, ChevronRight, ChevronLeft, MapPin, Phone, Plus, Check, Clock, Shield, Sparkles } from 'lucide-react';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, createContext, useContext } from 'react';
+import { useSiteContent, type ServiceCMS, type GalleryItemCMS } from './hooks/useSiteContent';
 import { Routes, Route, useNavigate, useLocation, useParams, Navigate } from 'react-router-dom';
 import { supabase } from './lib/supabase';
 import { useSEO } from './hooks/useSEO';
@@ -19,7 +20,15 @@ const JOTFORM_BOOKING_URL = 'https://form.jotform.com/210908294397061';
 const openBooking = () => window.open(JOTFORM_BOOKING_URL, '_blank', 'noopener,noreferrer');
 
 
-const services = [
+// CMS content context — App() loads from Supabase and provides; components consume.
+const SiteContentContext = createContext<{ services: ServiceCMS[]; galleryItems: GalleryItemCMS[] } | null>(null);
+const useSite = () => {
+  const ctx = useContext(SiteContentContext);
+  if (!ctx) throw new Error('SiteContentContext missing — wrap your tree in <SiteContentContext.Provider>');
+  return ctx;
+};
+
+const defaultServices: ServiceCMS[] = [
   {
     id: 'brows',
     title: 'Brows',
@@ -471,7 +480,9 @@ const About = () => (
   </section>
 );
 
-const Services = ({ onSelectService, onNavigate, excludeIds = [] }: { onSelectService: (service: any) => void, onNavigate: (page: any) => void, excludeIds?: string[] }) => (
+const Services = ({ onSelectService, onNavigate, excludeIds = [] }: { onSelectService: (service: any) => void, onNavigate: (page: any) => void, excludeIds?: string[] }) => {
+  const { services } = useSite();
+  return (
   <section className="py-24 bg-paper-dark px-6">
     <div className="max-w-7xl mx-auto">
       <div className="mb-20 text-center">
@@ -523,7 +534,8 @@ const Services = ({ onSelectService, onNavigate, excludeIds = [] }: { onSelectSe
       </div>
     </div>
   </section>
-);
+  );
+};
 
 const Testimonials = () => (
   <section className="py-24 px-6 max-w-5xl mx-auto">
@@ -1035,12 +1047,10 @@ const ContactPage = () => {
 
 // --- Page Content ---
 
-// Look up a service by its URL slug (id)
-const getServiceBySlug = (slug: string) => services.find(s => s.id === slug) ?? null;
-
 const ServiceDetailPage = ({ onNavigate }: { onNavigate: (page: Page) => void }) => {
   const { slug } = useParams<{ slug: string }>();
-  const service = slug ? getServiceBySlug(slug) : null;
+  const { services } = useSite();
+  const service = slug ? services.find(s => s.id === slug) ?? null : null;
 
   if (!service) {
     return (
@@ -1323,7 +1333,7 @@ const BookingPage = () => {
 
 const galleryCategories = ['All', 'Signature Brows', 'Lip Blush', 'Defining Liner'];
 
-const galleryItems = [
+const defaultGalleryItems: GalleryItemCMS[] = [
   {
     image: '/gallery/brows-nano-portrait.jpg',
     title: 'Nano Fusion',
@@ -1420,6 +1430,7 @@ const InstagramFeed = () => {
 const GalleryPage = () => {
   const [activeFilter, setActiveFilter] = useState('All');
   const [selectedItem, setSelectedItem] = useState<any>(null);
+  const { galleryItems } = useSite();
 
   // Close modal on Escape key
   useEffect(() => {
@@ -1428,8 +1439,8 @@ const GalleryPage = () => {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
-  const filteredItems = activeFilter === 'All' 
-    ? galleryItems 
+  const filteredItems = activeFilter === 'All'
+    ? galleryItems
     : galleryItems.filter(item => item.category === activeFilter);
 
   return (
@@ -1622,7 +1633,7 @@ const PhotoUpload = ({ fieldKey, label, sub, formData, setFormData }: {
 
 // --- Main App ---
 
-export default function App() {
+function AppShell() {
   const navigate = useNavigate();
   const location = useLocation();
   const [showScrollTop, setShowScrollTop] = useState(false);
@@ -1780,3 +1791,12 @@ export default function App() {
 }
 
 
+
+export default function App() {
+  const content = useSiteContent({ services: defaultServices, galleryItems: defaultGalleryItems });
+  return (
+    <SiteContentContext.Provider value={content}>
+      <AppShell />
+    </SiteContentContext.Provider>
+  );
+}
