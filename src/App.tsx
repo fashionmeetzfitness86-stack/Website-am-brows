@@ -1155,20 +1155,12 @@ const ServiceDetailPage = ({ onNavigate }: { onNavigate: (page: Page) => void })
                     <div className="p-8 flex flex-col flex-1">
                       <h3 className="text-3xl font-serif mb-3 leading-tight">{v.title}</h3>
                       <p className="text-sm text-ink/55 leading-relaxed mb-8 flex-1 line-clamp-5">{v.description}</p>
-                      <div className="flex flex-col gap-3">
-                        <button
-                          onClick={() => openBookingFor(v.title)}
-                          className="w-full py-5 bg-accent text-paper text-xs uppercase tracking-[0.2em] font-bold hover:bg-ink transition-all shadow-lg rounded-full flex items-center justify-center gap-3"
-                        >
-                          Book {v.title} <ArrowRight className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => { navigate(`/services/${service.id}/${variantSlug}`); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                          className="text-[10px] text-ink/40 uppercase tracking-widest font-bold hover:text-accent transition-colors flex items-center justify-center gap-2 py-2 rounded-full"
-                        >
-                          Read full details <ArrowRight className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
+                      <button
+                        onClick={() => openBookingFor(v.title)}
+                        className="w-full py-5 bg-accent text-paper text-xs uppercase tracking-[0.2em] font-bold hover:bg-ink transition-all shadow-lg rounded-full flex items-center justify-center gap-3"
+                      >
+                        Book {v.title} <ArrowRight className="w-4 h-4" />
+                      </button>
                     </div>
                   </motion.div>
                 );
