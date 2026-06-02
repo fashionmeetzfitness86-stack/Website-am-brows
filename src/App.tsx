@@ -1615,13 +1615,13 @@ const GalleryPage = () => {
                    className="group cursor-pointer"
                    onClick={() => setSelectedItem(item)}
                  >
-                    <div className="aspect-[3/4] bg-warm-gray overflow-hidden mb-6 relative rounded-3xl shadow-md group-hover:shadow-xl transition-shadow">
+                    <div className="aspect-[3/4] bg-paper overflow-hidden mb-6 relative rounded-3xl shadow-md group-hover:shadow-xl transition-shadow">
                        <img
-                        src={`${item.image}?auto=format&fit=crop&q=80&w=800`}
+                        src={item.image}
                         alt={item.title}
                         loading="lazy"
                         decoding="async"
-                        className="w-full h-full object-cover transition-transform duration-1000 ease-out group-hover:scale-105"
+                        className="w-full h-full object-contain transition-transform duration-1000 ease-out group-hover:scale-[1.03]"
                        />
                        <div className="absolute inset-0 bg-ink/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                           <div className="w-12 h-12 rounded-full bg-paper/90 backdrop-blur flex items-center justify-center scale-0 group-hover:scale-100 transition-transform">
@@ -1668,11 +1668,11 @@ const GalleryPage = () => {
                   >
                      <X className="w-5 h-5" />
                   </button>
-                  <div className="flex-[3] bg-warm-gray overflow-hidden">
-                    <img 
-                      src={`${selectedItem.image}?auto=format&fit=crop&q=100&w=1200`} 
-                      alt={selectedItem.title} 
-                      className="w-full h-full object-cover"
+                  <div className="flex-[3] bg-paper overflow-hidden flex items-center justify-center">
+                    <img
+                      src={selectedItem.image}
+                      alt={selectedItem.title}
+                      className="w-full h-full object-contain"
                     />
                   </div>
                   <div className="flex-[2] p-12 flex flex-col justify-center bg-paper">
