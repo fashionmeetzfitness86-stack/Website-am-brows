@@ -525,20 +525,14 @@ const Services = ({ onSelectService, onNavigate, excludeIds = [] }: { onSelectSe
             onClick={() => onSelectService(service)}
             aria-label={`View details for ${service.title}`}
           >
-            <div className="aspect-square bg-paper overflow-hidden mb-8 relative rounded-2xl">
-               <img src={service.image} alt="" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-               <div className="absolute bottom-6 left-6 right-6">
-                  <div className="bg-white/90 backdrop-blur px-6 py-4 flex justify-between items-center rounded-full group-hover:bg-accent group-hover:text-paper transition-colors">
-                     <span className="text-[10px] uppercase tracking-widest font-bold">Book {service.title}</span>
-                     <ArrowRight className="w-4 h-4 opacity-40 group-hover:opacity-100" />
-                  </div>
-               </div>
+            <div className="aspect-square bg-paper overflow-hidden mb-6 relative rounded-3xl shadow-md group-hover:shadow-xl transition-shadow">
+               <img src={service.image} alt="" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
             </div>
-            <div className="flex justify-between items-start mb-4">
+            <div className="flex justify-between items-start mb-3">
               <h3 className="text-2xl font-serif">{service.title}</h3>
               <span className="text-sm font-medium text-accent">{service.price}</span>
             </div>
-            <p className="text-sm text-ink/60 leading-relaxed mb-6 line-clamp-2">
+            <p className="text-sm text-ink/60 leading-relaxed mb-5 line-clamp-2">
               {service.shortDescription}
             </p>
             <div className="flex flex-wrap gap-2 mb-6">
