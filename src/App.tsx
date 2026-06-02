@@ -525,11 +525,11 @@ const Services = ({ onSelectService, onNavigate, excludeIds = [] }: { onSelectSe
             onClick={() => onSelectService(service)}
             aria-label={`View details for ${service.title}`}
           >
-            <div className="aspect-square bg-paper overflow-hidden mb-8 relative">
+            <div className="aspect-square bg-paper overflow-hidden mb-8 relative rounded-2xl">
                <img src={service.image} alt="" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                <div className="absolute bottom-6 left-6 right-6">
-                  <div className="bg-white/90 backdrop-blur px-6 py-4 flex justify-between items-center group-hover:bg-accent group-hover:text-paper transition-colors">
-                     <span className="text-[10px] uppercase tracking-widest font-bold">View Details</span>
+                  <div className="bg-white/90 backdrop-blur px-6 py-4 flex justify-between items-center rounded-full group-hover:bg-accent group-hover:text-paper transition-colors">
+                     <span className="text-[10px] uppercase tracking-widest font-bold">Book {service.title}</span>
                      <ArrowRight className="w-4 h-4 opacity-40 group-hover:opacity-100" />
                   </div>
                </div>
@@ -543,14 +543,14 @@ const Services = ({ onSelectService, onNavigate, excludeIds = [] }: { onSelectSe
             </p>
             <div className="flex flex-wrap gap-2 mb-6">
               {service.tags.map(tag => (
-                <span key={tag} className="text-[9px] uppercase tracking-widest px-3 py-1 bg-paper font-bold text-ink/40">{tag}</span>
+                <span key={tag} className="text-[9px] uppercase tracking-widest px-3 py-1 bg-paper font-bold text-ink/40 rounded-full">{tag}</span>
               ))}
             </div>
             <button
-              onClick={(e) => { e.stopPropagation(); openBooking(); }}
-              className="w-full py-4 border border-ink/15 text-[10px] uppercase tracking-[0.3em] font-bold hover:bg-accent hover:text-paper hover:border-accent transition-all duration-300"
+              onClick={(e) => { e.stopPropagation(); onSelectService(service); }}
+              className="w-full py-4 bg-accent text-paper text-[10px] uppercase tracking-[0.3em] font-bold rounded-full hover:bg-ink transition-all duration-300 flex items-center justify-center gap-3"
             >
-              Book Now
+              Book Now <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </motion.button>
         ))}
