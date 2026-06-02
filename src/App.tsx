@@ -1122,6 +1122,9 @@ const ServiceDetailPage = ({ onNavigate }: { onNavigate: (page: Page) => void })
               <p className="text-xl text-ink/70 leading-relaxed font-serif italic">{service.shortDescription}</p>
               <p className="text-ink/60 leading-relaxed mt-8">{service.description}</p>
             </motion.div>
+            <p className="text-center text-[11px] text-ink/40 uppercase tracking-[0.3em] font-bold mb-10">
+              Choose your option below — both are bookable
+            </p>
             <div className={`grid gap-10 ${variants.length === 2 ? 'md:grid-cols-2' : variants.length === 3 ? 'md:grid-cols-3' : 'md:grid-cols-2 lg:grid-cols-3'}`}>
               {variants.map((v: any, vi: number) => {
                 const variantSlug = slugifyVariant(v.title);
@@ -1131,33 +1134,37 @@ const ServiceDetailPage = ({ onNavigate }: { onNavigate: (page: Page) => void })
                     initial={{ opacity: 0, y: 30 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
+                    whileHover={{ y: -4 }}
                     transition={{ delay: vi * 0.1, duration: 0.6, ease: 'easeOut' }}
-                    className="group bg-white border border-ink/5 shadow-sm overflow-hidden flex flex-col"
+                    className="group bg-white border border-ink/5 rounded-3xl shadow-md hover:shadow-2xl transition-shadow overflow-hidden flex flex-col"
                   >
                     <button
                       onClick={() => { navigate(`/services/${service.id}/${variantSlug}`); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
                       className="block w-full aspect-[4/5] bg-warm-gray overflow-hidden relative focus-visible:outline-accent"
                       aria-label={`See details for ${v.title}`}
                     >
-                      <img src={v.image} alt={v.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.03]" />
-                      <div className="absolute top-6 right-6 bg-paper/90 backdrop-blur px-5 py-3 shadow-xl">
-                        <p className="text-[10px] uppercase tracking-widest font-bold opacity-40 mb-0.5">Price</p>
-                        <p className="text-xl font-serif text-accent">{v.price}</p>
+                      <img src={v.image} alt={v.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.04]" />
+                      <div className="absolute top-5 left-5 bg-ink/85 backdrop-blur text-paper px-4 py-1.5 rounded-full text-[10px] uppercase tracking-widest font-bold">
+                        Option {vi + 1} of {variants.length}
+                      </div>
+                      <div className="absolute top-5 right-5 bg-paper/95 backdrop-blur px-5 py-3 rounded-2xl shadow-xl">
+                        <p className="text-[9px] uppercase tracking-widest font-bold opacity-40 mb-0.5">Price</p>
+                        <p className="text-xl font-serif text-accent leading-none">{v.price}</p>
                       </div>
                     </button>
                     <div className="p-8 flex flex-col flex-1">
-                      <h3 className="text-3xl font-serif mb-4">{v.title}</h3>
-                      <p className="text-sm text-ink/60 leading-relaxed mb-8 flex-1 line-clamp-5">{v.description}</p>
+                      <h3 className="text-3xl font-serif mb-3 leading-tight">{v.title}</h3>
+                      <p className="text-sm text-ink/55 leading-relaxed mb-8 flex-1 line-clamp-5">{v.description}</p>
                       <div className="flex flex-col gap-3">
                         <button
                           onClick={() => openBookingFor(v.title)}
-                          className="w-full py-5 bg-accent text-paper text-xs uppercase tracking-[0.2em] font-bold hover:bg-ink transition-all shadow-lg flex items-center justify-center gap-3"
+                          className="w-full py-5 bg-accent text-paper text-xs uppercase tracking-[0.2em] font-bold hover:bg-ink transition-all shadow-lg rounded-full flex items-center justify-center gap-3"
                         >
                           Book {v.title} <ArrowRight className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => { navigate(`/services/${service.id}/${variantSlug}`); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                          className="text-[10px] text-ink/40 uppercase tracking-widest font-bold hover:text-accent transition-colors flex items-center justify-center gap-2 py-2"
+                          className="text-[10px] text-ink/40 uppercase tracking-widest font-bold hover:text-accent transition-colors flex items-center justify-center gap-2 py-2 rounded-full"
                         >
                           Read full details <ArrowRight className="w-3.5 h-3.5" />
                         </button>
