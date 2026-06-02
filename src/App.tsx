@@ -18,6 +18,14 @@ type Page = 'home' | 'services' | 'gallery' | 'booking' | 'artist' | 'contact' |
 // changes it. All "Book Now" CTAs open it in a new tab; /booking redirects.
 const JOTFORM_BOOKING_URL = 'https://form.jotform.com/210908294397061';
 const openBooking = () => window.open(JOTFORM_BOOKING_URL, '_blank', 'noopener,noreferrer');
+// Opens Jotform with a `?service=<name>` query parameter so Ashley can prefill
+// the dropdown / track which service the inquiry came from.
+const openBookingFor = (serviceName?: string) => {
+  const url = serviceName
+    ? `${JOTFORM_BOOKING_URL}?service=${encodeURIComponent(serviceName)}`
+    : JOTFORM_BOOKING_URL;
+  window.open(url, '_blank', 'noopener,noreferrer');
+};
 
 
 // CMS content context — App() loads from Supabase and provides; components consume.
@@ -41,13 +49,13 @@ const defaultServices: ServiceCMS[] = [
       {
         title: 'Powder Brows',
         price: '$650',
-        image: '/ashley-home-feature.jpg',
+        image: '/gallery/powder-brows-portrait.jpg',
         description: 'Most popular. Done with a single-needle tattoo machine that layers small pixels of pigment into the skin until the desired amount of saturation is achieved. Can be bold and defined to your preference, or softly shaded with no harsh edges for a natural makeup look. Best suited for all skin types, especially oily and mature types. (Does not include touch-up.)'
       },
       {
         title: 'Nano / Nano Fusion Brows',
         price: '$700',
-        image: '/gallery/nano-brows-1.jpg',
+        image: '/gallery/brows-nano-portrait.jpg',
         description: 'Not to be confused with microblading. Done using a machine, making it gentler on the skin and more sustainable long-term. NANO: a blend of ultra-fine, hair-like strokes for a soft natural enhancement that mimics real brow hair. FUSION: a seamless blend of Nano hair strokes and powder shading. Nano Fusion brows offer the best of both worlds — natural texture with added depth and fullness, perfect for those who want realistic detail in the front and a softly defined, fuller brow overall.'
       }
     ],
@@ -1090,101 +1098,119 @@ const ServiceDetailPage = ({ onNavigate }: { onNavigate: (page: Page) => void })
     );
   }
 
+  const hasVariants = Array.isArray((service as any).variants) && (service as any).variants.length > 0;
+  const variants = hasVariants ? (service as any).variants : [];
+
   return (
     <div className="pt-24 min-h-screen bg-paper pb-20">
       <div className="max-w-7xl mx-auto px-6 py-20">
         <button onClick={() => onNavigate('services')} className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold opacity-40 hover:opacity-100 mb-12">
           <ChevronLeft className="w-4 h-4" /> Back to services
         </button>
-        
-        <div className="grid lg:grid-cols-2 gap-20 items-start mb-32">
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }} 
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-          >
-             <div className="aspect-[4/5] bg-warm-gray overflow-hidden shadow-2xl relative">
-                <img src={service.image} alt={service.title} className="w-full h-full object-cover" />
-                <div className="absolute top-8 right-8 bg-paper/90 backdrop-blur px-6 py-4 shadow-xl">
-                   <p className="text-[10px] uppercase tracking-widest font-bold opacity-40 mb-1">Starting at</p>
-                   <p className="text-2xl font-serif text-accent">{service.price}</p>
-                </div>
-             </div>
-          </motion.div>
-          
-          <motion.div 
-            initial={{ opacity: 0, y: 30 }} 
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
-          >
-             <p className="text-accent text-[10px] uppercase tracking-[0.5em] font-bold mb-6">Service Detail</p>
-             <h2 className="text-5xl md:text-7xl font-serif mb-8 leading-tight">{service.title}</h2>
-             <p className="text-xl text-ink/70 leading-relaxed mb-12 font-serif italic border-l-2 border-accent pl-8">
-                {service.shortDescription}
-             </p>
-             <div className="prose prose-ink max-w-none mb-12 text-ink/60 leading-relaxed space-y-6">
-                <p>{service.description}</p>
-             </div>
-             <div className="flex flex-wrap gap-3 mb-12">
-                {service.tags.map((tag: string) => (
-                  <span key={tag} className="px-6 py-2 bg-white border border-ink/5 text-[10px] uppercase tracking-widest font-bold">{tag}</span>
-                ))}
-             </div>
-             <button
-                onClick={openBooking}
-                className="w-full py-6 bg-accent text-paper text-xs uppercase tracking-[0.2em] font-bold hover:bg-ink transition-all shadow-2xl flex items-center justify-center gap-4"
-             >
-                Book This Service <ArrowRight className="w-4 h-4" />
-             </button>
-          </motion.div>
-        </div>
 
-        {Array.isArray((service as any).variants) && (service as any).variants.length > 0 && (
+        {hasVariants ? (
+          // When the service has variants, the page IS the variant grid — no duplicate hero image.
           <div className="mb-32">
-            <div className="text-center mb-16">
-              <p className="text-accent text-[10px] uppercase tracking-[0.5em] font-bold mb-4">Choose Your Style</p>
-              <h3 className="text-4xl md:text-5xl font-serif">Available Options</h3>
-              <p className="text-ink/50 text-sm mt-4 max-w-xl mx-auto">
-                Tap any option to see full details, photos and book it.
-              </p>
-            </div>
-            <div className={`grid gap-8 ${
-              (service as any).variants.length === 2 ? 'md:grid-cols-2'
-              : (service as any).variants.length === 3 ? 'md:grid-cols-3'
-              : 'md:grid-cols-2 lg:grid-cols-3'
-            }`}>
-              {(service as any).variants.map((v: any, vi: number) => {
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, ease: 'easeOut' }}
+              className="text-center max-w-3xl mx-auto mb-16"
+            >
+              <p className="text-accent text-[10px] uppercase tracking-[0.5em] font-bold mb-6">Service Detail</p>
+              <h2 className="text-5xl md:text-7xl font-serif mb-8 leading-tight">{service.title}</h2>
+              <p className="text-xl text-ink/70 leading-relaxed font-serif italic">{service.shortDescription}</p>
+              <p className="text-ink/60 leading-relaxed mt-8">{service.description}</p>
+            </motion.div>
+            <div className={`grid gap-10 ${variants.length === 2 ? 'md:grid-cols-2' : variants.length === 3 ? 'md:grid-cols-3' : 'md:grid-cols-2 lg:grid-cols-3'}`}>
+              {variants.map((v: any, vi: number) => {
                 const variantSlug = slugifyVariant(v.title);
                 return (
-                  <motion.button
+                  <motion.div
                     key={vi}
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={{ opacity: 0, y: 30 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
-                    whileHover={{ y: -6 }}
-                    transition={{ delay: vi * 0.08, duration: 0.45 }}
-                    onClick={() => { navigate(`/services/${service.id}/${variantSlug}`); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                    className="group text-left bg-white border border-ink/5 shadow-sm overflow-hidden flex flex-col focus-visible:outline-accent"
-                    aria-label={`See details for ${v.title}`}
+                    transition={{ delay: vi * 0.1, duration: 0.6, ease: 'easeOut' }}
+                    className="group bg-white border border-ink/5 shadow-sm overflow-hidden flex flex-col"
                   >
-                    <div className="aspect-square bg-warm-gray overflow-hidden">
-                      <img src={v.image} alt={v.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                    </div>
-                    <div className="p-6">
-                      <div className="flex items-baseline justify-between mb-2">
-                        <h4 className="text-xl font-serif">{v.title}</h4>
-                        <span className="text-accent font-serif">{v.price}</span>
+                    <button
+                      onClick={() => { navigate(`/services/${service.id}/${variantSlug}`); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                      className="block w-full aspect-[4/5] bg-warm-gray overflow-hidden relative focus-visible:outline-accent"
+                      aria-label={`See details for ${v.title}`}
+                    >
+                      <img src={v.image} alt={v.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.03]" />
+                      <div className="absolute top-6 right-6 bg-paper/90 backdrop-blur px-5 py-3 shadow-xl">
+                        <p className="text-[10px] uppercase tracking-widest font-bold opacity-40 mb-0.5">Price</p>
+                        <p className="text-xl font-serif text-accent">{v.price}</p>
                       </div>
-                      <p className="text-xs text-ink/40 uppercase tracking-widest font-bold mt-3 flex items-center gap-2 group-hover:text-accent transition-colors">
-                        View details <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-                      </p>
+                    </button>
+                    <div className="p-8 flex flex-col flex-1">
+                      <h3 className="text-3xl font-serif mb-4">{v.title}</h3>
+                      <p className="text-sm text-ink/60 leading-relaxed mb-8 flex-1 line-clamp-5">{v.description}</p>
+                      <div className="flex flex-col gap-3">
+                        <button
+                          onClick={() => openBookingFor(v.title)}
+                          className="w-full py-5 bg-accent text-paper text-xs uppercase tracking-[0.2em] font-bold hover:bg-ink transition-all shadow-lg flex items-center justify-center gap-3"
+                        >
+                          Book {v.title} <ArrowRight className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => { navigate(`/services/${service.id}/${variantSlug}`); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                          className="text-[10px] text-ink/40 uppercase tracking-widest font-bold hover:text-accent transition-colors flex items-center justify-center gap-2 py-2"
+                        >
+                          Read full details <ArrowRight className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </div>
-                  </motion.button>
+                  </motion.div>
                 );
               })}
             </div>
+          </div>
+        ) : (
+          <div className="grid lg:grid-cols-2 gap-20 items-start mb-32">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8, ease: 'easeOut' }}
+            >
+              <div className="aspect-[4/5] bg-warm-gray overflow-hidden shadow-2xl relative">
+                <img src={service.image} alt={service.title} className="w-full h-full object-cover" />
+                <div className="absolute top-8 right-8 bg-paper/90 backdrop-blur px-6 py-4 shadow-xl">
+                  <p className="text-[10px] uppercase tracking-widest font-bold opacity-40 mb-1">Starting at</p>
+                  <p className="text-2xl font-serif text-accent">{service.price}</p>
+                </div>
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8, delay: 0.2, ease: 'easeOut' }}
+            >
+              <p className="text-accent text-[10px] uppercase tracking-[0.5em] font-bold mb-6">Service Detail</p>
+              <h2 className="text-5xl md:text-7xl font-serif mb-8 leading-tight">{service.title}</h2>
+              <p className="text-xl text-ink/70 leading-relaxed mb-12 font-serif italic border-l-2 border-accent pl-8">
+                {service.shortDescription}
+              </p>
+              <div className="prose prose-ink max-w-none mb-12 text-ink/60 leading-relaxed space-y-6">
+                <p>{service.description}</p>
+              </div>
+              <div className="flex flex-wrap gap-3 mb-12">
+                {service.tags.map((tag: string) => (
+                  <span key={tag} className="px-6 py-2 bg-white border border-ink/5 text-[10px] uppercase tracking-widest font-bold">{tag}</span>
+                ))}
+              </div>
+              <button
+                onClick={() => openBookingFor(service.title)}
+                className="w-full py-6 bg-accent text-paper text-xs uppercase tracking-[0.2em] font-bold hover:bg-ink transition-all shadow-2xl flex items-center justify-center gap-4"
+              >
+                Book {service.title} <ArrowRight className="w-4 h-4" />
+              </button>
+            </motion.div>
           </div>
         )}
 
@@ -1319,7 +1345,7 @@ const VariantDetailPage = () => {
               {variant.description}
             </div>
             <button
-              onClick={openBooking}
+              onClick={() => openBookingFor(variant.title)}
               className="w-full py-6 bg-accent text-paper text-xs uppercase tracking-[0.2em] font-bold hover:bg-ink transition-all shadow-2xl flex items-center justify-center gap-4"
             >
               Book {variant.title} <ArrowRight className="w-4 h-4" />
