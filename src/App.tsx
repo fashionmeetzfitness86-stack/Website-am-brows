@@ -528,24 +528,26 @@ const Services = ({ onSelectService, onNavigate, excludeIds = [] }: { onSelectSe
             <div className="aspect-square bg-paper overflow-hidden mb-6 relative rounded-3xl shadow-md group-hover:shadow-xl transition-shadow">
                <img src={service.image} alt="" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
             </div>
-            <div className="flex justify-between items-start mb-3">
-              <h3 className="text-2xl font-serif">{service.title}</h3>
-              <span className="text-sm font-medium text-accent">{service.price}</span>
+            <div className="px-2">
+              <div className="flex justify-between items-start mb-3">
+                <h3 className="text-2xl font-serif">{service.title}</h3>
+                <span className="text-sm font-medium text-accent">{service.price}</span>
+              </div>
+              <p className="text-sm text-ink/60 leading-relaxed mb-5 line-clamp-2">
+                {service.shortDescription}
+              </p>
+              <div className="flex flex-wrap gap-2 mb-6">
+                {service.tags.map(tag => (
+                  <span key={tag} className="text-[9px] uppercase tracking-widest px-3 py-1 bg-paper font-bold text-ink/40 rounded-full">{tag}</span>
+                ))}
+              </div>
+              <button
+                onClick={(e) => { e.stopPropagation(); onSelectService(service); }}
+                className="w-full py-4 bg-accent text-paper text-[10px] uppercase tracking-[0.3em] font-bold rounded-full hover:bg-ink transition-all duration-300 flex items-center justify-center gap-3"
+              >
+                Book Now <ArrowRight className="w-3.5 h-3.5" />
+              </button>
             </div>
-            <p className="text-sm text-ink/60 leading-relaxed mb-5 line-clamp-2">
-              {service.shortDescription}
-            </p>
-            <div className="flex flex-wrap gap-2 mb-6">
-              {service.tags.map(tag => (
-                <span key={tag} className="text-[9px] uppercase tracking-widest px-3 py-1 bg-paper font-bold text-ink/40 rounded-full">{tag}</span>
-              ))}
-            </div>
-            <button
-              onClick={(e) => { e.stopPropagation(); onSelectService(service); }}
-              className="w-full py-4 bg-accent text-paper text-[10px] uppercase tracking-[0.3em] font-bold rounded-full hover:bg-ink transition-all duration-300 flex items-center justify-center gap-3"
-            >
-              Book Now <ArrowRight className="w-3.5 h-3.5" />
-            </button>
           </motion.button>
         ))}
       </div>
@@ -1535,7 +1537,7 @@ const InstagramFeed = () => {
               target="_blank"
               rel="noopener noreferrer"
               whileHover={{ y: -10 }}
-              className="relative group cursor-pointer aspect-square overflow-hidden bg-warm-gray focus-visible:outline-accent"
+              className="relative group cursor-pointer aspect-square overflow-hidden bg-warm-gray rounded-3xl shadow-md hover:shadow-xl transition-shadow focus-visible:outline-accent"
               aria-label={`View Instagram post with ${post.likes} likes`}
             >
               <img src={`${post.image}?auto=format&fit=crop&q=80&w=400`} alt="" loading="lazy" decoding="async" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
@@ -1613,13 +1615,13 @@ const GalleryPage = () => {
                    className="group cursor-pointer"
                    onClick={() => setSelectedItem(item)}
                  >
-                    <div className="aspect-[3/4] bg-warm-gray overflow-hidden mb-6 relative">
-                       <img 
-                        src={`${item.image}?auto=format&fit=crop&q=80&w=800`} 
-                        alt={item.title} 
+                    <div className="aspect-[3/4] bg-warm-gray overflow-hidden mb-6 relative rounded-3xl shadow-md group-hover:shadow-xl transition-shadow">
+                       <img
+                        src={`${item.image}?auto=format&fit=crop&q=80&w=800`}
+                        alt={item.title}
                         loading="lazy"
                         decoding="async"
-                        className="w-full h-full object-cover transition-transform duration-1000 ease-out group-hover:scale-110" 
+                        className="w-full h-full object-cover transition-transform duration-1000 ease-out group-hover:scale-105"
                        />
                        <div className="absolute inset-0 bg-ink/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                           <div className="w-12 h-12 rounded-full bg-paper/90 backdrop-blur flex items-center justify-center scale-0 group-hover:scale-100 transition-transform">
@@ -1658,7 +1660,7 @@ const GalleryPage = () => {
                 aria-label="Gallery Image Detail"
                 className="fixed inset-0 z-[70] flex items-center justify-center p-6 pointer-events-none"
               >
-                <div className="bg-white max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col md:flex-row pointer-events-auto shadow-2xl relative">
+                <div className="bg-white max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col md:flex-row pointer-events-auto shadow-2xl relative rounded-3xl">
                   <button 
                     onClick={() => setSelectedItem(null)}
                     aria-label="Close image viewer"
