@@ -370,7 +370,8 @@ const Hero = ({ onNavigate }: { onNavigate: (page: Page) => void }) => (
       loop
       muted
       playsInline
-      preload="metadata"
+      preload="auto"
+      poster="/ashley-home-feature.jpg"
       className="absolute inset-0 w-full h-full object-cover -z-20 pointer-events-none"
       aria-hidden="true"
     >
@@ -1703,7 +1704,7 @@ const ArtistPage = () => (
         <div className="space-y-40">
            {artists.map((artist, idx) => (
              <div key={idx} className={`flex flex-col ${idx % 2 === 0 ? 'md:flex-row' : 'md:flex-row-reverse'} gap-20 items-center`}>
-                <motion.div initial={{ opacity: 0, x: idx % 2 === 0 ? -50 : 50 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 1, ease: 'easeOut' }} className="flex-1 aspect-[4/5] bg-warm-gray w-full max-w-md overflow-hidden relative shadow-2xl">
+                <motion.div initial={{ opacity: 0, x: idx % 2 === 0 ? -50 : 50 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 1, ease: 'easeOut' }} className="flex-1 aspect-[4/5] bg-warm-gray w-full max-w-md overflow-hidden relative shadow-2xl rounded-3xl">
                    <img src={artist.image} alt={artist.name} className="w-full h-full object-cover grayscale-[30%] hover:grayscale-0 transition-all duration-700" />
                    <motion.div initial={{ scaleY: 1 }} whileInView={{ scaleY: 0 }} viewport={{ once: true }} transition={{ duration: 0.9, ease: 'easeInOut' }} style={{ originY: 0 }} className="absolute inset-0 bg-paper pointer-events-none" />
                 </motion.div>

@@ -280,11 +280,14 @@ function InquiriesPane() {
 
 // ─── Services pane ───────────────────────────────────────────────────────────
 
+type Variant = ServiceRow['variants'][number];
+
 function ServicesPane() {
   const [rows, setRows] = useState<ServiceRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<ServiceRow | null>(null);
   const [creating, setCreating] = useState(false);
+  const [editingVariant, setEditingVariant] = useState<{ serviceId: string; index: number | null } | null>(null);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [savedId, setSavedId] = useState<string | null>(null);
 
@@ -306,7 +309,6 @@ function ServicesPane() {
       description: row.description,
       image_url: row.image_url,
       tags: row.tags,
-      variants: row.variants,
       process: row.process,
       updated_at: new Date().toISOString(),
     }).eq('id', row.id);
@@ -319,11 +321,10 @@ function ServicesPane() {
   };
 
   const create = async (row: ServiceRow) => {
-    if (!row.title.trim()) { alert('Title is required.'); return; }
-    // Auto-generate an id from the title if user didn't change the placeholder
+    if (!row.title.trim()) { alert('Category title is required.'); return; }
     const slugId = row.id?.trim() || row.title.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
     if (!slugId) { alert('Title must contain at least one letter or number.'); return; }
-    if (rows.some(r => r.id === slugId)) { alert(`A service with id "${slugId}" already exists. Pick a different title.`); return; }
+    if (rows.some(r => r.id === slugId)) { alert(`A category with id "${slugId}" already exists. Pick a different title.`); return; }
 
     const nextSort = rows.length ? Math.max(...rows.map(r => r.sort_order)) + 10 : 10;
 
@@ -337,7 +338,7 @@ function ServicesPane() {
       description: row.description || '',
       image_url: row.image_url || '',
       tags: row.tags ?? [],
-      variants: row.variants ?? [],
+      variants: [],
       process: row.process ?? [],
       testimonials: [],
     });
@@ -350,10 +351,42 @@ function ServicesPane() {
   };
 
   const remove = async (id: string, title: string) => {
-    if (!window.confirm(`Delete the "${title}" service? This cannot be undone.`)) return;
+    if (!window.confirm(`Delete the entire "${title}" category (including all its options)? This cannot be undone.`)) return;
     const { error } = await supabase.from('site_services').delete().eq('id', id);
     if (error) { alert('Delete failed: ' + error.message); return; }
     setRows(prev => prev.filter(r => r.id !== id));
+  };
+
+  const saveVariant = async (serviceId: string, index: number | null, variant: Variant) => {
+    const service = rows.find(r => r.id === serviceId);
+    if (!service) return;
+    if (!variant.title.trim()) { alert('Option title is required.'); return; }
+    const nextVariants: Variant[] = index === null
+      ? [...(service.variants ?? []), variant]
+      : (service.variants ?? []).map((v, i) => i === index ? variant : v);
+    const { error } = await supabase.from('site_services').update({
+      variants: nextVariants,
+      updated_at: new Date().toISOString(),
+    }).eq('id', serviceId);
+    if (error) { alert('Save failed: ' + error.message); return; }
+    setRows(prev => prev.map(r => r.id === serviceId ? { ...r, variants: nextVariants } : r));
+    setEditingVariant(null);
+    setSavedId(serviceId);
+    setTimeout(() => setSavedId(null), 2000);
+  };
+
+  const removeVariant = async (serviceId: string, index: number) => {
+    const service = rows.find(r => r.id === serviceId);
+    if (!service) return;
+    const v = service.variants?.[index];
+    if (!window.confirm(`Remove the "${v?.title || 'option'}" option from ${service.title}?`)) return;
+    const nextVariants = (service.variants ?? []).filter((_, i) => i !== index);
+    const { error } = await supabase.from('site_services').update({
+      variants: nextVariants,
+      updated_at: new Date().toISOString(),
+    }).eq('id', serviceId);
+    if (error) { alert('Delete failed: ' + error.message); return; }
+    setRows(prev => prev.map(r => r.id === serviceId ? { ...r, variants: nextVariants } : r));
   };
 
   if (loading) return <div className="flex items-center justify-center py-32"><div className="w-6 h-6 border-2 border-[#C4A882] border-t-transparent rounded-full animate-spin" /></div>;
@@ -363,38 +396,84 @@ function ServicesPane() {
       <div className="mb-8 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-[#1A1714]">Services & Prices</h1>
-          <p className="text-sm text-[#1A1714]/50 mt-1">Edits appear on the live site within seconds.</p>
+          <p className="text-sm text-[#1A1714]/50 mt-1">Edits appear on the live site within seconds. Organized by category — add options under each.</p>
         </div>
         <button
           onClick={() => setCreating(true)}
           className="px-5 py-2.5 bg-[#C4A882] text-white text-[10px] uppercase tracking-widest font-bold rounded hover:bg-[#b8976e]"
-        >+ Add service</button>
+        >+ Add new category</button>
       </div>
 
-      <div className="grid gap-4">
+      <div className="grid gap-6">
         {rows.map(row => (
-          <div key={row.id} className="bg-white rounded-lg shadow-sm overflow-hidden">
-            <div className="flex items-center gap-5 p-5">
-              <img src={row.image_url} alt="" className="w-20 h-20 object-cover rounded shrink-0 bg-[#F0EDE9]" />
+          <section key={row.id} className="bg-white rounded-xl shadow-sm overflow-hidden">
+            {/* Category header */}
+            <header className="flex items-center gap-5 p-5 border-b border-[#F0EDE9]">
+              <img src={row.image_url} alt="" className="w-20 h-20 object-cover rounded-lg shrink-0 bg-[#F0EDE9]" />
               <div className="flex-1 min-w-0">
-                <div className="flex items-baseline gap-3">
-                  <h3 className="font-semibold text-[#1A1714]">{row.title}</h3>
+                <div className="flex items-baseline gap-3 flex-wrap">
+                  <span className="text-[9px] uppercase tracking-widest font-bold text-[#C4A882]">Category</span>
+                  <h2 className="font-semibold text-[#1A1714] text-lg">{row.title}</h2>
                   <span className="text-[#C4A882] font-semibold">{row.price}</span>
                 </div>
-                <p className="text-sm text-[#1A1714]/60 mt-1 truncate">{row.short_description}</p>
+                <p className="text-sm text-[#1A1714]/60 mt-1">{row.short_description}</p>
                 <p className="text-xs text-[#1A1714]/30 mt-1">{(row.tags ?? []).join(' · ')}</p>
               </div>
-              <button
-                onClick={() => setEditing(row)}
-                className="px-4 py-2 bg-[#1A1714] text-white text-[10px] uppercase tracking-widest font-bold rounded hover:bg-[#C4A882]"
-              >Edit</button>
-              <button
-                onClick={() => remove(row.id, row.title)}
-                className="px-3 py-2 text-[10px] uppercase tracking-widest font-bold text-red-400 hover:text-red-600"
-              >Delete</button>
-              {savedId === row.id && <span className="text-emerald-600 text-xs font-semibold">Saved ✓</span>}
+              <div className="flex items-center gap-2">
+                {savedId === row.id && <span className="text-emerald-600 text-xs font-semibold mr-2">Saved ✓</span>}
+                <button
+                  onClick={() => setEditing(row)}
+                  className="px-4 py-2 bg-[#1A1714] text-white text-[10px] uppercase tracking-widest font-bold rounded hover:bg-[#C4A882]"
+                >Edit category</button>
+                <button
+                  onClick={() => remove(row.id, row.title)}
+                  className="px-3 py-2 text-[10px] uppercase tracking-widest font-bold text-red-400 hover:text-red-600"
+                >Delete</button>
+              </div>
+            </header>
+
+            {/* Variants / options inside this category */}
+            <div className="px-5 py-4 bg-[#FAF9F7]">
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-[10px] uppercase tracking-widest font-bold text-[#1A1714]/50">
+                  Options under {row.title} ({(row.variants ?? []).length})
+                </p>
+                <button
+                  onClick={() => setEditingVariant({ serviceId: row.id, index: null })}
+                  className="px-3 py-1.5 bg-[#C4A882] text-white text-[10px] uppercase tracking-widest font-bold rounded hover:bg-[#b8976e]"
+                >+ Add option to {row.title}</button>
+              </div>
+
+              {(row.variants ?? []).length === 0 ? (
+                <p className="text-xs text-[#1A1714]/40 italic py-4 text-center">
+                  No options yet. Click "+ Add option" if {row.title} has multiple price tiers (e.g. different techniques) — otherwise the category page just shows the main info above.
+                </p>
+              ) : (
+                <ul className="space-y-2">
+                  {(row.variants ?? []).map((v, i) => (
+                    <li key={i} className="flex items-center gap-4 bg-white rounded-lg p-3 shadow-sm">
+                      <img src={v.image} alt="" className="w-14 h-14 object-cover rounded shrink-0 bg-[#F0EDE9]" />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-baseline gap-3 flex-wrap">
+                          <h4 className="font-semibold text-[#1A1714] text-sm">{v.title || '(untitled)'}</h4>
+                          <span className="text-[#C4A882] font-semibold text-sm">{v.price}</span>
+                        </div>
+                        <p className="text-xs text-[#1A1714]/50 mt-1 line-clamp-2">{v.description}</p>
+                      </div>
+                      <button
+                        onClick={() => setEditingVariant({ serviceId: row.id, index: i })}
+                        className="px-3 py-1.5 text-[10px] uppercase tracking-widest font-bold text-[#1A1714] hover:bg-[#FAF9F7] rounded"
+                      >Edit</button>
+                      <button
+                        onClick={() => removeVariant(row.id, i)}
+                        className="px-3 py-1.5 text-[10px] uppercase tracking-widest font-bold text-red-400 hover:text-red-600 rounded"
+                      >Remove</button>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
-          </div>
+          </section>
         ))}
       </div>
 
@@ -419,7 +498,65 @@ function ServicesPane() {
           onSave={create}
         />
       )}
+
+      {editingVariant && (() => {
+        const service = rows.find(r => r.id === editingVariant.serviceId);
+        if (!service) return null;
+        const initial: Variant = editingVariant.index !== null
+          ? service.variants[editingVariant.index]
+          : { title: '', price: '', image: '', description: '' };
+        return (
+          <VariantEditModal
+            categoryTitle={service.title}
+            variant={initial}
+            isNew={editingVariant.index === null}
+            onClose={() => setEditingVariant(null)}
+            onSave={(v) => saveVariant(editingVariant.serviceId, editingVariant.index, v)}
+          />
+        );
+      })()}
     </>
+  );
+}
+
+function VariantEditModal({ categoryTitle, variant, isNew, onClose, onSave }: {
+  categoryTitle: string;
+  variant: Variant;
+  isNew: boolean;
+  onClose: () => void;
+  onSave: (v: Variant) => void;
+}) {
+  const [draft, setDraft] = useState<Variant>(variant);
+  const set = (patch: Partial<Variant>) => setDraft(d => ({ ...d, ...patch }));
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-start justify-center pt-16 px-4 pb-16 overflow-y-auto">
+      <div className="absolute inset-0 bg-black/30" onClick={onClose} />
+      <div className="relative w-full max-w-xl bg-white rounded-lg shadow-2xl">
+        <div className="sticky top-0 bg-white border-b border-[#F0EDE9] px-6 py-4 flex items-center justify-between rounded-t-lg">
+          <div>
+            <p className="text-[10px] uppercase tracking-widest font-bold text-[#C4A882]">{categoryTitle} — Option</p>
+            <h2 className="font-semibold text-[#1A1714]">{isNew ? `Add new option under ${categoryTitle}` : `Edit option: ${variant.title}`}</h2>
+          </div>
+          <button onClick={onClose} className="text-[#1A1714]/30 hover:text-[#1A1714] text-xl">&times;</button>
+        </div>
+
+        <div className="px-6 py-6 space-y-5">
+          <Field label="Option title" value={draft.title} onChange={v => set({ title: v })} placeholder="e.g. Powder Brows" />
+          <Field label="Price (display)" value={draft.price} onChange={v => set({ price: v })} placeholder="$650" />
+          <ImageUploader label="Option photo" value={draft.image} onChange={v => set({ image: v })} folder="services" />
+          <Field label="Description" value={draft.description} onChange={v => set({ description: v })} multiline rows={5} />
+        </div>
+
+        <div className="sticky bottom-0 bg-white border-t border-[#F0EDE9] px-6 py-4 flex gap-3 rounded-b-lg">
+          <button onClick={onClose} className="px-5 py-3 text-[10px] uppercase tracking-widest font-bold text-[#1A1714]/50 hover:text-[#1A1714]">Cancel</button>
+          <button
+            onClick={() => onSave(draft)}
+            className="flex-1 py-3 bg-[#C4A882] text-white text-[10px] uppercase tracking-widest font-bold rounded hover:bg-[#b8976e]"
+          >{isNew ? `Add option to ${categoryTitle}` : 'Save changes'}</button>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -439,9 +576,9 @@ function ServiceEditModal({ row, saving, onClose, onSave, isNew }: {
         </div>
 
         <div className="px-6 py-6 space-y-5">
-          <Field label="Title" value={draft.title} onChange={v => set({ title: v })} />
-          <Field label="Price (display)" value={draft.price} onChange={v => set({ price: v })} placeholder="$650 or $650+" />
-          <ImageUploader label="Main photo" value={draft.image_url} onChange={v => set({ image_url: v })} folder="services" />
+          <Field label="Category title" value={draft.title} onChange={v => set({ title: v })} placeholder="e.g. Brows" />
+          <Field label="Price label (display)" value={draft.price} onChange={v => set({ price: v })} placeholder="$650 or $650+" />
+          <ImageUploader label="Category cover photo" value={draft.image_url} onChange={v => set({ image_url: v })} folder="services" />
           <Field label="Short description" value={draft.short_description} onChange={v => set({ short_description: v })} multiline />
           <Field label="Full description" value={draft.description} onChange={v => set({ description: v })} multiline rows={5} />
           <Field
@@ -449,35 +586,9 @@ function ServiceEditModal({ row, saving, onClose, onSave, isNew }: {
             value={draft.tags.join(', ')}
             onChange={v => set({ tags: v.split(',').map(t => t.trim()).filter(Boolean) })}
           />
-
-          <div>
-            <p className="text-[10px] uppercase tracking-widest font-bold text-[#1A1714]/50 mb-3">
-              Variants ({(draft.variants ?? []).length})
-            </p>
-            <p className="text-xs text-[#1A1714]/40 mb-3">
-              Use variants when one service has multiple price tiers (e.g. Powder Brows vs Nano Fusion, or Lip Blush vs Ombre Lip Blush). Each variant shows its own card with photo + price + description + Book button on the service detail page.
-            </p>
-            <div className="space-y-3">
-              {(draft.variants ?? []).map((v, i) => (
-                <div key={i} className="bg-[#FAF9F7] rounded p-4 space-y-3 relative">
-                  <button
-                    type="button"
-                    onClick={() => set({ variants: (draft.variants ?? []).filter((_, j) => j !== i) })}
-                    className="absolute top-2 right-2 text-[10px] uppercase tracking-widest font-bold text-red-400 hover:text-red-600"
-                  >Remove</button>
-                  <Field label="Variant title" value={v.title} onChange={x => set({ variants: (draft.variants ?? []).map((vv, j) => j === i ? { ...vv, title: x } : vv) })} />
-                  <Field label="Variant price" value={v.price} onChange={x => set({ variants: (draft.variants ?? []).map((vv, j) => j === i ? { ...vv, price: x } : vv) })} />
-                  <ImageUploader label="Variant photo" value={v.image} onChange={x => set({ variants: (draft.variants ?? []).map((vv, j) => j === i ? { ...vv, image: x } : vv) })} folder="services" />
-                  <Field label="Variant description" value={v.description} onChange={x => set({ variants: (draft.variants ?? []).map((vv, j) => j === i ? { ...vv, description: x } : vv) })} multiline rows={3} />
-                </div>
-              ))}
-            </div>
-            <button
-              type="button"
-              onClick={() => set({ variants: [...(draft.variants ?? []), { title: '', price: '', image: '', description: '' }] })}
-              className="mt-3 text-[10px] uppercase tracking-widest font-bold text-[#C4A882] hover:text-[#1A1714]"
-            >+ Add variant</button>
-          </div>
+          <p className="text-xs text-[#1A1714]/40 italic pt-2 border-t border-[#F0EDE9]">
+            Options under this category (e.g. Powder Brows, Nano Fusion) are managed from the main Services page using the "+ Add option" button.
+          </p>
         </div>
 
         <div className="sticky bottom-0 bg-white border-t border-[#F0EDE9] px-6 py-4 flex gap-3 rounded-b-lg">
