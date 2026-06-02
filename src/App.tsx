@@ -377,8 +377,8 @@ const Hero = ({ onNavigate }: { onNavigate: (page: Page) => void }) => (
     >
       <source src="/hero-bg.mp4" type="video/mp4" />
     </video>
-    {/* Soft paper-tinted overlay so the text stays readable */}
-    <div className="absolute inset-0 bg-paper/70 -z-10 pointer-events-none" aria-hidden="true" />
+    {/* Very subtle paper-tinted overlay — kept light so the video shows clearly */}
+    <div className="absolute inset-0 bg-gradient-to-b from-paper/40 via-paper/10 to-paper/40 -z-10 pointer-events-none" aria-hidden="true" />
 
     <motion.p
       initial={{ opacity: 0, y: 10 }}
