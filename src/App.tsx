@@ -457,9 +457,9 @@ const About = () => (
          whileInView={{ opacity: 1, x: 0, scale: 1 }}
          viewport={{ once: true }}
          transition={{ duration: 0.9, ease: 'easeOut' }}
-         className="relative aspect-[3/4] bg-warm-gray overflow-hidden shadow-2xl"
+         className="relative aspect-[3/4] bg-warm-gray overflow-hidden shadow-2xl rounded-2xl"
        >
-         <img 
+         <img
            src="/ashley-portrait.jpg"
            alt="Ashley Miller"
            className="w-full h-full object-cover"
@@ -1410,7 +1410,7 @@ const HomePage = ({ onNavigate, onSelectService }: { onNavigate: (page: Page) =>
                initial={{ scale: 1.1 }}
                whileInView={{ scale: 1 }}
                transition={{ duration: 1.5 }}
-               className="aspect-[4/5] bg-ink"
+               className="aspect-[4/5] bg-ink rounded-2xl overflow-hidden"
              >
                 <img src="/permanent-makeup-feature.jpg" alt="Ashley working on a client's brows" className="w-full h-full object-cover" />
              </motion.div>
@@ -1616,13 +1616,13 @@ const GalleryPage = () => {
                    className="group cursor-pointer"
                    onClick={() => setSelectedItem(item)}
                  >
-                    <div className="aspect-[3/4] bg-paper overflow-hidden mb-6 relative rounded-3xl shadow-md group-hover:shadow-xl transition-shadow">
+                    <div className="aspect-square bg-paper overflow-hidden mb-6 relative rounded-2xl shadow-md group-hover:shadow-xl transition-shadow flex items-center justify-center">
                        <img
                         src={item.image}
                         alt={item.title}
                         loading="lazy"
                         decoding="async"
-                        className="w-full h-full object-contain transition-transform duration-1000 ease-out group-hover:scale-[1.03]"
+                        className="max-w-full max-h-full object-contain transition-transform duration-1000 ease-out group-hover:scale-[1.03]"
                        />
                        <div className="absolute inset-0 bg-ink/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                           <div className="w-12 h-12 rounded-full bg-paper/90 backdrop-blur flex items-center justify-center scale-0 group-hover:scale-100 transition-transform">
