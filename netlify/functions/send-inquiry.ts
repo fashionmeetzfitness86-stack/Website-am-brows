@@ -7,7 +7,7 @@
 // Required env vars (Netlify → Site → Build & deploy → Environment):
 //   RESEND_API_KEY   — from resend.com
 //   FROM_EMAIL       — e.g. "Ashley M. Brows <onboarding@resend.dev>"
-//   ASHLEY_EMAIL     — destination inbox, e.g. "ashleymbrows@gmail.com"
+// Destination inbox is hardcoded to ashleymbrows@gmail.com (see ASHLEY_EMAIL below).
 
 import type { Handler } from '@netlify/functions';
 
@@ -45,7 +45,9 @@ export const handler: Handler = async (event) => {
 
     const RESEND_API_KEY = process.env.RESEND_API_KEY;
     const FROM_EMAIL = process.env.FROM_EMAIL ?? 'Ashley M. Brows <onboarding@resend.dev>';
-    const ASHLEY_EMAIL = process.env.ASHLEY_EMAIL ?? 'adminashleybrows@gmail.com';
+    // All inquiry notifications go to Ashley's inbox. Hardcoded on purpose so a
+    // stale or missing ASHLEY_EMAIL env var can never misroute the queries.
+    const ASHLEY_EMAIL = 'ashleymbrows@gmail.com';
 
     if (!RESEND_API_KEY) {
       console.error('[send-inquiry] RESEND_API_KEY not set in Netlify env.');
