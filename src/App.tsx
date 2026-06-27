@@ -10,7 +10,14 @@ import AdminRoute from './components/AdminRoute';
 import AdminDashboard from './AdminDashboard';
 
 // --- Types ---
-type Page = 'home' | 'services' | 'gallery' | 'booking' | 'artist' | 'contact' | 'service-detail' | 'privacy' | 'policies';
+type Page = 'home' | 'services' | 'gallery' | 'booking' | 'artist' | 'contact' | 'service-detail' | 'privacy' | 'policies' | 'aftercare';
+
+// Display labels for nav/footer where the page token differs from the wording we
+// want shown. Falls back to the raw token (which CSS uppercases) when absent.
+const PAGE_LABELS: Partial<Record<Page, string>> = {
+  aftercare: 'Preparation & Aftercare',
+};
+const pageLabel = (p: Page) => PAGE_LABELS[p] ?? p;
 
 
 // --- Booking ---
@@ -260,7 +267,7 @@ const Navbar = ({ onNavigate, currentPage }: { onNavigate: (page: Page) => void,
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const navLinks: Page[] = ['home', 'services', 'gallery', 'artist', 'contact', 'policies'];
+  const navLinks: Page[] = ['home', 'services', 'gallery', 'artist', 'aftercare', 'contact', 'policies'];
 
   return (
     <>
@@ -295,7 +302,7 @@ const Navbar = ({ onNavigate, currentPage }: { onNavigate: (page: Page) => void,
               aria-current={currentPage === p ? 'page' : undefined}
               className={`text-[10px] uppercase tracking-[0.3em] font-bold transition-colors focus-visible:outline-accent px-2 py-1 ${currentPage === p ? 'text-accent' : 'text-ink/40 hover:text-ink'}`}
             >
-              {p}
+              {pageLabel(p)}
             </button>
           ))}
         </div>
@@ -341,7 +348,7 @@ const Navbar = ({ onNavigate, currentPage }: { onNavigate: (page: Page) => void,
                   onClick={() => navigate(p)}
                   className={`text-left py-4 border-b border-ink/5 text-sm uppercase tracking-[0.3em] font-bold transition-colors ${currentPage === p ? 'text-accent' : 'text-ink/60 hover:text-accent'}`}
                 >
-                  {p}
+                  {pageLabel(p)}
                 </motion.button>
               ))}
               <motion.button
@@ -504,13 +511,17 @@ const About = () => (
   </section>
 );
 
-const Services = ({ onSelectService, onNavigate, excludeIds = [] }: { onSelectService: (service: any) => void, onNavigate: (page: any) => void, excludeIds?: string[] }) => {
+const Services = ({ onSelectService, onNavigate, excludeIds = [], asPage = false }: { onSelectService: (service: any) => void, onNavigate: (page: any) => void, excludeIds?: string[], asPage?: boolean }) => {
   const { services } = useSite();
   return (
-  <section className="py-24 bg-paper-dark px-6">
+  // asPage: standalone /services route — extra top padding clears the fixed navbar
+  // and a proper page title is shown. On the homepage (asPage=false) it stays a
+  // compact in-page section.
+  <section className={`${asPage ? 'pt-40 md:pt-44 min-h-screen ' : ''}py-24 bg-paper-dark px-6`}>
     <div className="max-w-7xl mx-auto">
       <div className="mb-20 text-center">
-        <h2 className="text-4xl md:text-6xl font-serif mb-4">Curated Aesthetics</h2>
+        {asPage && <p className="text-accent text-[10px] uppercase tracking-[0.5em] mb-4 font-bold">Services &amp; Pricing</p>}
+        <h2 className="text-4xl md:text-6xl font-serif mb-4">{asPage ? 'Curated Aesthetics' : 'Curated Aesthetics'}</h2>
         <p className="text-ink/50 uppercase tracking-[0.3em] font-bold text-[10px]">Every procedure is a bespoke masterpiece</p>
       </div>
       <div className="grid md:grid-cols-3 gap-8">
@@ -552,6 +563,19 @@ const Services = ({ onSelectService, onNavigate, excludeIds = [] }: { onSelectSe
           </motion.button>
         ))}
       </div>
+
+      {/* On the homepage (not the full /services page) invite visitors to see the
+          rest of the menu — Tooth Gems and any other services hidden here. */}
+      {!asPage && (
+        <div className="text-center mt-16">
+          <button
+            onClick={() => onNavigate('services')}
+            className="group inline-flex items-center gap-3 px-12 py-4 border border-ink/15 text-[10px] uppercase tracking-[0.3em] font-bold hover:bg-accent hover:text-paper hover:border-accent transition-all focus-visible:outline-accent"
+          >
+            See More Services <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+          </button>
+        </div>
+      )}
     </div>
   </section>
   );
@@ -617,6 +641,9 @@ const Footer = ({ onNavigate }: { onNavigate: (page: Page) => void }) => (
              >
                The Studio
              </button>
+           </li>
+           <li className="hover:text-accent transition-colors">
+             <button className="focus-visible:outline-accent uppercase text-[10px] font-bold" onClick={() => onNavigate('aftercare')}>Preparation &amp; Aftercare</button>
            </li>
            <li className="hover:text-accent transition-colors">
              <button className="focus-visible:outline-accent uppercase text-[10px] font-bold" onClick={() => onNavigate('policies')}>Studio Policies</button>
@@ -834,6 +861,179 @@ const PoliciesPage = () => (
             Questions about any of the above? Email <a href="mailto:ashleymbrows@gmail.com" className="text-accent hover:underline">ashleymbrows@gmail.com</a> before booking.
           </p>
         </section>
+      </div>
+    </div>
+  </div>
+);
+
+// Prep + Aftercare content, recovered from Ashley's previous site. Items beginning
+// with "## " render as a small accent sub-heading instead of a bullet.
+const aftercareGuides: { title: string; prep: string[]; after: string[] }[] = [
+  {
+    title: 'Brows',
+    prep: [
+      'Avoid caffeine/alcohol and use of blood thinners (aspirin, ibuprofen, fish oil, Niacin, etc.) 24+ hours prior.',
+      'Discontinue skin care with exfoliants/acids (AHA/BHA, glycolic, Retin-A, etc.) 2 weeks prior.',
+      'Avoid sun tanning 30 days prior to and after your appointment. Always use sunscreen. Coming to your appointment with a tan will result in being sent home and rescheduling.',
+      'Botox/Filler should be done 2 weeks prior.',
+      'Brow waxing and shaping at least 72 hours prior.',
+      'Brow tinting 7 days prior.',
+      'Come with your brows grown out so Ashley can see how they grow naturally.',
+      'Avoid exercise. Elevated heart rates increase oil production and blood flow, leading to poor healed results. Sweat is essentially salt water, which dissolves pigment.',
+      'If you regularly fill in your brows, come with them filled in so Ashley can see what you are used to.',
+      'Makeup is optional — we take a lot of photos, so come however you are most comfortable.',
+    ],
+    after: [
+      'Very important! One hour after your procedure, wipe away the barrier cream and lymph with a clean, lightly dampened cotton pad or tissue. Gently pat dry and reapply a very thin layer of fresh barrier cream. Repeat every 2–3 hours for the rest of the day, then 4 times per day for the next 3 days. Dry heal thereafter, but keep the area clean.',
+      'Lightly wash the area once per day for the first 7 days using a fragrance-free, dye-free, non-exfoliating cleanser and clean fingertips, in a gentle circular motion for 5 seconds. Rinse with cool water and pat dry with a tissue.',
+      'Do NOT scratch, rub or pick at the area at all during healing.',
+      'Do NOT oversaturate or submerge brows in water for 7 days. Avoid hot showers, swimming, saunas, lakes, pools or any other bodies of water for at least 10 days.',
+      'Do NOT perform any exercise or task that causes perspiration for 7 days.',
+      'Do NOT tint, thread or wax the area, receive Botox or other injectables, or get a facial or skin treatment for at least 14 days.',
+      'Do NOT use any exfoliating products on the brow area EVER (Retin-A, AHA/glycolic acids, anti-aging creams/serums, scrubs, chemical peels).',
+      'Avoid sun exposure for 7 days, then always protect with SPF 30 to prevent premature fading.',
+      'Do NOT apply makeup, face creams, ointments or balms to the area for at least 7 days.',
+      'Your brows will change over the next few weeks — too dark at first, then very light, with color and definition returning around the 4th week. This is normal.',
+      'Schedule a Perfection Session 6–8 weeks after the initial procedure to address any healing imperfections.',
+    ],
+  },
+  {
+    title: 'Lip Blush',
+    prep: [
+      'Very important! If you are prone to cold sores, get prescribed an anti-viral to prevent an outbreak — begin 3–5 days prior to and after your appointment.',
+      '## 24 hours before',
+      'Avoid alcohol and excessive caffeine. Blood thinners (Ibuprofen, Advil, fish oil, etc.) should be avoided unless prescribed by a doctor.',
+      '## One week before',
+      'Begin to gently exfoliate your lips and keep them hydrated. Dry, flaky lips lead to poor healed results.',
+      '## Botox / Filler',
+      'Must be done 30 days prior to or after your appointment.',
+      '## Waxing / Threading',
+      'Please do so at least 2 weeks before your appointment.',
+      '## Retin-A',
+      'Refrain from any Retin-A products in the area for 2 weeks beforehand.',
+      'Avoid exercise — increased blood flow causes excessive bleeding and poor healed results. Sweat dissolves pigment.',
+    ],
+    after: [
+      '## Day 1 (day of the procedure)',
+      'One hour after, wipe your lips with the included antiseptic wipe, followed by a cotton round dampened with lukewarm water, pat dry, then reapply the included balm. Repeat at bedtime.',
+      'You may refrigerate the included lip mask ~10 minutes, then apply to ease tenderness and swelling.',
+      'Apply the included balm whenever your lips feel dry.',
+      '## Days 1–5 (or until flaking is finished)',
+      'Do not get your lips wet for 7–10 days, aside from the day-1 cleaning. Let them heal!',
+      'Keep your lips hydrated with the included balm at all times — never let them dry out.',
+      'Do NOT pick or pull at any flaking or scabbing.',
+      'Drink all liquids through a straw.',
+      '## Please avoid for 10–14 days',
+      'Water on the area (aside from cleaning), makeup, sweating/workouts, saunas, pools, jacuzzis and any body of water, tanning beds, direct sun, spicy/acidic food, smoking/vaping (can alter color) and kissing — plus exfoliating products or services of any kind.',
+      'Be patient — color starts dark and bold, lightens significantly, then "blooms" back around the 3rd–4th week, healing 40–70% lighter. A touch-up may be scheduled 4–8 weeks after.',
+      'If you experience an allergic reaction or signs of an infection, contact your doctor right away.',
+    ],
+  },
+  {
+    title: 'Eyeliner',
+    prep: [
+      'Take a month-long break from exfoliating anti-aging/acne products (retinoids, glycolics, Vitamin C, AHA/BHA, enzyme washes, serums).',
+      'Stop all lash growth solutions such as Latisse at least 12 weeks before your session and 2 weeks after, ideally until after your touch-up.',
+      'Lasers, peels, tinting, lash lifts, etc. should take place 2 weeks before or after your appointment.',
+      'No lash extensions or fake lashes until your eyeliner is fully healed (10–14 days). Extensions must be removed a week before your appointment.',
+      'No eye makeup on the day of your appointment — come as clean as possible.',
+      'Contacts must be removed at the time of your appointment.',
+      '## 24 hours before',
+      'Avoid alcohol and caffeine. Blood thinners (Ibuprofen, Advil) should be avoided unless prescribed by a doctor.',
+      '## Botox',
+      'If you get Botox or Dysport, it must be done at least 14 days prior — receiving it within 14 days results in being sent home to reschedule.',
+      'Avoid exercise/sweating before and after your appointment.',
+    ],
+    after: [
+      'Some puffiness is normal right after and for the following couple of days.',
+      'A week-long dry heal is recommended — do not put anything on your eyes for at least 10 days.',
+      'Avoid soaking the area in water (shower/bath/swimming), saunas, long steamy showers, eye makeup, moisturizer and exercise/sweating. Repeat the same aftercare after your second session.',
+      'You may gently clean your eyelids with a lightly dampened cotton round 1–2× a day. A balm is supplied if needed, but it is best to let it dry-heal.',
+      'Do not touch your eyes or pick at any flaking during healing.',
+    ],
+  },
+  {
+    title: 'Freckles',
+    prep: [
+      '## 30 days before',
+      'No filler or injections in or around the face. Do not tan or sunbathe — irritated or sunburnt skin cannot be worked on. Avoid any facial, laser or waxing treatments on the face.',
+      '## 2 weeks before',
+      'Discontinue any skincare that encourages exfoliation on the face (Retinol, AHA/BHA, etc.).',
+      '## 48 hours before',
+      'No blood thinners such as Aspirin, Ibuprofen, caffeine, coffee, tea, smoking, alcohol, soda, Niacin, Vitamin E, Advil or fish oil.',
+      '## Day of',
+      'Arrive with a fresh, clean face free of makeup — and again, no caffeine!',
+      '## Menstrual cycle',
+      'Please note you will be more sensitive during your cycle due to hormone fluctuations.',
+    ],
+    after: [
+      '## Normal to dry skin',
+      'Cleanse morning and night with a gentle, fragrance-free cleanser such as Cetaphil/Cerave. Keep freckles dry — no ointments or lotions. Very dry skin: Aquaphor may be applied once a day.',
+      '## Oily skin',
+      'Cleanse morning and night and keep freckles dry. For the first 48 hours, dab any excess lymph or glossiness with a clean tissue or sterile water wipe.',
+      '## Avoid for 5–7 days',
+      'No picking or scratching, no sunscreen/skincare/makeup, no sun exposure or tanning (this alters the pigment color), no steam baths/showers/saunas, and no working out or increased sweating.',
+      '## What to expect',
+      'Days 1–2: bold, dark and inflamed. Days 3–4: scabbing. Days 5–7: scabs/peeling fall off naturally — do not pick.',
+      'Surface healing takes 5–7 days, but the skin fully heals over 6–8 weeks. Some freckles may ghost and return, some may not retain. Overall they heal 30–40% lighter than the initial result.',
+    ],
+  },
+];
+
+const AftercareList = ({ items }: { items: string[] }) => (
+  <ul className="space-y-3">
+    {items.map((item, i) =>
+      item.startsWith('## ') ? (
+        <li key={i} className="text-accent text-[10px] uppercase tracking-[0.3em] font-bold pt-4 first:pt-0 list-none -ml-1">
+          {item.slice(3)}
+        </li>
+      ) : (
+        <li key={i} className="text-ink/70 leading-relaxed text-sm md:text-base list-disc ml-5">
+          {item}
+        </li>
+      )
+    )}
+  </ul>
+);
+
+const AftercarePage = ({ onNavigate }: { onNavigate: (page: Page) => void }) => (
+  <div className="pt-24 min-h-screen bg-paper pb-32">
+    <div className="max-w-4xl mx-auto px-6 py-20">
+      <p className="text-accent text-[10px] uppercase tracking-[0.6em] mb-4 font-bold">Before &amp; After Your Appointment</p>
+      <h1 className="text-4xl md:text-6xl font-serif mb-4">Preparation &amp; Aftercare</h1>
+      <p className="text-ink/60 leading-relaxed max-w-2xl mb-16">
+        Proper prep and aftercare are essential to a beautiful, long-lasting result. Please read the instructions for your service carefully — following them closely protects your investment and helps your skin heal evenly.
+      </p>
+
+      <div className="space-y-10">
+        {aftercareGuides.map((guide) => (
+          <section key={guide.title} className="bg-white border border-ink/5 shadow-sm p-8 md:p-12 rounded-2xl">
+            <h2 className="text-3xl md:text-4xl font-serif mb-10">{guide.title}</h2>
+            <div className="grid md:grid-cols-2 gap-12">
+              <div>
+                <h3 className="text-[10px] uppercase tracking-[0.4em] font-bold text-ink/30 mb-6 border-b border-ink/5 pb-4">Preparation</h3>
+                <AftercareList items={guide.prep} />
+              </div>
+              <div>
+                <h3 className="text-[10px] uppercase tracking-[0.4em] font-bold text-ink/30 mb-6 border-b border-ink/5 pb-4">Aftercare</h3>
+                <AftercareList items={guide.after} />
+              </div>
+            </div>
+          </section>
+        ))}
+      </div>
+
+      <div className="mt-16 text-center bg-sage-light rounded-2xl py-14 px-6">
+        <h2 className="text-3xl md:text-4xl font-serif mb-4">Questions Before You Book?</h2>
+        <p className="text-ink/60 max-w-md mx-auto mb-8 leading-relaxed">
+          If you are unsure whether you are an eligible candidate or have any questions about preparing for your appointment, reach out before booking.
+        </p>
+        <button
+          onClick={() => onNavigate('contact')}
+          className="px-12 py-4 bg-accent text-paper text-[10px] uppercase tracking-[0.3em] font-bold hover:bg-ink transition-colors"
+        >
+          Contact the Studio
+        </button>
       </div>
     </div>
   </div>
@@ -1785,7 +1985,7 @@ function AppShell() {
     const routes: Record<Page, string> = {
       home: '/', services: '/services', gallery: '/gallery', booking: '/booking',
       artist: '/artist', contact: '/contact', 'service-detail': '/services',
-      privacy: '/privacy', policies: '/policies',
+      privacy: '/privacy', policies: '/policies', aftercare: '/preparation-aftercare',
     };
     navigate(routes[page] || '/');
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1802,6 +2002,7 @@ function AppShell() {
     if (path === '/artist') return 'artist';
     if (path === '/privacy') return 'privacy';
     if (path === '/policies') return 'policies';
+    if (path === '/preparation-aftercare') return 'aftercare';
     return 'home';
   };
   const currentPage = getCurrentPage();
@@ -1880,11 +2081,12 @@ function AppShell() {
               <Route path="/" element={<HomePage onNavigate={handleNavigate} onSelectService={handleSelectService} />} />
               <Route path="/booking" element={<BookingPage />} />
               <Route path="/gallery" element={<GalleryPage />} />
-              <Route path="/services" element={<Services onSelectService={handleSelectService} onNavigate={handleNavigate} />} />
+              <Route path="/services" element={<Services onSelectService={handleSelectService} onNavigate={handleNavigate} asPage />} />
               <Route path="/artist" element={<ArtistPage />} />
               <Route path="/contact" element={<ContactPage />} />
               <Route path="/privacy" element={<PrivacyPage />} />
               <Route path="/policies" element={<PoliciesPage />} />
+              <Route path="/preparation-aftercare" element={<AftercarePage onNavigate={handleNavigate} />} />
               <Route path="/services/:slug" element={<ServiceDetailPage onNavigate={handleNavigate} />} />
               <Route path="/services/:slug/:variantSlug" element={<VariantDetailPage />} />
               <Route path="/login" element={<LoginPage />} />

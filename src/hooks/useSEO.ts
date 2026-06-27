@@ -40,6 +40,10 @@ const META: Record<string, SEOMeta> = {
     title: `Booking Policies | ${SITE_NAME}`,
     description: 'Deposit requirements, cancellation policy, and booking terms for Ashley M. Brows cosmetic tattoo services.',
   },
+  '/preparation-aftercare': {
+    title: `Preparation & Aftercare | ${SITE_NAME}`,
+    description: 'How to prepare for and care for your cosmetic tattoo — prep and aftercare instructions for brows, lip blush, eyeliner and freckles by Ashley M. Brows.',
+  },
   '/booking/success': {
     title: `Request Received | ${SITE_NAME}`,
     description: 'Your consultation request has been received. Ashley will review and contact you to confirm availability.',
