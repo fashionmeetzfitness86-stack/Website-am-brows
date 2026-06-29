@@ -564,6 +564,58 @@ const Services = ({ onSelectService, onNavigate, excludeIds = [], asPage = false
         ))}
       </div>
 
+      {/* Touch-up pricing — shown on the full /services page only, for existing clients. */}
+      {asPage && (
+        <div className="mt-28">
+          <div className="text-center mb-14">
+            <p className="text-accent text-[10px] uppercase tracking-[0.5em] mb-4 font-bold">Existing Clientele Only</p>
+            <h3 className="text-3xl md:text-5xl font-serif">Touch-Up Pricing</h3>
+          </div>
+          <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+            {/* Perfection session */}
+            <div className="bg-paper border border-ink/5 rounded-3xl shadow-md p-10 flex flex-col">
+              <div className="flex justify-between items-start mb-1">
+                <h4 className="text-2xl font-serif">Touch-Up</h4>
+                <span className="text-xl font-serif text-accent">$150</span>
+              </div>
+              <p className="text-[10px] uppercase tracking-[0.3em] font-bold text-ink/40 mb-6">6&ndash;12 Weeks &middot; &ldquo;Perfection Session&rdquo;</p>
+              <p className="text-sm text-ink/60 leading-relaxed mb-4">
+                Your follow-up for lip blush, brows, or eyeliner to reinforce any imperfections during the
+                healing process. Highly recommended for longer-lasting results.
+              </p>
+              <p className="text-sm text-ink/60 leading-relaxed">
+                Permanent makeup is always a two-step process &mdash; only after your touch-up is the treatment
+                complete. Additional sessions may be necessary to achieve your desired results.
+              </p>
+            </div>
+            {/* Periodic / annual */}
+            <div className="bg-paper border border-ink/5 rounded-3xl shadow-md p-10 flex flex-col">
+              <h4 className="text-2xl font-serif mb-6">Periodic Touch-Up</h4>
+              <ul className="space-y-3 mb-6">
+                <li className="flex justify-between items-center border-b border-ink/5 pb-3">
+                  <span className="text-[11px] uppercase tracking-[0.2em] font-bold text-ink/60">3&ndash;9 Months</span>
+                  <span className="text-lg font-serif text-accent">$225</span>
+                </li>
+                <li className="flex justify-between items-center border-b border-ink/5 pb-3">
+                  <span className="text-[11px] uppercase tracking-[0.2em] font-bold text-ink/60">9&ndash;24 Months</span>
+                  <span className="text-lg font-serif text-accent">$325</span>
+                </li>
+                <li className="flex justify-between items-center border-b border-ink/5 pb-3">
+                  <span className="text-[11px] uppercase tracking-[0.2em] font-bold text-ink/60">2&ndash;3 Years</span>
+                  <span className="text-lg font-serif text-accent">$375</span>
+                </li>
+              </ul>
+              <p className="text-sm text-ink/60 leading-relaxed mb-3">
+                Your annual touch-up to keep your permanent makeup looking fresh. Please be sure your tattoo
+                has faded by at least 50% before booking. If you are unsure, email photos to{' '}
+                <a href="mailto:ashleymbrows@gmail.com" className="text-accent hover:underline">ashleymbrows@gmail.com</a>.
+              </p>
+              <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-ink/40 mt-auto">After 3 years &mdash; initial session pricing applies</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* On the homepage (not the full /services page) invite visitors to see the
           rest of the menu — Tooth Gems and any other services hidden here. */}
       {!asPage && (
@@ -854,6 +906,34 @@ const PoliciesPage = () => (
             <li>Any active infection</li>
             <li>Non-compliant with aftercare instructions</li>
           </ul>
+        </section>
+
+        <section className="pt-12">
+          <h2 className="text-2xl font-serif text-ink mb-4">Numbing &mdash; Michigan Clients Only</h2>
+          <p className="mb-4">
+            Due to updated Michigan tattooing regulations, topical numbing agents used during
+            cosmetic tattoo procedures are now regulated and must meet specific state requirements.
+          </p>
+          <p className="mb-4">If you would like numbing used during your procedure, you will need to:</p>
+          <ul className="space-y-2 list-disc pl-6 mb-6">
+            <li>Obtain a prescription and provider authorization from a licensed medical provider, such as your primary care physician or a licensed telehealth provider.</li>
+            <li>Bring your prescribed numbing product to your appointment.</li>
+            <li>Ensure the authorization specifically permits application by your PMU artist during the procedure.</li>
+          </ul>
+          <p className="mb-4">Please ask your provider to include wording similar to the following in your authorization:</p>
+          <blockquote className="border-l-2 border-accent pl-6 italic text-ink/80 my-6">
+            &ldquo;Patient may use topical lidocaine products up to 5% concentration during cosmetic
+            tattoo procedures. Application by the licensed cosmetic tattoo technician/PMU artist during
+            the procedure is authorized. This may include gel formulations intended for use on broken skin.&rdquo;
+          </blockquote>
+          <p className="mb-4">
+            A copy of the prescription and provider authorization must be brought to your appointment and
+            will be kept on file in accordance with Michigan regulations.
+          </p>
+          <p>
+            If you choose not to obtain a prescription, your procedure can still be safely performed
+            <strong className="text-ink"> without numbing</strong>. <strong className="text-ink">Eyeliner services must obtain a script for the appointment.</strong>
+          </p>
         </section>
 
         <section className="pt-8">
