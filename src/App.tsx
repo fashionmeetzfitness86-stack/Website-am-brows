@@ -431,7 +431,19 @@ const Hero = ({ onNavigate }: { onNavigate: (page: Page) => void }) => (
       </button>
     </motion.div>
 
-    <motion.div 
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.9 }}
+      className="mt-10 inline-flex items-center gap-3 border border-accent/30 bg-accent/5 px-5 py-3 rounded-full"
+    >
+      <MapPin className="w-3.5 h-3.5 text-accent" />
+      <span className="text-[10px] uppercase tracking-[0.25em] font-bold text-accent">
+        Now taking appointments in Miami
+      </span>
+    </motion.div>
+
+    <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ delay: 1.2 }}
@@ -499,7 +511,8 @@ const About = () => (
          <div className="mt-12 flex gap-12">
             <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.6 }}>
               <p className="text-2xl font-serif">Brighton, MI</p>
-              <p className="text-[10px] uppercase tracking-widest font-bold opacity-40">Studio Location</p>
+              <p className="text-2xl font-serif">Miami, FL</p>
+              <p className="text-[10px] uppercase tracking-widest font-bold opacity-40">Studio Locations</p>
             </motion.div>
             <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.75 }}>
               <p className="text-2xl font-serif">All Skin Types</p>
@@ -722,6 +735,7 @@ const Footer = ({ onNavigate }: { onNavigate: (page: Page) => void }) => (
        <p>© 2026 Ashley M. Brows. Cosmetic Tattoo Artist.</p>
        <div className="flex gap-8">
           <span>Brighton, Michigan</span>
+          <span>Miami, Florida</span>
            <span>USA</span>
        </div>
     </div>
